@@ -16,13 +16,18 @@ public class SceneAutoSetup : EditorWindow
         // 1. Force Maximize on Play
         EditorPrefs.SetBool("GameView.MaximizeOnPlay", true);
 
-        // 2. Configure Slicing (CRITICAL FIX FOR ASSETS)
+        // 2. Configure Slicing & Import Settings
         string tilesetPath = "Assets/Sprites/school_tileset.png";
         ConfigureSlicing(tilesetPath, 8, 8, true);
         string p1Path = "Assets/Sprites/Characters/blonde_man.png";
         ConfigureSlicing(p1Path, 32, 32, false);
         string p2Path = "Assets/Sprites/Characters/blue_haired_woman.png";
         ConfigureSlicing(p2Path, 32, 32, false);
+
+        string titleScreenPath = "Assets/Sprites/Backgrounds/TitleScreen_BG.png";
+        string classroomBgPath = "Assets/Sprites/Backgrounds/Classroom_BG.png";
+        ConfigureSingleSprite(titleScreenPath, 16);
+        ConfigureSingleSprite(classroomBgPath, 16);
 
         // 3. Cleanup Scene safely
         var currentScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
@@ -32,56 +37,52 @@ public class SceneAutoSetup : EditorWindow
                 DestroyImmediate(obj);
         }
 
-        // 4. Grid & 2D Preparation
-        GameObject gridObj = new GameObject("Environment_Grid", typeof(Grid));
-        // Use 1x1 cells. Our PPU is 8 for 8x8 tiles, so 1 unit = 1 tile exactly.
-        gridObj.GetComponent<Grid>().cellSize = new Vector3(1, 1, 0);
-        
-        GameObject floorObj = new GameObject("Floor", typeof(Tilemap), typeof(TilemapRenderer));
-        floorObj.transform.SetParent(gridObj.transform);
-        Tilemap floorMap = floorObj.GetComponent<Tilemap>();
-        floorObj.GetComponent<TilemapRenderer>().sortingOrder = -20;
-
-        GameObject wallObj = new GameObject("Walls", typeof(Tilemap), typeof(TilemapRenderer));
-        wallObj.transform.SetParent(gridObj.transform);
-        Tilemap wallMap = wallObj.GetComponent<Tilemap>();
-        wallObj.GetComponent<TilemapRenderer>().sortingOrder = -5; // Walls behind player
-
-        // 5. Intelligent Tile Selection
-        Object[] tiles = AssetDatabase.LoadAllAssetsAtPath(tilesetPath);
-        List<Sprite> s = tiles.OfType<Sprite>().OrderBy(sprite => sprite.name).ToList();
-        
-        if (s.Count < 50) {
-            Debug.LogError("Slicing error: Not enough tiles found. Script will stop to prevent empty worlds.");
-            return;
-        }
-
-        // Pick specific wood floor (row 1 is generally wood)
-        Tile floorTile = ScriptableObject.CreateInstance<Tile>();
-        floorTile.sprite = s[1]; 
-
-        Tile wallTile = ScriptableObject.CreateInstance<Tile>();
-        wallTile.sprite = s[17];
-
-        Tile boardTile = ScriptableObject.CreateInstance<Tile>();
-        boardTile.sprite = s[41];
-
-        // Paint 20x20 Room
-        for (int x = -10; x <= 10; x++)
+        // 4. Background Preparation
+        // Instead of generating tiles, we instantiate the Classroom image
+        GameObject backgroundObj = new GameObject("Classroom_Background");
+        backgroundObj.transform.position = Vector3.zero;
+        var bgRenderer = backgroundObj.AddComponent<SpriteRenderer>();
+        bgRenderer.sortingOrder = -20; // Ensure it's behind everything
+        Sprite classroomSprite = AssetDatabase.LoadAssetAtPath<Sprite>(classroomBgPath);
+        if (classroomSprite != null)
         {
-            for (int y = -10; y <= 10; y++)
-            {
-                floorMap.SetTile(new Vector3Int(x, y, 0), floorTile);
-                if (y == 10 || y == -10 || x == -10 || x == 10)
-                    wallMap.SetTile(new Vector3Int(x, y, 0), wallTile);
-                if (y == 10 && x >= -2 && x <= 2)
-                    wallMap.SetTile(new Vector3Int(x, y, 0), boardTile);
-            }
+            bgRenderer.sprite = classroomSprite;
+            backgroundObj.transform.position = new Vector3(0, 0, 0); 
+            // ESCALA 1:1 PARA PIXEL ART PERFECTO
+            backgroundObj.transform.localScale = new Vector3(1, 1, 1);
         }
+
+        // --- SISTEMA DE FÍSICAS (BARRERAS INVISIBLES) ---
+        var rb = backgroundObj.AddComponent<Rigidbody2D>();
+        rb.bodyType = RigidbodyType2D.Static;
+
+        // Limite Superior (Pizarra / Muro)
+        var topWall = backgroundObj.AddComponent<BoxCollider2D>();
+        topWall.size = new Vector2(40f, 6f);
+        topWall.offset = new Vector2(0f, 13f);
+
+        // Limite Inferior
+        var bottomWall = backgroundObj.AddComponent<BoxCollider2D>();
+        bottomWall.size = new Vector2(40f, 2f);
+        bottomWall.offset = new Vector2(0f, -14f);
+
+        // Limite Izquierdo
+        var leftWall = backgroundObj.AddComponent<BoxCollider2D>();
+        leftWall.size = new Vector2(2f, 30f);
+        leftWall.offset = new Vector2(-19.5f, 0f);
+
+        // Limite Derecho
+        var rightWall = backgroundObj.AddComponent<BoxCollider2D>();
+        rightWall.size = new Vector2(2f, 30f);
+        rightWall.offset = new Vector2(19.5f, 0f);
+
+        // 5. Build Environment Collision/Grid (Optional for now, but keeping an empty grid)
+        GameObject gridObj = new GameObject("Environment_Grid", typeof(Grid));
+        gridObj.GetComponent<Grid>().cellSize = new Vector3(1, 1, 0);
 
         // 6. Player
         GameObject playerObj = new GameObject("PlayerAccountant");
-        playerObj.transform.position = Vector3.zero;
+        playerObj.transform.position = new Vector3(0, -2, 0);
         var sr = playerObj.AddComponent<SpriteRenderer>();
         var anim = playerObj.AddComponent<Animator>();
         var pClass = playerObj.AddComponent<Player>();
@@ -93,52 +94,63 @@ public class SceneAutoSetup : EditorWindow
 
         // 7. NPC
         GameObject npcObj = new GameObject("Classmate_Sofia");
-        npcObj.transform.position = new Vector3(3, 3, 0); // Spaced appropriately
+        npcObj.transform.position = new Vector3(4, -1, 0); // Spaced appropriately
         npcObj.AddComponent<SpriteRenderer>().sortingOrder = 9;
         npcObj.AddComponent<Animator>().runtimeAnimatorController = AnimationBuilder.GeneratePlayerAnimator(p2Path);
         npcObj.AddComponent<Victim>();
         npcObj.GetComponent<SpriteRenderer>().sprite = AssetDatabase.LoadAllAssetsAtPath(p2Path).OfType<Sprite>().FirstOrDefault();
 
-        // 8. Quality Lighting
-        GameObject lightObj = new GameObject("GlobalLight");
-        var lightType = System.Type.GetType("UnityEngine.Rendering.Universal.Light2D, Unity.RenderPipelines.Universal.Runtime");
-        if (lightType != null) {
-            var lComponent = lightObj.AddComponent(lightType);
-            var colorProp = lightType.GetProperty("color");
-            var intensityProp = lightType.GetProperty("intensity");
-            if (colorProp != null) colorProp.SetValue(lComponent, new Color(1, 0.98f, 0.9f, 1)); 
-            if (intensityProp != null) intensityProp.SetValue(lComponent, 1.1f);
+        // 8. Quality Lighting (Removed or kept minimal for 2D Unlit)
+        // Ya que usamos Sprites, si no hay material iluminado no se verá el efecto normal,
+        // pero podemos eliminar la luz o dejarla si usan URP.
+
+        // 9. UI Canvas (Start Menu & UI System)
+        if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+        {
+            new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.EventSystems.StandaloneInputModule));
         }
 
-        // 9. UI Canvas (Refined for visibility and scaling)
         GameObject canvasObj = new GameObject("UI_Presentation", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         Canvas canvas = canvasObj.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvasObj.layer = 5; // Layer UI
         CanvasScaler scaler = canvasObj.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
         
-        GameObject panelObj = new GameObject("BackgroundPanel", typeof(RectTransform), typeof(Image));
+        // Panel de Inicio (Imagen de título)
+        GameObject panelObj = new GameObject("StartScreenPanel", typeof(RectTransform), typeof(Image));
         panelObj.transform.SetParent(canvasObj.transform, false);
+        panelObj.layer = 5; // Layer UI
         Image panelImg = panelObj.GetComponent<Image>();
-        panelImg.color = new Color(0, 0, 0, 0.85f);
+        Sprite titleSprite = AssetDatabase.LoadAssetAtPath<Sprite>(titleScreenPath);
+        if (titleSprite != null) {
+            panelImg.sprite = titleSprite;
+            panelImg.color = Color.white; // No tint
+        } else {
+            panelImg.color = new Color(0.1f, 0.1f, 0.1f, 1f); // Dark fallback
+        }
+        
         RectTransform panelRT = panelObj.GetComponent<RectTransform>();
-        panelRT.anchorMin = new Vector2(0, 1); panelRT.anchorMax = new Vector2(1, 1);
-        panelRT.pivot = new Vector2(0.5f, 1);
-        panelRT.sizeDelta = new Vector2(0, 120);
+        panelRT.anchorMin = Vector2.zero; panelRT.anchorMax = Vector2.one; // Fullscreen
+        panelRT.offsetMin = Vector2.zero; panelRT.offsetMax = Vector2.zero;
 
-        GameObject titleObj = new GameObject("ProjectTitle", typeof(RectTransform), typeof(Text));
-        titleObj.transform.SetParent(panelObj.transform, false);
-        Text titleText = titleObj.GetComponent<Text>();
-        titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        titleText.text = "PROYECTO POO: ANTI-BULLYING RPG\n(Walk con WASD o Flechas)";
-        titleText.fontSize = 40;
-        titleText.fontStyle = FontStyle.Bold;
-        titleText.alignment = TextAnchor.MiddleCenter;
-        titleText.color = new Color(1f, 0.9f, 0.2f, 1f); // Golden yellow
-        RectTransform titleRT = titleObj.GetComponent<RectTransform>();
-        titleRT.anchorMin = Vector2.zero; titleRT.anchorMax = Vector2.one;
-        titleRT.offsetMin = Vector2.zero; titleRT.offsetMax = Vector2.zero;
+        // Boton START (Hacemos que sea transparente y cubra TODA la pantalla)
+        GameObject btnObj = new GameObject("StartButton", typeof(RectTransform), typeof(Image), typeof(UnityEngine.UI.Button));
+        btnObj.transform.SetParent(panelObj.transform, false);
+        btnObj.layer = 5; // Layer UI
+        Image btnImg = btnObj.GetComponent<Image>();
+        btnImg.color = new Color(1f, 1f, 1f, 0f); // 100% Transparente
+        RectTransform btnRTC = btnObj.GetComponent<RectTransform>();
+        btnRTC.anchorMin = Vector2.zero; 
+        btnRTC.anchorMax = Vector2.one; // Fullscreen
+        btnRTC.offsetMin = Vector2.zero; 
+        btnRTC.offsetMax = Vector2.zero;
+        
+        // Conectar el sistema con el Script que congela el juego
+        var startScript = canvasObj.AddComponent<StartMenu>();
+        startScript.startButton = btnObj.GetComponent<UnityEngine.UI.Button>();
+        startScript.startMenuPanel = panelObj;
 
         // 10. Camera Configuration (The Fix for the Skybox)
         var cam = Camera.main;
@@ -160,6 +172,19 @@ public class SceneAutoSetup : EditorWindow
 
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(currentScene);
         Debug.Log("MASTER DELIVERY READY! Fixes injected. Press Play to see the classroom.");
+    }
+
+    private static void ConfigureSingleSprite(string path, float ppu)
+    {
+        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        if (importer == null) return;
+        importer.textureType = TextureImporterType.Sprite;
+        importer.spriteImportMode = SpriteImportMode.Single;
+        importer.spritePixelsPerUnit = ppu; 
+        importer.filterMode = FilterMode.Point;
+        importer.textureCompression = TextureImporterCompression.Uncompressed;
+        EditorUtility.SetDirty(importer);
+        importer.SaveAndReimport();
     }
 
     private static void ConfigureSlicing(string path, int spriteWidth, int spriteHeight, bool isTile)
