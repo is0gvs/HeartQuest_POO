@@ -48,8 +48,8 @@ public class SceneAutoSetup : EditorWindow
         {
             bgRenderer.sprite = classroomSprite;
             backgroundObj.transform.position = new Vector3(0, 0, 0); 
-            // ESCALA 1:1 PARA PIXEL ART PERFECTO
-            backgroundObj.transform.localScale = new Vector3(1, 1, 1);
+            // Restaurar la escala de la escena a 1.0
+            backgroundObj.transform.localScale = new Vector3(1f, 1f, 1f);
         }
 
         // --- SISTEMA DE FÍSICAS (BARRERAS INVISIBLES) ---
@@ -157,7 +157,8 @@ public class SceneAutoSetup : EditorWindow
         if (cam != null)
         {
             cam.orthographic = true;
-            cam.orthographicSize = 6f; // See more of the room
+            // Restauramos el orthographicSize a 5f
+            cam.orthographicSize = 5f; 
             cam.clearFlags = CameraClearFlags.SolidColor; // REMOVES THE 3D HORIZON
             cam.backgroundColor = new Color(0.1f, 0.1f, 0.12f);
             
