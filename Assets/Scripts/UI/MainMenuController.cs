@@ -19,19 +19,19 @@ namespace HeartQuest.UI
         [SerializeField] private string sceneToLoad = "ClassroomScene";
 
         [Header("── Paneles Principales ──")]
-        [SerializeField] private GameObject leftMenu;
-        [SerializeField] private GameObject rightPanel;
-        [SerializeField] private GameObject centerVisual;
-        [SerializeField] private GameObject topBar;
-        [SerializeField] private GameObject bottomDialogue;
+        public GameObject leftMenu;
+        public GameObject rightPanel;
+        public GameObject centerVisual;
+        public GameObject topBar;
+        public GameObject bottomDialogue;
 
         [Header("── Fade In ──")]
-        [SerializeField] private CanvasGroup fadeOverlay;
-        [SerializeField] private float fadeDuration = 1.5f;
+        public CanvasGroup fadeOverlay;
+        public float fadeDuration = 1.5f;
 
         [Header("── Navegación por Teclado ──")]
-        [SerializeField] private List<Button> menuButtons = new List<Button>();
-        private int currentIndex = 0;
+        public List<Button> menuButtons = new List<Button>();
+        public int currentIndex = 0;
 
         private void Start()
         {

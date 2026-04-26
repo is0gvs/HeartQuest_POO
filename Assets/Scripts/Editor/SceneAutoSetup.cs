@@ -296,47 +296,7 @@ public class SceneAutoSetup : EditorWindow
         GameObject panelObj = new GameObject("StartScreenPanel", typeof(RectTransform), typeof(Image));
         panelObj.transform.SetParent(canvasObj.transform, false);
         panelObj.layer = 5; // Layer UI
-        Image panelImg = panelObj.GetComponent<Image>();
-        Sprite titleSprite = AssetDatabase.LoadAssetAtPath<Sprite>(titleScreenPath);
-        if (titleSprite != null) {
-            panelImg.sprite = titleSprite;
-            panelImg.color = Color.white;
-        } else {
-            panelImg.color = new Color(0.1f, 0.1f, 0.1f, 1f);
-        }
-        
-        RectTransform panelRT = panelObj.GetComponent<RectTransform>();
-        panelRT.anchorMin = Vector2.zero; panelRT.anchorMax = Vector2.one; // Fullscreen
-        panelRT.offsetMin = Vector2.zero; panelRT.offsetMax = Vector2.zero;
-
-        // Boton START (Visible)
-        GameObject btnObj = new GameObject("StartButton", typeof(RectTransform), typeof(Image), typeof(UnityEngine.UI.Button));
-        btnObj.transform.SetParent(panelObj.transform, false);
-        btnObj.layer = 5; // Layer UI
-        Image btnImg = btnObj.GetComponent<Image>();
-        btnImg.color = new Color(0f, 0.8f, 0.2f, 1f); // Verde visible
-        RectTransform btnRTC = btnObj.GetComponent<RectTransform>();
-        btnRTC.anchorMin = new Vector2(0.5f, 0.5f);
-        btnRTC.anchorMax = new Vector2(0.5f, 0.5f);
-        btnRTC.sizeDelta = new Vector2(300, 100);
-        btnRTC.anchoredPosition = new Vector2(0, -150);
-        
-        // Texto del botón
-        GameObject txtObj = new GameObject("Text", typeof(RectTransform));
-        txtObj.transform.SetParent(btnObj.transform, false);
-        var txt = txtObj.AddComponent<TMPro.TextMeshProUGUI>();
-        txt.text = "INICIAR JUEGO";
-        txt.alignment = TMPro.TextAlignmentOptions.Center;
-        txt.color = Color.white;
-        txt.fontSize = 36;
-        RectTransform txtRT = txtObj.GetComponent<RectTransform>();
-        txtRT.anchorMin = Vector2.zero; txtRT.anchorMax = Vector2.one;
-        txtRT.offsetMin = Vector2.zero; txtRT.offsetMax = Vector2.zero;
-        
-        // Conectar el sistema con el Script que congela el juego
-        var startScript = canvasObj.AddComponent<AntiBullyingGame.RPG.StartMenu>();
-        startScript.startButton = btnObj.GetComponent<UnityEngine.UI.Button>();
-        startScript.startMenuPanel = panelObj;
+        CreateCyberpunkMenu(canvasObj, panelObj);
 
         // 9.5 RPG Stats UI (Top Left, Estilo Undertale Moderno)
         GameObject statsPanelObj = new GameObject("PlayerStatsUI", typeof(RectTransform), typeof(Image));
@@ -594,5 +554,86 @@ public class SceneAutoSetup : EditorWindow
 
         EditorUtility.SetDirty(importer);
         importer.SaveAndReimport();
+    }
+
+    private static void CreateCyberpunkMenu(GameObject canvasObj, GameObject panelObj)
+    {
+        RectTransform panelRT = panelObj.GetComponent<RectTransform>();
+        panelRT.anchorMin = Vector2.zero; panelRT.anchorMax = Vector2.one;
+        panelRT.sizeDelta = Vector2.zero;
+        panelObj.GetComponent<Image>().color = new Color(0.02f, 0.05f, 0.12f, 0.98f); // Fondo oscuro
+
+        // Título Neon
+        GameObject titleObj = new GameObject("Title", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
+        titleObj.transform.SetParent(panelObj.transform, false);
+        titleObj.layer = 5;
+        var txt = titleObj.GetComponent<TMPro.TextMeshProUGUI>();
+        txt.text = "<color=#FF00E5>HEART</color><color=#00E5FF>QUEST</color>";
+        txt.fontSize = 140; 
+        txt.alignment = TMPro.TextAlignmentOptions.Center;
+        txt.fontStyle = TMPro.FontStyles.Bold;
+        RectTransform titleRT = titleObj.GetComponent<RectTransform>();
+        titleRT.anchorMin = new Vector2(0.5f, 0.85f); titleRT.anchorMax = new Vector2(0.5f, 0.85f);
+        titleRT.sizeDelta = new Vector2(1000, 200); titleRT.anchoredPosition = Vector2.zero;
+        titleObj.AddComponent<HeartQuest.UI.NeonPanelFlicker>();
+
+        // Contenedor de Botones
+        GameObject buttonContainer = new GameObject("ButtonList", typeof(RectTransform), typeof(UnityEngine.UI.VerticalLayoutGroup));
+        buttonContainer.transform.SetParent(panelObj.transform, false);
+        buttonContainer.layer = 5;
+        RectTransform containerRt = buttonContainer.GetComponent<RectTransform>();
+        containerRt.anchorMin = new Vector2(0.1f, 0.2f); containerRt.anchorMax = new Vector2(0.4f, 0.7f);
+        containerRt.sizeDelta = Vector2.zero;
+        var vlg = buttonContainer.GetComponent<UnityEngine.UI.VerticalLayoutGroup>();
+        vlg.spacing = 20; vlg.childAlignment = TextAnchor.MiddleLeft;
+        vlg.childControlHeight = false; vlg.childControlWidth = false;
+
+        // Botones
+        List<UnityEngine.UI.Button> buttons = new List<UnityEngine.UI.Button>();
+        string[] labels = { "CONTINUAR", "NUEVA PARTIDA", "OPCIONES", "SALIR" };
+        for (int i = 0; i < labels.Length; i++) {
+            GameObject b = CreateCyberBtn(labels[i], buttonContainer.transform);
+            buttons.Add(b.GetComponent<UnityEngine.UI.Button>());
+        }
+
+        // Integración de controladores
+        var menuCtrl = panelObj.AddComponent<HeartQuest.UI.MenuController>();
+        menuCtrl.menuButtons = buttons;
+        menuCtrl.leftMenu = buttonContainer;
+        
+        var startLogic = canvasObj.AddComponent<AntiBullyingGame.RPG.StartMenu>();
+        startLogic.startButton = buttons[1]; // Nueva Partida
+        startLogic.startMenuPanel = panelObj;
+    }
+
+    private static GameObject CreateCyberBtn(string label, Transform parent)
+    {
+        GameObject btnObj = new GameObject("Btn_" + label, typeof(RectTransform), typeof(Image), typeof(UnityEngine.UI.Button));
+        btnObj.transform.SetParent(parent, false); btnObj.layer = 5;
+        RectTransform rt = btnObj.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(400, 70); 
+        
+        Image img = btnObj.GetComponent<Image>();
+        img.color = new Color(0.1f, 0.1f, 0.15f, 0.8f);
+
+        GameObject tObj = new GameObject("Text", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
+        tObj.transform.SetParent(btnObj.transform, false); tObj.layer = 5;
+        var txt = tObj.GetComponent<TMPro.TextMeshProUGUI>();
+        txt.text = "> " + label; 
+        txt.fontSize = 32; 
+        txt.color = new Color(0.6f, 0.9f, 1f); 
+        RectTransform trt = tObj.GetComponent<RectTransform>();
+        trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one; trt.offsetMin = new Vector2(30, 0);
+
+        var btn = btnObj.GetComponent<UnityEngine.UI.Button>();
+        var colors = btn.colors;
+        colors.normalColor = new Color(1f, 1f, 1f, 1f);
+        colors.highlightedColor = new Color(1f, 0f, 0.9f, 1f); // Rosa Neón muy visible
+        colors.selectedColor = new Color(0f, 1f, 0.9f, 1f);    // Cyan Neón muy visible
+        colors.pressedColor = new Color(1f, 1f, 1f, 1f);
+        colors.colorMultiplier = 2.5f; // ESTO ES LA CLAVE: Multiplica el color para que brille
+        btn.colors = colors;
+
+        return btnObj;
     }
 }
