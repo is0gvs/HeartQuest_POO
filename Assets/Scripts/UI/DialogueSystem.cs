@@ -94,7 +94,8 @@ namespace HeartQuest.UI
             if (currentStory != null && currentLineIndex < currentStory.lines.Length)
             {
                 var line = currentStory.lines[currentLineIndex];
-                ShowDialogue($"<color=#00E5FF>{line.speakerName}</color>\n{line.text}", line.portrait);
+                string parsedText = line.text.Replace("{PLAYER_NAME}", PlayerPrefs.GetString("PlayerName", "Jugador"));
+                ShowDialogue($"<color=#00E5FF>{line.speakerName}</color>\n{parsedText}", line.portrait);
                 currentLineIndex++;
             }
             else if (currentStory != null)
@@ -167,6 +168,12 @@ namespace HeartQuest.UI
 
         private void SpawnChoices()
         {
+            if (currentStory.requiresNameInput)
+            {
+                SpawnNameInput();
+                return;
+            }
+
             if (currentStory.choices == null || currentStory.choices.Length == 0)
             {
                 FinishDialogueStory();
@@ -273,6 +280,90 @@ namespace HeartQuest.UI
                 }
             }
             currentStory = null;
+        }
+
+        private void SpawnNameInput()
+        {
+            if (portraitImage != null) portraitImage.gameObject.SetActive(false);
+            
+            dialogueText.text = "<color=#00E5FF>¿Cuál es tu nombre?</color>";
+            dialogueText.maxVisibleCharacters = 99999;
+
+            GameObject inputObj = new GameObject("NameInput", typeof(RectTransform), typeof(Image), typeof(TMP_InputField));
+            inputObj.transform.SetParent(dialogueBox.transform, false);
+            
+            RectTransform rt = inputObj.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f); rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(400, 50);
+            rt.anchoredPosition = new Vector2(0, -30);
+
+            Image img = inputObj.GetComponent<Image>();
+            img.color = new Color(0.12f, 0.16f, 0.25f, 1f);
+
+            var outline = inputObj.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0.898f, 1f, 1f); // Cian
+            outline.effectDistance = new Vector2(2, -2);
+
+            GameObject textObj = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+            textObj.transform.SetParent(inputObj.transform, false);
+            RectTransform trt = textObj.GetComponent<RectTransform>();
+            trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+            trt.offsetMin = new Vector2(10, 0); trt.offsetMax = Vector2.zero;
+
+            TextMeshProUGUI tmp = textObj.GetComponent<TextMeshProUGUI>();
+            tmp.color = Color.white;
+            tmp.fontSize = 30;
+
+            TMP_InputField inputField = inputObj.GetComponent<TMP_InputField>();
+            inputField.textComponent = tmp;
+
+            choiceButtons.Add(inputObj);
+
+            // Botón Confirmar
+            GameObject btnObj = new GameObject("ConfirmBtn", typeof(RectTransform), typeof(Image), typeof(Button));
+            btnObj.transform.SetParent(dialogueBox.transform, false);
+            RectTransform brt = btnObj.GetComponent<RectTransform>();
+            brt.anchorMin = new Vector2(0.5f, 0.5f); brt.anchorMax = new Vector2(0.5f, 0.5f);
+            brt.sizeDelta = new Vector2(200, 45);
+            brt.anchoredPosition = new Vector2(0, -90);
+
+            Image bimg = btnObj.GetComponent<Image>();
+            bimg.color = new Color(0f, 0.898f, 1f, 1f);
+
+            GameObject bTextObj = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+            bTextObj.transform.SetParent(btnObj.transform, false);
+            RectTransform btrt = bTextObj.GetComponent<RectTransform>();
+            btrt.anchorMin = Vector2.zero; btrt.anchorMax = Vector2.one;
+            btrt.offsetMin = Vector2.zero; btrt.offsetMax = Vector2.zero;
+            TextMeshProUGUI btmp = bTextObj.GetComponent<TextMeshProUGUI>();
+            btmp.text = "CONFIRMAR";
+            btmp.color = Color.black;
+            btmp.alignment = TextAlignmentOptions.Center;
+            btmp.fontSize = 24;
+
+            Button btn = btnObj.GetComponent<Button>();
+            btn.onClick.AddListener(() => 
+            {
+                if (!string.IsNullOrEmpty(inputField.text))
+                {
+                    PlayerPrefs.SetString("PlayerName", inputField.text);
+                    PlayerPrefs.Save();
+                    
+                    var gm = Object.FindAnyObjectByType<AntiBullyingGame.Core.GameManager>();
+                    if (gm != null) {
+                        // Cambiamos temporalmente el nombre de entidad si queremos, pero en prefs está guardado
+                    }
+
+                    ClearChoices();
+                    if (currentStory.nextDialogueAfterInput != null)
+                        StartDialogueStory(currentStory.nextDialogueAfterInput);
+                    else
+                        FinishDialogueStory();
+                }
+            });
+
+            choiceButtons.Add(btnObj);
         }
 
         // ═══════════════════════════════════════

@@ -110,40 +110,51 @@ public class SceneAutoSetup : EditorWindow
         var soNpc = new SerializedObject(npcClass);
         soNpc.FindProperty("entityName").stringValue = "Sofía";
         
-        // --- Generar Historia de Prueba para Sofía ---
-        string storyPath = "Assets/Stories/Sofia_TestStory.asset";
+        // --- Generar Historia de Prueba para Sofía (2 Partes) ---
         if (!AssetDatabase.IsValidFolder("Assets/Stories")) AssetDatabase.CreateFolder("Assets", "Stories");
         
-        var sofiaStory = AssetDatabase.LoadAssetAtPath<HeartQuest.Core.DialogueData>(storyPath);
-        if (sofiaStory == null)
-        {
-            sofiaStory = ScriptableObject.CreateInstance<HeartQuest.Core.DialogueData>();
-            sofiaStory.moraleChangeOnComplete = 0; // Se decide en las opciones
-            sofiaStory.lines = new HeartQuest.Core.DialogueLine[]
-            {
-                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Hola... ¿eres el nuevo, verdad?" },
-                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Esos chicos de allá me quitaron mis apuntes de matemáticas y los tiraron a la basura." },
-                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Nadie quiere ayudarme porque tienen miedo de que se la agarren con ellos..." }
-            };
-            
-            // Agregar Elecciones
-            sofiaStory.choices = new HeartQuest.Core.DialogueChoice[]
-            {
-                new HeartQuest.Core.DialogueChoice { 
-                    choiceText = "No te preocupes, yo te ayudaré.", 
-                    moraleChange = 15 
-                },
-                new HeartQuest.Core.DialogueChoice { 
-                    choiceText = "Ese no es mi problema.", 
-                    moraleChange = -10 
-                }
-            };
-            
-            AssetDatabase.CreateAsset(sofiaStory, storyPath);
-            AssetDatabase.SaveAssets();
-        }
+        string p1Path = "Assets/Stories/Sofia_Part1.asset";
+        string p2PathAsset = "Assets/Stories/Sofia_Part2.asset";
         
-        soNpc.FindProperty("story").objectReferenceValue = sofiaStory;
+        var story2 = AssetDatabase.LoadAssetAtPath<HeartQuest.Core.DialogueData>(p2PathAsset);
+        if (story2 == null)
+        {
+            story2 = ScriptableObject.CreateInstance<HeartQuest.Core.DialogueData>();
+            story2.moraleChangeOnComplete = 0;
+            story2.lines = new HeartQuest.Core.DialogueLine[]
+            {
+                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Mucho gusto, {PLAYER_NAME}. Qué bueno que estás aquí." },
+                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "No quería decírselo a los profesores, pero esos chicos de allá... me han estado molestando toda la semana." },
+                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Hoy me quitaron mis apuntes de matemáticas y los rompieron frente a todos. Fue horrible." },
+                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Siento que a nadie le importa. Nadie interviene porque tienen miedo de que se la agarren con ellos..." },
+                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Tengo mucho miedo de volver mañana a clases. ¿Crees... crees que estoy exagerando?" }
+            };
+            story2.choices = new HeartQuest.Core.DialogueChoice[]
+            {
+                new HeartQuest.Core.DialogueChoice { choiceText = "Claro que no, te ayudaré a reportarlos.", moraleChange = 25 },
+                new HeartQuest.Core.DialogueChoice { choiceText = "Tal vez sí exageras. Déjalos en paz.", moraleChange = -15 },
+                new HeartQuest.Core.DialogueChoice { choiceText = "Lo siento, pero no me quiero meter en problemas.", moraleChange = -5 }
+            };
+            AssetDatabase.CreateAsset(story2, p2PathAsset);
+        }
+
+        var story1 = AssetDatabase.LoadAssetAtPath<HeartQuest.Core.DialogueData>(p1Path);
+        if (story1 == null)
+        {
+            story1 = ScriptableObject.CreateInstance<HeartQuest.Core.DialogueData>();
+            story1.moraleChangeOnComplete = 0;
+            story1.requiresNameInput = true;
+            story1.nextDialogueAfterInput = story2;
+            story1.lines = new HeartQuest.Core.DialogueLine[]
+            {
+                new HeartQuest.Core.DialogueLine { speakerName = "???", text = "Hola... no te había visto por aquí." },
+                new HeartQuest.Core.DialogueLine { speakerName = "???", text = "Disculpa si me ves llorando... no he tenido un buen día." }
+            };
+            AssetDatabase.CreateAsset(story1, p1Path);
+        }
+        AssetDatabase.SaveAssets();
+        
+        soNpc.FindProperty("story").objectReferenceValue = story1;
         soNpc.ApplyModifiedProperties();
 
         npcObj.GetComponent<SpriteRenderer>().sprite = AssetDatabase.LoadAllAssetsAtPath(p2Path).OfType<Sprite>().FirstOrDefault();
@@ -211,7 +222,77 @@ public class SceneAutoSetup : EditorWindow
         startScript.startButton = btnObj.GetComponent<UnityEngine.UI.Button>();
         startScript.startMenuPanel = panelObj;
 
-        // 9.5 Dialogue System (Estilo Undertale)
+        // 9.5 TopBar (Medidor de Moral Cyberpunk)
+        GameObject topBarObj = new GameObject("TopBar", typeof(RectTransform), typeof(Image));
+        topBarObj.transform.SetParent(canvasObj.transform, false);
+        topBarObj.layer = 5;
+        topBarObj.GetComponent<Image>().color = new Color(0.05f, 0.08f, 0.15f, 0.95f);
+        RectTransform topRT = topBarObj.GetComponent<RectTransform>();
+        topRT.anchorMin = new Vector2(0, 1); topRT.anchorMax = new Vector2(1, 1);
+        topRT.pivot = new Vector2(0.5f, 1);
+        topRT.sizeDelta = new Vector2(0, 80);
+        topRT.anchoredPosition = Vector2.zero;
+
+        var topOutline = topBarObj.AddComponent<UnityEngine.UI.Outline>();
+        topOutline.effectColor = new Color(0.6f, 0.3f, 1f, 1f); // Morado neón
+        topOutline.effectDistance = new Vector2(0, -3);
+
+        // Barra de Moral (Slider)
+        GameObject sliderObj = new GameObject("MoraleSlider", typeof(RectTransform), typeof(Slider));
+        sliderObj.transform.SetParent(topBarObj.transform, false);
+        RectTransform sRT = sliderObj.GetComponent<RectTransform>();
+        sRT.anchorMin = new Vector2(0, 0.5f); sRT.anchorMax = new Vector2(0, 0.5f);
+        sRT.pivot = new Vector2(0, 0.5f);
+        sRT.sizeDelta = new Vector2(400, 40);
+        sRT.anchoredPosition = new Vector2(40, 0);
+
+        Slider slider = sliderObj.GetComponent<Slider>();
+        slider.interactable = false;
+        slider.transition = Selectable.Transition.None;
+        slider.minValue = 0; slider.maxValue = 100; slider.value = 50;
+
+        GameObject bgObj = new GameObject("Background", typeof(RectTransform), typeof(Image));
+        bgObj.transform.SetParent(sliderObj.transform, false);
+        RectTransform bgRT = bgObj.GetComponent<RectTransform>();
+        bgRT.anchorMin = Vector2.zero; bgRT.anchorMax = Vector2.one;
+        bgRT.sizeDelta = Vector2.zero;
+        bgObj.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.1f, 1f);
+
+        GameObject fillArea = new GameObject("Fill Area", typeof(RectTransform));
+        fillArea.transform.SetParent(sliderObj.transform, false);
+        RectTransform faRT = fillArea.GetComponent<RectTransform>();
+        faRT.anchorMin = Vector2.zero; faRT.anchorMax = Vector2.one;
+        faRT.sizeDelta = new Vector2(-10, -10);
+
+        GameObject fillObj = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+        fillObj.transform.SetParent(fillArea.transform, false);
+        RectTransform fRT = fillObj.GetComponent<RectTransform>();
+        fRT.anchorMin = Vector2.zero; fRT.anchorMax = Vector2.one;
+        fRT.sizeDelta = Vector2.zero;
+        fillObj.GetComponent<Image>().color = new Color(0f, 0.898f, 1f, 1f); // Cian neón
+        slider.fillRect = fRT;
+
+        // Texto de Moral
+        GameObject mTextObj = new GameObject("MoraleText", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
+        mTextObj.transform.SetParent(topBarObj.transform, false);
+        RectTransform mtRT = mTextObj.GetComponent<RectTransform>();
+        mtRT.anchorMin = new Vector2(0, 0.5f); mtRT.anchorMax = new Vector2(0, 0.5f);
+        mtRT.pivot = new Vector2(0, 0.5f);
+        mtRT.sizeDelta = new Vector2(200, 40);
+        mtRT.anchoredPosition = new Vector2(460, 0);
+
+        var mTmp = mTextObj.GetComponent<TMPro.TextMeshProUGUI>();
+        mTmp.text = "MORAL: 50/100";
+        mTmp.fontSize = 30;
+        mTmp.color = Color.white;
+        mTmp.alignment = TMPro.TextAlignmentOptions.Left;
+
+        // Añadir el script Observador
+        var moraleScript = topBarObj.AddComponent<HeartQuest.UI.MoraleUI>();
+        moraleScript.moraleSlider = slider;
+        moraleScript.moraleText = mTmp;
+
+        // 9.6 Dialogue System (Estilo Undertale)
         GameObject dialogueObj = new GameObject("DialogueBox", typeof(RectTransform), typeof(Image));
         dialogueObj.transform.SetParent(canvasObj.transform, false);
         dialogueObj.layer = 5;

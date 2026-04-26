@@ -33,6 +33,10 @@ namespace HeartQuest.Core
         [Tooltip("Si dejas esto vacío, el diálogo simplemente terminará. Si pones opciones, el jugador deberá elegir.")]
         public DialogueChoice[] choices;
 
+        [Header("Input Especial (Guardar Nombre)")]
+        public bool requiresNameInput = false;
+        public DialogueData nextDialogueAfterInput;
+
         [Header("Consecuencias por Defecto (Si no hay elecciones)")]
         [Tooltip("Cantidad de moral a sumar (positivo) o restar (negativo) al terminar de hablar.")]
         public int moraleChangeOnComplete = 0;
