@@ -15,6 +15,6 @@ namespace AntiBullyingGame.Core
     /// </summary>
     public interface IObserver
     {
-        void OnMoraleUpdated(int currentMorale);
+        void OnStatsUpdated(int hp, int maxHp, int morale, int maxMorale, int xp, int maxXp, int level);
     }
 }

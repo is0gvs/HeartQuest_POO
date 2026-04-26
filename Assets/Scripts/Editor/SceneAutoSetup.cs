@@ -222,75 +222,118 @@ public class SceneAutoSetup : EditorWindow
         startScript.startButton = btnObj.GetComponent<UnityEngine.UI.Button>();
         startScript.startMenuPanel = panelObj;
 
-        // 9.5 TopBar (Medidor de Moral Cyberpunk)
-        GameObject topBarObj = new GameObject("TopBar", typeof(RectTransform), typeof(Image));
-        topBarObj.transform.SetParent(canvasObj.transform, false);
-        topBarObj.layer = 5;
-        topBarObj.GetComponent<Image>().color = new Color(0.05f, 0.08f, 0.15f, 0.95f);
-        RectTransform topRT = topBarObj.GetComponent<RectTransform>();
-        topRT.anchorMin = new Vector2(0, 1); topRT.anchorMax = new Vector2(1, 1);
-        topRT.pivot = new Vector2(0.5f, 1);
-        topRT.sizeDelta = new Vector2(0, 80);
-        topRT.anchoredPosition = Vector2.zero;
+        // 9.5 RPG Stats UI (Top Left, Estilo Undertale Moderno)
+        GameObject statsPanelObj = new GameObject("PlayerStatsUI", typeof(RectTransform), typeof(Image));
+        statsPanelObj.transform.SetParent(canvasObj.transform, false);
+        statsPanelObj.layer = 5;
+        
+        var statsImg = statsPanelObj.GetComponent<Image>();
+        statsImg.color = new Color(0.05f, 0.05f, 0.08f, 0.9f); // Fondo oscuro para visibilidad
+        
+        RectTransform statsRT = statsPanelObj.GetComponent<RectTransform>();
+        statsRT.anchorMin = new Vector2(0, 1); statsRT.anchorMax = new Vector2(0, 1);
+        statsRT.pivot = new Vector2(0, 1);
+        statsRT.sizeDelta = new Vector2(400, 70); // Más pequeño porque es solo 1 barra
+        statsRT.anchoredPosition = new Vector2(20, -20); // Margen superior izquierdo
 
-        var topOutline = topBarObj.AddComponent<UnityEngine.UI.Outline>();
-        topOutline.effectColor = new Color(0.6f, 0.3f, 1f, 1f); // Morado neón
-        topOutline.effectDistance = new Vector2(0, -3);
+        var statsScript = statsPanelObj.AddComponent<HeartQuest.UI.PlayerStatsUI>();
 
-        // Barra de Moral (Slider)
-        GameObject sliderObj = new GameObject("MoraleSlider", typeof(RectTransform), typeof(Slider));
-        sliderObj.transform.SetParent(topBarObj.transform, false);
-        RectTransform sRT = sliderObj.GetComponent<RectTransform>();
-        sRT.anchorMin = new Vector2(0, 0.5f); sRT.anchorMax = new Vector2(0, 0.5f);
-        sRT.pivot = new Vector2(0, 0.5f);
-        sRT.sizeDelta = new Vector2(400, 40);
-        sRT.anchoredPosition = new Vector2(40, 0);
+        // Datos para generar la barra de Moral
+        string[] statNames = { "MORAL" };
+        Color[] fillColors = { 
+            new Color(0.15f, 0.5f, 0.8f, 1f) // Azul apagado (MP / Moral)
+        };
+        
+        for (int i = 0; i < 1; i++)
+        {
+            float yPos = -(i * 45); // Espaciado vertical
 
-        Slider slider = sliderObj.GetComponent<Slider>();
-        slider.interactable = false;
-        slider.transition = Selectable.Transition.None;
-        slider.minValue = 0; slider.maxValue = 100; slider.value = 50;
+            // Row Container
+            GameObject rowObj = new GameObject(statNames[i] + "_Row", typeof(RectTransform));
+            rowObj.transform.SetParent(statsPanelObj.transform, false);
+            RectTransform rowRT = rowObj.GetComponent<RectTransform>();
+            rowRT.anchorMin = new Vector2(0, 1); rowRT.anchorMax = new Vector2(1, 1);
+            rowRT.pivot = new Vector2(0, 1);
+            rowRT.sizeDelta = new Vector2(400, 30);
+            rowRT.anchoredPosition = new Vector2(0, yPos);
 
-        GameObject bgObj = new GameObject("Background", typeof(RectTransform), typeof(Image));
-        bgObj.transform.SetParent(sliderObj.transform, false);
-        RectTransform bgRT = bgObj.GetComponent<RectTransform>();
-        bgRT.anchorMin = Vector2.zero; bgRT.anchorMax = Vector2.one;
-        bgRT.sizeDelta = Vector2.zero;
-        bgObj.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.1f, 1f);
+            // Label (e.g. "MORAL")
+            GameObject labelObj = new GameObject("Label", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
+            labelObj.transform.SetParent(rowObj.transform, false);
+            RectTransform lRT = labelObj.GetComponent<RectTransform>();
+            lRT.anchorMin = new Vector2(0, 0.5f); lRT.anchorMax = new Vector2(0, 0.5f);
+            lRT.pivot = new Vector2(0, 0.5f);
+            lRT.sizeDelta = new Vector2(90, 30); // Más ancho para la palabra MORAL
+            lRT.anchoredPosition = new Vector2(15, 0); // Margen interno
 
-        GameObject fillArea = new GameObject("Fill Area", typeof(RectTransform));
-        fillArea.transform.SetParent(sliderObj.transform, false);
-        RectTransform faRT = fillArea.GetComponent<RectTransform>();
-        faRT.anchorMin = Vector2.zero; faRT.anchorMax = Vector2.one;
-        faRT.sizeDelta = new Vector2(-10, -10);
+            var lTmp = labelObj.GetComponent<TMPro.TextMeshProUGUI>();
+            lTmp.text = statNames[i];
+            lTmp.fontSize = 20;
+            lTmp.fontStyle = TMPro.FontStyles.Bold;
+            lTmp.color = new Color(0.8f, 0.75f, 0.7f, 1f); // Gris más claro para visibilidad
+            lTmp.alignment = TMPro.TextAlignmentOptions.Left;
 
-        GameObject fillObj = new GameObject("Fill", typeof(RectTransform), typeof(Image));
-        fillObj.transform.SetParent(fillArea.transform, false);
-        RectTransform fRT = fillObj.GetComponent<RectTransform>();
-        fRT.anchorMin = Vector2.zero; fRT.anchorMax = Vector2.one;
-        fRT.sizeDelta = Vector2.zero;
-        fillObj.GetComponent<Image>().color = new Color(0f, 0.898f, 1f, 1f); // Cian neón
-        slider.fillRect = fRT;
+            // Slider
+            GameObject sliderObj = new GameObject("Slider", typeof(RectTransform), typeof(Slider));
+            sliderObj.transform.SetParent(rowObj.transform, false);
+            RectTransform sRT = sliderObj.GetComponent<RectTransform>();
+            sRT.anchorMin = new Vector2(0, 0.5f); sRT.anchorMax = new Vector2(0, 0.5f);
+            sRT.pivot = new Vector2(0, 0.5f);
+            sRT.sizeDelta = new Vector2(160, 18);
+            sRT.anchoredPosition = new Vector2(100, 0);
 
-        // Texto de Moral
-        GameObject mTextObj = new GameObject("MoraleText", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
-        mTextObj.transform.SetParent(topBarObj.transform, false);
-        RectTransform mtRT = mTextObj.GetComponent<RectTransform>();
-        mtRT.anchorMin = new Vector2(0, 0.5f); mtRT.anchorMax = new Vector2(0, 0.5f);
-        mtRT.pivot = new Vector2(0, 0.5f);
-        mtRT.sizeDelta = new Vector2(200, 40);
-        mtRT.anchoredPosition = new Vector2(460, 0);
+            Slider slider = sliderObj.GetComponent<Slider>();
+            slider.interactable = false;
+            slider.transition = Selectable.Transition.None;
 
-        var mTmp = mTextObj.GetComponent<TMPro.TextMeshProUGUI>();
-        mTmp.text = "MORAL: 50/100";
-        mTmp.fontSize = 30;
-        mTmp.color = Color.white;
-        mTmp.alignment = TMPro.TextAlignmentOptions.Left;
+            // Slider Background
+            GameObject bgObj = new GameObject("Background", typeof(RectTransform), typeof(Image));
+            bgObj.transform.SetParent(sliderObj.transform, false);
+            RectTransform bgRT = bgObj.GetComponent<RectTransform>();
+            bgRT.anchorMin = Vector2.zero; bgRT.anchorMax = Vector2.one;
+            bgRT.sizeDelta = Vector2.zero;
+            var bgImg = bgObj.GetComponent<Image>();
+            bgImg.color = new Color(0.15f, 0.15f, 0.18f, 1f);
+            
+            // Borde redondeado sutil
+            var bgOutline = bgObj.AddComponent<UnityEngine.UI.Outline>();
+            bgOutline.effectColor = new Color(0.25f, 0.25f, 0.3f, 1f);
+            bgOutline.effectDistance = new Vector2(1, -1);
 
-        // Añadir el script Observador
-        var moraleScript = topBarObj.AddComponent<HeartQuest.UI.MoraleUI>();
-        moraleScript.moraleSlider = slider;
-        moraleScript.moraleText = mTmp;
+            // Slider Fill Area
+            GameObject fillArea = new GameObject("Fill Area", typeof(RectTransform));
+            fillArea.transform.SetParent(sliderObj.transform, false);
+            RectTransform faRT = fillArea.GetComponent<RectTransform>();
+            faRT.anchorMin = Vector2.zero; faRT.anchorMax = Vector2.one;
+            faRT.sizeDelta = new Vector2(-4, -4); // Padding interno
+
+            GameObject fillObj = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+            fillObj.transform.SetParent(fillArea.transform, false);
+            RectTransform fRT = fillObj.GetComponent<RectTransform>();
+            fRT.anchorMin = Vector2.zero; fRT.anchorMax = Vector2.one;
+            fRT.sizeDelta = Vector2.zero;
+            fillObj.GetComponent<Image>().color = fillColors[i];
+            slider.fillRect = fRT;
+
+            // Value Text (e.g. "70/200")
+            GameObject valObj = new GameObject("Value", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
+            valObj.transform.SetParent(rowObj.transform, false);
+            RectTransform vRT = valObj.GetComponent<RectTransform>();
+            vRT.anchorMin = new Vector2(0, 0.5f); vRT.anchorMax = new Vector2(0, 0.5f);
+            vRT.pivot = new Vector2(0, 0.5f);
+            vRT.sizeDelta = new Vector2(120, 30);
+            vRT.anchoredPosition = new Vector2(275, 0);
+
+            var vTmp = valObj.GetComponent<TMPro.TextMeshProUGUI>();
+            vTmp.text = "";
+            vTmp.fontSize = 20;
+            vTmp.fontStyle = TMPro.FontStyles.Bold;
+            vTmp.color = new Color(0.8f, 0.75f, 0.7f, 1f); // Gris más claro
+            vTmp.alignment = TMPro.TextAlignmentOptions.Left;
+
+            // Asignar al script (i=0 es Moral en esta configuración)
+            if (i == 0) { statsScript.mpSlider = slider; statsScript.mpText = vTmp; }
+        }
 
         // 9.6 Dialogue System (Estilo Undertale)
         GameObject dialogueObj = new GameObject("DialogueBox", typeof(RectTransform), typeof(Image));

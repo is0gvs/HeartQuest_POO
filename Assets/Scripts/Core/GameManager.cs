@@ -11,8 +11,23 @@ namespace AntiBullyingGame.Core
     public class GameManager : MonoBehaviour, ISubject
     {
         [Header("Player Stats")]
-        [SerializeField] private int currentMorale = 100;
-        public int CurrentMorale => currentMorale; // Encapsulamiento
+        [SerializeField] private int maxHp = 500;
+        [SerializeField] private int currentHp = 280;
+        
+        [SerializeField] private int maxMorale = 200;
+        [SerializeField] private int currentMorale = 70;
+        
+        [SerializeField] private int currentXp = 0;
+        [SerializeField] private int maxXp = 100;
+        [SerializeField] private int currentLevel = 14;
+
+        public int CurrentHp => currentHp;
+        public int MaxHp => maxHp;
+        public int CurrentMorale => currentMorale;
+        public int MaxMorale => maxMorale;
+        public int CurrentXp => currentXp;
+        public int MaxXp => maxXp;
+        public int CurrentLevel => currentLevel;
 
         [Header("Game State")]
         public bool IsInTowerDefenseMode { get; private set; }
@@ -34,10 +49,9 @@ namespace AntiBullyingGame.Core
 
         public void NotifyObservers()
         {
-            // Notificamos a todos los que estén suscritos (ej. el sistema de salud en pantalla)
             foreach (var obs in observers)
             {
-                obs.OnMoraleUpdated(currentMorale);
+                obs.OnStatsUpdated(currentHp, maxHp, currentMorale, maxMorale, currentXp, maxXp, currentLevel);
             }
         }
 
@@ -45,6 +59,7 @@ namespace AntiBullyingGame.Core
         public void AddMorale(int amount)
         {
             currentMorale += amount;
+            if (currentMorale > maxMorale) currentMorale = maxMorale;
             Debug.Log($"Moral actual: {currentMorale}");
             NotifyObservers(); 
         }
@@ -52,6 +67,7 @@ namespace AntiBullyingGame.Core
         public void DeductMorale(int amount)
         {
             currentMorale -= amount;
+            if (currentMorale < 0) currentMorale = 0;
             Debug.Log($"Moral actual: {currentMorale}");
             NotifyObservers();
 
@@ -59,6 +75,25 @@ namespace AntiBullyingGame.Core
             {
                 SwitchToTowerDefenseMode();
             }
+        }
+
+        public void TakeDamage(int amount)
+        {
+            currentHp -= amount;
+            if (currentHp < 0) currentHp = 0;
+            NotifyObservers();
+        }
+
+        public void AddXp(int amount)
+        {
+            currentXp += amount;
+            if (currentXp >= maxXp)
+            {
+                currentLevel++;
+                currentXp -= maxXp;
+                maxXp = Mathf.RoundToInt(maxXp * 1.5f);
+            }
+            NotifyObservers();
         }
 
         private void SwitchToTowerDefenseMode()
