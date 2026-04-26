@@ -40,9 +40,14 @@ namespace AntiBullyingGame.RPG
 
         private void HandleMovement()
         {
-            // Movimiento usando Input básico de Unity
-            float moveX = Input.GetAxisRaw("Horizontal"); // Flechas o A/D
-            float moveY = Input.GetAxisRaw("Vertical");   // Flechas o W/S
+            // Movimiento usando WASD
+            float moveX = 0f;
+            float moveY = 0f;
+
+            if (Input.GetKey(KeyCode.W)) moveY = 1f;
+            if (Input.GetKey(KeyCode.S)) moveY = -1f;
+            if (Input.GetKey(KeyCode.A)) moveX = -1f;
+            if (Input.GetKey(KeyCode.D)) moveX = 1f;
 
             Vector3 moveDir = new Vector3(moveX, moveY, 0).normalized;
             
