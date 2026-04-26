@@ -107,7 +107,9 @@ public class SceneAutoSetup : EditorWindow
         npcObj.AddComponent<SpriteRenderer>().sortingOrder = 9;
         npcObj.AddComponent<Animator>().runtimeAnimatorController = AnimationBuilder.GeneratePlayerAnimator(p2Path);
         var npcClass = npcObj.AddComponent<Victim>();
-        npcClass.entityName = "Sofía";
+        var soNpc = new SerializedObject(npcClass);
+        soNpc.FindProperty("entityName").stringValue = "Sofía";
+        soNpc.ApplyModifiedProperties();
         npcObj.GetComponent<SpriteRenderer>().sprite = AssetDatabase.LoadAllAssetsAtPath(p2Path).OfType<Sprite>().FirstOrDefault();
         
         // Físicas para NPC
@@ -123,7 +125,9 @@ public class SceneAutoSetup : EditorWindow
         bullyObj.AddComponent<SpriteRenderer>().sortingOrder = 9;
         bullyObj.AddComponent<Animator>().runtimeAnimatorController = AnimationBuilder.GeneratePlayerAnimator(p1Path);
         var bClass = bullyObj.AddComponent<Bully>();
-        bClass.entityName = "Gastón";
+        var soBully = new SerializedObject(bClass);
+        soBully.FindProperty("entityName").stringValue = "Gastón";
+        soBully.ApplyModifiedProperties();
         bullyObj.GetComponent<SpriteRenderer>().sprite = AssetDatabase.LoadAllAssetsAtPath(p1Path).OfType<Sprite>().FirstOrDefault();
         bullyObj.GetComponent<SpriteRenderer>().color = new Color(1f, 0.6f, 0.6f); // Tinto para diferenciarlo
         
@@ -142,7 +146,7 @@ public class SceneAutoSetup : EditorWindow
         // pero podemos eliminar la luz o dejarla si usan URP.
 
         // 9. UI Canvas (Start Menu & UI System)
-        if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+        if (Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
         {
             new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.EventSystems.StandaloneInputModule));
         }

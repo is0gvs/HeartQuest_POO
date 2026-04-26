@@ -30,7 +30,7 @@ public class MainMenuAutoSetup
         if (cam != null) cam.backgroundColor = bgColor;
 
         // EventSystem
-        if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+        if (Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
             new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.EventSystems.StandaloneInputModule));
 
         // Canvas
