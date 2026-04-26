@@ -119,24 +119,6 @@ public class SceneAutoSetup : EditorWindow
         nCol.size = new Vector2(0.8f, 0.8f);
         nCol.offset = new Vector2(0, 0.4f);
 
-        // 7.5. Bully (Opcional, añadimos uno para probar)
-        GameObject bullyObj = new GameObject("Bully_Gaston");
-        bullyObj.transform.position = new Vector3(-4, 2, 0);
-        bullyObj.AddComponent<SpriteRenderer>().sortingOrder = 9;
-        bullyObj.AddComponent<Animator>().runtimeAnimatorController = AnimationBuilder.GeneratePlayerAnimator(p1Path);
-        var bClass = bullyObj.AddComponent<Bully>();
-        var soBully = new SerializedObject(bClass);
-        soBully.FindProperty("entityName").stringValue = "Gastón";
-        soBully.ApplyModifiedProperties();
-        bullyObj.GetComponent<SpriteRenderer>().sprite = AssetDatabase.LoadAllAssetsAtPath(p1Path).OfType<Sprite>().FirstOrDefault();
-        bullyObj.GetComponent<SpriteRenderer>().color = new Color(1f, 0.6f, 0.6f); // Tinto para diferenciarlo
-        
-        var bRb = bullyObj.AddComponent<Rigidbody2D>();
-        bRb.bodyType = RigidbodyType2D.Static;
-        var bCol = bullyObj.AddComponent<BoxCollider2D>();
-        bCol.size = new Vector2(0.8f, 0.8f);
-        bCol.offset = new Vector2(0, 0.4f);
-
         // 7.8 GameManager
         GameObject gmObj = new GameObject("GameManager");
         gmObj.AddComponent<GameManager>();

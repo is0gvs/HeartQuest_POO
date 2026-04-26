@@ -41,11 +41,8 @@ namespace AntiBullyingGame.RPG
 
         private void FixedUpdate()
         {
-            // El movimiento físico se hace en FixedUpdate
-            if (currentMoveDir != Vector3.zero)
-            {
-                Move(currentMoveDir, moveSpeed);
-            }
+            // El movimiento físico se hace en FixedUpdate, siempre llamamos a Move para que actualice la velocidad
+            Move(currentMoveDir, moveSpeed);
         }
 
         private void HandleMovementInput()
@@ -97,20 +94,26 @@ namespace AntiBullyingGame.RPG
             
             Debug.DrawRay(origin, facingDir * 1.5f, Color.green, 1f); // Para depuración en el Editor
 
-            RaycastHit2D hit = Physics2D.Raycast(origin, facingDir, 1.5f);
+            RaycastHit2D[] hits = Physics2D.RaycastAll(origin, facingDir, 1.5f);
+            bool interacted = false;
 
-            if (hit.collider != null)
+            foreach (var hit in hits)
             {
-                // Si chocamos con algo, buscamos si tiene el componente (Interfaz) IInteractable
-                IInteractable interactableObj = hit.collider.GetComponent<IInteractable>();
-                
-                if (interactableObj != null)
+                if (hit.collider != null && hit.collider.gameObject != this.gameObject)
                 {
-                    Debug.Log($"Interactuando con: {hit.collider.gameObject.name}");
-                    interactableObj.Interact(); // Aplicamos polimorfismo
+                    IInteractable interactableObj = hit.collider.GetComponent<IInteractable>();
+                    
+                    if (interactableObj != null)
+                    {
+                        Debug.Log($"Interactuando con: {hit.collider.gameObject.name}");
+                        interactableObj.Interact(); // Aplicamos polimorfismo
+                        interacted = true;
+                        break; // Solo interactuamos con el primero que encontremos
+                    }
                 }
             }
-            else
+
+            if (!interacted)
             {
                 Debug.Log("No hay nada con qué interactuar aquí.");
             }

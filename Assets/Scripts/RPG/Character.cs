@@ -29,7 +29,7 @@ namespace AntiBullyingGame.RPG
             // Movimiento usando Físicas 2D para que las paredes y colisiones funcionen
             if (rb != null)
             {
-                rb.MovePosition(rb.position + (Vector2)direction * speed * Time.fixedDeltaTime);
+                rb.linearVelocity = direction * speed;
             }
             else
             {
