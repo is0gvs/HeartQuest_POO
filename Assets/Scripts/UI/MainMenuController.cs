@@ -16,22 +16,22 @@ namespace HeartQuest.UI
     {
         [Header("── Escenas ──")]
         [Tooltip("Nombre de la escena que se carga al presionar Continuar o Nuevo Juego")]
-        [SerializeField] private string sceneToLoad = "ClassroomScene";
+        [SerializeField] private string sceneToLoad = "Escuela";
 
         [Header("── Paneles Principales ──")]
-        [SerializeField] private GameObject leftMenu;
-        [SerializeField] private GameObject rightPanel;
-        [SerializeField] private GameObject centerVisual;
-        [SerializeField] private GameObject topBar;
-        [SerializeField] private GameObject bottomDialogue;
+        public GameObject leftMenu;
+        public GameObject rightPanel;
+        public GameObject centerVisual;
+        public GameObject topBar;
+        public GameObject bottomDialogue;
 
         [Header("── Fade In ──")]
-        [SerializeField] private CanvasGroup fadeOverlay;
-        [SerializeField] private float fadeDuration = 1.5f;
+        public CanvasGroup fadeOverlay;
+        public float fadeDuration = 1.5f;
 
         [Header("── Navegación por Teclado ──")]
-        [SerializeField] private List<Button> menuButtons = new List<Button>();
-        private int currentIndex = 0;
+        public List<Button> menuButtons = new List<Button>();
+        public int currentIndex = 0;
 
         private void Start()
         {
@@ -59,6 +59,16 @@ namespace HeartQuest.UI
         private void HandleKeyboardNavigation()
         {
             if (menuButtons.Count == 0) return;
+
+            // NO procesar input si el menú no está visible
+            if (!gameObject.activeInHierarchy) return;
+            // Verificar que el panel padre esté activo también
+            Transform p = transform;
+            while (p != null)
+            {
+                if (!p.gameObject.activeSelf) return;
+                p = p.parent;
+            }
 
             if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
             {
@@ -90,6 +100,15 @@ namespace HeartQuest.UI
         // ═══════════════════════════════════════
         // MÉTODOS PÚBLICOS PARA BOTONES
         // ═══════════════════════════════════════
+
+        /// <summary>
+        /// Start Game
+        /// </summary>
+        public void OnStartGame()
+        {
+            Debug.Log("[HeartQuest] Starting Game...");
+            SceneManager.LoadScene(sceneToLoad);
+        }
 
         /// <summary>
         /// Continuar partida / Nuevo Juego → carga la escena del juego.

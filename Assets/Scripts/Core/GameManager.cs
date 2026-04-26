@@ -35,6 +35,38 @@ namespace AntiBullyingGame.Core
         // Lista de objetos que "observan" a este GameManager (Patrón de Diseño Observer)
         private List<IObserver> observers = new List<IObserver>();
 
+        private void Awake()
+        {
+            // Asegurar que el GameManager sobreviva al cambio de escena
+            DontDestroyOnLoad(gameObject);
+        }
+
+        private void OnEnable()
+        {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnDisable()
+        {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            if (scene.name == "main scene")
+            {
+                // Configurar cámara de batalla
+                Camera mainCam = Camera.main;
+                if (mainCam != null)
+                {
+                    mainCam.clearFlags = CameraClearFlags.SolidColor;
+                    mainCam.backgroundColor = Color.black;
+                }
+                Time.timeScale = 1f;
+                Debug.Log("Configuración de Batalla Aplicada: Fondo Negro.");
+            }
+        }
+
         // Métodos de la interfaz ISubject
         public void Attach(IObserver observer)
         {
@@ -100,6 +132,21 @@ namespace AntiBullyingGame.Core
         {
             IsInTowerDefenseMode = true;
             Debug.Log("Moral demasiado baja: ¡Cambiando al estado de Defender!");
+        }
+
+        public void StartBattle()
+        {
+            Debug.Log("Iniciando Batalla Undertale...");
+            
+            // Ocultar la UI de la escuela para que no tape la batalla
+            GameObject ui = GameObject.Find("UI_Presentation");
+            if (ui != null) ui.SetActive(false);
+
+            // Asegurar que el tiempo esté corriendo antes del cambio
+            Time.timeScale = 1f;
+
+            // Carga la escena principal del paquete de Undertale usando su ruta completa para evitar errores de Perfil en Unity 6
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Assets/Examples/Scenes/main scene.unity");
         }
     }
 }

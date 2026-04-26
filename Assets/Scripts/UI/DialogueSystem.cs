@@ -270,16 +270,37 @@ namespace HeartQuest.UI
         private void FinishDialogueStory()
         {
             HideDialogue();
-            if (currentStory != null && currentStory.moraleChangeOnComplete != 0)
+            
+            bool shouldTriggerBattle = false;
+            
+            if (currentStory != null)
+            {
+                if (currentStory.moraleChangeOnComplete != 0)
+                {
+                    var gm = Object.FindAnyObjectByType<AntiBullyingGame.Core.GameManager>();
+                    if (gm != null)
+                    {
+                        if (currentStory.moraleChangeOnComplete > 0) gm.AddMorale(currentStory.moraleChangeOnComplete);
+                        else gm.DeductMorale(-currentStory.moraleChangeOnComplete);
+                    }
+                }
+                
+                if (currentStory.triggersBattle)
+                {
+                    shouldTriggerBattle = true;
+                }
+            }
+            
+            currentStory = null;
+            
+            if (shouldTriggerBattle)
             {
                 var gm = Object.FindAnyObjectByType<AntiBullyingGame.Core.GameManager>();
                 if (gm != null)
                 {
-                    if (currentStory.moraleChangeOnComplete > 0) gm.AddMorale(currentStory.moraleChangeOnComplete);
-                    else gm.DeductMorale(-currentStory.moraleChangeOnComplete);
+                    gm.StartBattle();
                 }
             }
-            currentStory = null;
         }
 
         private void SpawnNameInput()
