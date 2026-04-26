@@ -113,10 +113,10 @@ public class SceneAutoSetup : EditorWindow
         // --- Generar Historia de Prueba para Sofía (2 Partes) ---
         if (!AssetDatabase.IsValidFolder("Assets/Stories")) AssetDatabase.CreateFolder("Assets", "Stories");
         
-        string p1Path = "Assets/Stories/Sofia_Part1.asset";
-        string p2PathAsset = "Assets/Stories/Sofia_Part2.asset";
+        string story1Path = "Assets/Stories/Sofia_Part1.asset";
+        string story2Path = "Assets/Stories/Sofia_Part2.asset";
         
-        var story2 = AssetDatabase.LoadAssetAtPath<HeartQuest.Core.DialogueData>(p2PathAsset);
+        var story2 = AssetDatabase.LoadAssetAtPath<HeartQuest.Core.DialogueData>(story2Path);
         if (story2 == null)
         {
             story2 = ScriptableObject.CreateInstance<HeartQuest.Core.DialogueData>();
@@ -135,10 +135,10 @@ public class SceneAutoSetup : EditorWindow
                 new HeartQuest.Core.DialogueChoice { choiceText = "Tal vez sí exageras. Déjalos en paz.", moraleChange = -15 },
                 new HeartQuest.Core.DialogueChoice { choiceText = "Lo siento, pero no me quiero meter en problemas.", moraleChange = -5 }
             };
-            AssetDatabase.CreateAsset(story2, p2PathAsset);
+            AssetDatabase.CreateAsset(story2, story2Path);
         }
 
-        var story1 = AssetDatabase.LoadAssetAtPath<HeartQuest.Core.DialogueData>(p1Path);
+        var story1 = AssetDatabase.LoadAssetAtPath<HeartQuest.Core.DialogueData>(story1Path);
         if (story1 == null)
         {
             story1 = ScriptableObject.CreateInstance<HeartQuest.Core.DialogueData>();
@@ -150,7 +150,7 @@ public class SceneAutoSetup : EditorWindow
                 new HeartQuest.Core.DialogueLine { speakerName = "???", text = "Hola... no te había visto por aquí." },
                 new HeartQuest.Core.DialogueLine { speakerName = "???", text = "Disculpa si me ves llorando... no he tenido un buen día." }
             };
-            AssetDatabase.CreateAsset(story1, p1Path);
+            AssetDatabase.CreateAsset(story1, story1Path);
         }
         AssetDatabase.SaveAssets();
         

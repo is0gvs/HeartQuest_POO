@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48523a17e88479544aecb45b66eb2bb6, type: 3}
+  m_Name: Sofia_Part2
+  m_EditorClassIdentifier: Assembly-CSharp::HeartQuest.Core.DialogueData
+  lines:
+  - speakerName: "Sof\xEDa"
+    text: "Mucho gusto, {PLAYER_NAME}. Qu\xE9 bueno que est\xE1s aqu\xED."
+    portrait: {fileID: 0}
+  - speakerName: "Sof\xEDa"
+    text: "No quer\xEDa dec\xEDrselo a los profesores, pero esos chicos de all\xE1...
+      me han estado molestando toda la semana."
+    portrait: {fileID: 0}
+  - speakerName: "Sof\xEDa"
+    text: "Hoy me quitaron mis apuntes de matem\xE1ticas y los rompieron frente a
+      todos. Fue horrible."
+    portrait: {fileID: 0}
+  - speakerName: "Sof\xEDa"
+    text: Siento que a nadie le importa. Nadie interviene porque tienen miedo de
+      que se la agarren con ellos...
+    portrait: {fileID: 0}
+  - speakerName: "Sof\xEDa"
+    text: "Tengo mucho miedo de volver ma\xF1ana a clases. \xBFCrees... crees que
+      estoy exagerando?"
+    portrait: {fileID: 0}
+  choices:
+  - choiceText: "Claro que no, te ayudar\xE9 a reportarlos."
+    nextDialogue: {fileID: 0}
+    moraleChange: 25
+  - choiceText: "Tal vez s\xED exageras. D\xE9jalos en paz."
+    nextDialogue: {fileID: 0}
+    moraleChange: -15
+  - choiceText: Lo siento, pero no me quiero meter en problemas.
+    nextDialogue: {fileID: 0}
+    moraleChange: -5
+  requiresNameInput: 0
+  nextDialogueAfterInput: {fileID: 0}
+  moraleChangeOnComplete: 0
