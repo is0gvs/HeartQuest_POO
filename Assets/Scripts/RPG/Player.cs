@@ -47,6 +47,20 @@ namespace AntiBullyingGame.RPG
 
         private void HandleMovementInput()
         {
+            // Bloquear movimiento si el diálogo está activo
+            var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>(FindObjectsInactive.Include);
+            if (ds != null && ds.gameObject.activeSelf)
+            {
+                currentMoveDir = Vector3.zero;
+                if (animator != null)
+                {
+                    animator.SetFloat("moveX", lastMoveX);
+                    animator.SetFloat("moveY", lastMoveY);
+                    animator.SetBool("isWalking", false);
+                }
+                return;
+            }
+
             // Movimiento usando WASD
             float moveX = 0f;
             float moveY = 0f;
