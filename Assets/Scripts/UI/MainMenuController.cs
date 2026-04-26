@@ -1,77 +1,173 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using System.Collections;
+using System.Collections.Generic;
 
-namespace AntiBullyingGame.UI
+namespace HeartQuest.UI
 {
     /// <summary>
-    /// Controlador para la Interfaz del Menú Principal.
-    /// Administra la navegación entre el menú principal, opciones y la carga de escenas.
+    /// Controlador principal del Menú Cyberpunk de HeartQuest.
+    /// Maneja navegación por teclado/mouse, transiciones entre paneles,
+    /// y el fade-in inicial de la interfaz.
     /// </summary>
-    public class MainMenuController : MonoBehaviour
+    public class MenuController : MonoBehaviour
     {
-        [Header("Escena a Cargar")]
-        [Tooltip("El nombre exacto de la escena que se cargará al dar click en Jugar (Ej: 'ClassroomScene')")]
+        [Header("── Escenas ──")]
+        [Tooltip("Nombre de la escena que se carga al presionar Continuar o Nuevo Juego")]
         [SerializeField] private string sceneToLoad = "ClassroomScene";
 
-        [Header("Paneles de Interfaz")]
-        [Tooltip("Referencia al panel principal del menú")]
-        [SerializeField] private GameObject mainPanel;
-        
-        [Tooltip("Referencia al panel de opciones o configuraciones")]
-        [SerializeField] private GameObject optionsPanel;
+        [Header("── Paneles Principales ──")]
+        [SerializeField] private GameObject leftMenu;
+        [SerializeField] private GameObject rightPanel;
+        [SerializeField] private GameObject centerVisual;
+        [SerializeField] private GameObject topBar;
+        [SerializeField] private GameObject bottomDialogue;
+
+        [Header("── Fade In ──")]
+        [SerializeField] private CanvasGroup fadeOverlay;
+        [SerializeField] private float fadeDuration = 1.5f;
+
+        [Header("── Navegación por Teclado ──")]
+        [SerializeField] private List<Button> menuButtons = new List<Button>();
+        private int currentIndex = 0;
 
         private void Start()
         {
-            // Asegurarse de que al iniciar el menú, el panel principal esté activo y opciones esté apagado.
-            ShowMainPanel();
+            // Inicia con fade-in si hay overlay
+            if (fadeOverlay != null)
+            {
+                StartCoroutine(FadeIn());
+            }
+
+            // Seleccionar el primer botón
+            if (menuButtons.Count > 0)
+            {
+                SelectButton(0);
+            }
+        }
+
+        private void Update()
+        {
+            HandleKeyboardNavigation();
         }
 
         /// <summary>
-        /// Método llamado por el botón de Jugar.
-        /// Carga la escena del juego principal.
+        /// Navegación con flechas del teclado y Enter/Space para confirmar.
         /// </summary>
-        public void PlayGame()
+        private void HandleKeyboardNavigation()
         {
-            Debug.Log($"Cargando escena: {sceneToLoad}");
-            // Nota: ¡Asegúrate de haber añadido la escena a los Build Settings (File > Build Settings)!
+            if (menuButtons.Count == 0) return;
+
+            if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
+            {
+                currentIndex = (currentIndex + 1) % menuButtons.Count;
+                SelectButton(currentIndex);
+            }
+            else if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
+            {
+                currentIndex = (currentIndex - 1 + menuButtons.Count) % menuButtons.Count;
+                SelectButton(currentIndex);
+            }
+            else if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
+            {
+                if (menuButtons[currentIndex] != null)
+                {
+                    menuButtons[currentIndex].onClick.Invoke();
+                }
+            }
+        }
+
+        private void SelectButton(int index)
+        {
+            if (index >= 0 && index < menuButtons.Count && menuButtons[index] != null)
+            {
+                EventSystem.current.SetSelectedGameObject(menuButtons[index].gameObject);
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // MÉTODOS PÚBLICOS PARA BOTONES
+        // ═══════════════════════════════════════
+
+        /// <summary>
+        /// Continuar partida / Nuevo Juego → carga la escena del juego.
+        /// </summary>
+        public void OnContinueGame()
+        {
+            Debug.Log($"[HeartQuest] Cargando escena: {sceneToLoad}");
             SceneManager.LoadScene(sceneToLoad);
         }
 
         /// <summary>
-        /// Método llamado por el botón de Opciones.
-        /// Oculta el panel principal y muestra el de opciones.
+        /// Nuevo Juego → misma funcionalidad por ahora, expansible.
         /// </summary>
-        public void ShowOptions()
+        public void OnNewGame()
         {
-            if (mainPanel != null) mainPanel.SetActive(false);
-            if (optionsPanel != null) optionsPanel.SetActive(true);
+            Debug.Log("[HeartQuest] Iniciando Nuevo Juego...");
+            SceneManager.LoadScene(sceneToLoad);
         }
 
         /// <summary>
-        /// Método llamado por el botón de Volver (en el menú de opciones).
-        /// Oculta el panel de opciones y muestra el principal.
+        /// Cargar Partida → placeholder, muestra mensaje.
         /// </summary>
-        public void ShowMainPanel()
+        public void OnLoadGame()
         {
-            if (mainPanel != null) mainPanel.SetActive(true);
-            if (optionsPanel != null) optionsPanel.SetActive(false);
+            Debug.Log("[HeartQuest] Sistema de guardado no implementado aún.");
         }
 
         /// <summary>
-        /// Método llamado por el botón de Salir.
-        /// Cierra la aplicación (solo funciona en builds exportadas).
+        /// Opciones → placeholder.
         /// </summary>
-        public void QuitGame()
+        public void OnOptions()
         {
-            Debug.Log("Saliendo de la aplicación...");
-            // Si estamos en el editor de Unity, detenemos el modo Play
+            Debug.Log("[HeartQuest] Menú de opciones no implementado aún.");
+        }
+
+        /// <summary>
+        /// Extras → placeholder.
+        /// </summary>
+        public void OnExtras()
+        {
+            Debug.Log("[HeartQuest] Extras no implementado aún.");
+        }
+
+        /// <summary>
+        /// Salir del juego.
+        /// </summary>
+        public void OnExitGame()
+        {
+            Debug.Log("[HeartQuest] Saliendo...");
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #else
-            // Si es un build real (juego compilado), cierra la app
             Application.Quit();
 #endif
+        }
+
+        // ═══════════════════════════════════════
+        // CORRUTINAS
+        // ═══════════════════════════════════════
+
+        /// <summary>
+        /// Fade in suave al inicio del menú.
+        /// </summary>
+        private IEnumerator FadeIn()
+        {
+            fadeOverlay.alpha = 1f;
+            fadeOverlay.blocksRaycasts = true;
+
+            float elapsed = 0f;
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                fadeOverlay.alpha = 1f - (elapsed / fadeDuration);
+                yield return null;
+            }
+
+            fadeOverlay.alpha = 0f;
+            fadeOverlay.blocksRaycasts = false;
         }
     }
 }
