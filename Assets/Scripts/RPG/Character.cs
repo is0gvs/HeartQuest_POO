@@ -15,16 +15,38 @@ namespace AntiBullyingGame.RPG
         // Propiedad pública de lectura
         public int Morale => morale;
 
+        protected Rigidbody2D rb;
+
+        public override void Initialize()
+        {
+            base.Initialize();
+            rb = GetComponent<Rigidbody2D>();
+        }
+
         // Método virtual que puede cambiar la forma de moverse en el futuro (POO: Polimorfismo)
         public virtual void Move(Vector3 direction, float speed)
         {
-            // Lógica base de movimiento usando Transform de Unity
-            transform.Translate(direction * speed * Time.deltaTime);
+            // Movimiento usando Físicas 2D para que las paredes y colisiones funcionen
+            if (rb != null)
+            {
+                rb.MovePosition(rb.position + (Vector2)direction * speed * Time.fixedDeltaTime);
+            }
+            else
+            {
+                transform.Translate(direction * speed * Time.deltaTime);
+            }
         }
 
         public virtual void Speak(string message)
         {
             Debug.Log($"[{entityName}] dice: {message}");
+            
+            // Si el sistema de diálogo Cyberpunk está en la escena, lo usamos
+            var dialogueSystem = Object.FindFirstObjectByType<HeartQuest.UI.DialogueSystem>();
+            if (dialogueSystem != null)
+            {
+                dialogueSystem.ShowDialogue($"[{entityName}]: {message}");
+            }
         }
 
         // Método para modificar la moral interna del personaje de forma controlada (POO: Encapsulamiento)

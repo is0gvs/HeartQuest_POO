@@ -87,18 +87,55 @@ public class SceneAutoSetup : EditorWindow
         var anim = playerObj.AddComponent<Animator>();
         var pClass = playerObj.AddComponent<Player>();
         
+        // Físicas para el Jugador
+        var pRb = playerObj.AddComponent<Rigidbody2D>();
+        pRb.bodyType = RigidbodyType2D.Dynamic;
+        pRb.gravityScale = 0;
+        pRb.freezeRotation = true;
+        var pCol = playerObj.AddComponent<BoxCollider2D>();
+        pCol.size = new Vector2(0.8f, 0.8f);
+        pCol.offset = new Vector2(0, 0.4f);
+
         sr.sortingOrder = 10;
         playerObj.tag = "Player";
         anim.runtimeAnimatorController = AnimationBuilder.GeneratePlayerAnimator(p1Path);
         sr.sprite = AssetDatabase.LoadAllAssetsAtPath(p1Path).OfType<Sprite>().FirstOrDefault();
 
-        // 7. NPC
+        // 7. NPC (Victima)
         GameObject npcObj = new GameObject("Classmate_Sofia");
         npcObj.transform.position = new Vector3(4, -1, 0); // Spaced appropriately
         npcObj.AddComponent<SpriteRenderer>().sortingOrder = 9;
         npcObj.AddComponent<Animator>().runtimeAnimatorController = AnimationBuilder.GeneratePlayerAnimator(p2Path);
-        npcObj.AddComponent<Victim>();
+        var npcClass = npcObj.AddComponent<Victim>();
+        npcClass.entityName = "Sofía";
         npcObj.GetComponent<SpriteRenderer>().sprite = AssetDatabase.LoadAllAssetsAtPath(p2Path).OfType<Sprite>().FirstOrDefault();
+        
+        // Físicas para NPC
+        var nRb = npcObj.AddComponent<Rigidbody2D>();
+        nRb.bodyType = RigidbodyType2D.Static; // No la empujamos
+        var nCol = npcObj.AddComponent<BoxCollider2D>();
+        nCol.size = new Vector2(0.8f, 0.8f);
+        nCol.offset = new Vector2(0, 0.4f);
+
+        // 7.5. Bully (Opcional, añadimos uno para probar)
+        GameObject bullyObj = new GameObject("Bully_Gaston");
+        bullyObj.transform.position = new Vector3(-4, 2, 0);
+        bullyObj.AddComponent<SpriteRenderer>().sortingOrder = 9;
+        bullyObj.AddComponent<Animator>().runtimeAnimatorController = AnimationBuilder.GeneratePlayerAnimator(p1Path);
+        var bClass = bullyObj.AddComponent<Bully>();
+        bClass.entityName = "Gastón";
+        bullyObj.GetComponent<SpriteRenderer>().sprite = AssetDatabase.LoadAllAssetsAtPath(p1Path).OfType<Sprite>().FirstOrDefault();
+        bullyObj.GetComponent<SpriteRenderer>().color = new Color(1f, 0.6f, 0.6f); // Tinto para diferenciarlo
+        
+        var bRb = bullyObj.AddComponent<Rigidbody2D>();
+        bRb.bodyType = RigidbodyType2D.Static;
+        var bCol = bullyObj.AddComponent<BoxCollider2D>();
+        bCol.size = new Vector2(0.8f, 0.8f);
+        bCol.offset = new Vector2(0, 0.4f);
+
+        // 7.8 GameManager
+        GameObject gmObj = new GameObject("GameManager");
+        gmObj.AddComponent<GameManager>();
 
         // 8. Quality Lighting (Removed or kept minimal for 2D Unlit)
         // Ya que usamos Sprites, si no hay material iluminado no se verá el efecto normal,

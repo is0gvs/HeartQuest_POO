@@ -1,4 +1,5 @@
 using UnityEngine;
+using AntiBullyingGame.Interfaces;
 
 namespace AntiBullyingGame.RPG
 {
@@ -13,6 +14,7 @@ namespace AntiBullyingGame.RPG
         private Animator animator;
         private float lastMoveX = 0;
         private float lastMoveY = -1; // Default looking down
+        private Vector3 currentMoveDir;
 
         private void Awake()
         {
@@ -22,7 +24,7 @@ namespace AntiBullyingGame.RPG
         // Sobreescritura del método Initialize (POO: Polimorfismo / Override)
         public override void Initialize()
         {
-            base.Initialize(); // Llama a la lógica de Initialize del padre (GameEntity)
+            base.Initialize(); // Llama a la lógica de Initialize del padre
             
             if (string.IsNullOrEmpty(entityName))
             {
@@ -33,12 +35,20 @@ namespace AntiBullyingGame.RPG
 
         private void Update()
         {
-            // El Update de Unity se llama en cada frame
-            HandleMovement();
+            HandleMovementInput();
             HandleInteractionInput();
         }
 
-        private void HandleMovement()
+        private void FixedUpdate()
+        {
+            // El movimiento físico se hace en FixedUpdate
+            if (currentMoveDir != Vector3.zero)
+            {
+                Move(currentMoveDir, moveSpeed);
+            }
+        }
+
+        private void HandleMovementInput()
         {
             // Movimiento usando WASD
             float moveX = 0f;
@@ -49,12 +59,12 @@ namespace AntiBullyingGame.RPG
             if (Input.GetKey(KeyCode.A)) moveX = -1f;
             if (Input.GetKey(KeyCode.D)) moveX = 1f;
 
-            Vector3 moveDir = new Vector3(moveX, moveY, 0).normalized;
+            currentMoveDir = new Vector3(moveX, moveY, 0).normalized;
             
             // Actualizar Animator
             if (animator != null)
             {
-                bool isMoving = moveDir != Vector3.zero;
+                bool isMoving = currentMoveDir != Vector3.zero;
                 
                 if (isMoving)
                 {
@@ -66,17 +76,11 @@ namespace AntiBullyingGame.RPG
                 animator.SetFloat("moveY", isMoving ? moveY : lastMoveY);
                 animator.SetBool("isWalking", isMoving);
             }
-
-            if (moveDir != Vector3.zero)
-            {
-                // Usamos el método heredado de la clase padre Character
-                Move(moveDir, moveSpeed);
-            }
         }
 
         private void HandleInteractionInput()
         {
-            if (Input.GetKeyDown(KeyCode.E)) // Presionar 'E' para hablar/interactuar
+            if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Z)) // Presionar 'E' o 'Z' para interactuar
             {
                 TryInteract();
             }
@@ -84,8 +88,32 @@ namespace AntiBullyingGame.RPG
 
         private void TryInteract()
         {
-            // Aquí en un futuro lanzaremos un raycast o buscaremos objetos cercanos con la Interfaz IInteractable
-            Debug.Log("El jugador está tratando de interactuar con lo que tiene enfrente...");
+            // Lanzamos un rayo invisible (Raycast) en la dirección a la que mira el jugador
+            Vector2 facingDir = new Vector2(lastMoveX, lastMoveY).normalized;
+            if (facingDir == Vector2.zero) facingDir = Vector2.down; // Por defecto abajo
+
+            // Punto de origen ajustado al centro del jugador
+            Vector2 origin = transform.position + new Vector3(0, 0.5f, 0); 
+            
+            Debug.DrawRay(origin, facingDir * 1.5f, Color.green, 1f); // Para depuración en el Editor
+
+            RaycastHit2D hit = Physics2D.Raycast(origin, facingDir, 1.5f);
+
+            if (hit.collider != null)
+            {
+                // Si chocamos con algo, buscamos si tiene el componente (Interfaz) IInteractable
+                IInteractable interactableObj = hit.collider.GetComponent<IInteractable>();
+                
+                if (interactableObj != null)
+                {
+                    Debug.Log($"Interactuando con: {hit.collider.gameObject.name}");
+                    interactableObj.Interact(); // Aplicamos polimorfismo
+                }
+            }
+            else
+            {
+                Debug.Log("No hay nada con qué interactuar aquí.");
+            }
         }
     }
 }
