@@ -14,7 +14,7 @@ namespace AntiBullyingGame.RPG
 
         public void Interact()
         {
-            var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>();
+            var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>(FindObjectsInactive.Include);
             if (ds != null && story != null)
             {
                 ds.StartDialogueStory(story);

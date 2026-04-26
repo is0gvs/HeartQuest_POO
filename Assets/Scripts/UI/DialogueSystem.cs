@@ -1,14 +1,15 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 
 namespace HeartQuest.UI
 {
     /// <summary>
     /// Sistema de diálogos estilo Undertale con estética cyberpunk.
-    /// Produce un efecto de "máquina de escribir" (typewriter) para
-    /// revelar texto carácter por carácter con sonido opcional.
+    /// Soporta texto enriquecido (colores), efecto máquina de escribir,
+    /// avance con tecla Z y sistema de elecciones.
     /// </summary>
     public class DialogueSystem : MonoBehaviour
     {
@@ -18,16 +19,12 @@ namespace HeartQuest.UI
         [SerializeField] private GameObject dialogueBox;
 
         [Header("── Configuración ──")]
-        [SerializeField] private float charactersPerSecond = 30f;
+        [SerializeField] private float charactersPerSecond = 45f;
         [SerializeField] private float pauseOnPunctuation = 0.15f;
 
         [Header("── Sonido (Opcional) ──")]
         [SerializeField] private AudioSource typingAudioSource;
         [SerializeField] private AudioClip typingSound;
-
-        [Header("── Auto Avance ──")]
-        [SerializeField] private bool autoAdvance = false;
-        [SerializeField] private float autoAdvanceDelay = 2f;
 
         // Estado interno de la conversación
         private HeartQuest.Core.DialogueData currentStory;
@@ -36,6 +33,9 @@ namespace HeartQuest.UI
         private Coroutine typingCoroutine;
         private bool isTyping = false;
         private string currentFullText = "";
+        
+        // Estado de Elecciones
+        private List<GameObject> choiceButtons = new List<GameObject>();
 
         private void Start()
         {
@@ -47,6 +47,9 @@ namespace HeartQuest.UI
 
         private void Update()
         {
+            // Ignoramos input de teclado si estamos mostrando botones de elección
+            if (choiceButtons.Count > 0) return;
+
             // Presionar Z, Enter o Space para avanzar/completar el diálogo
             if (dialogueBox != null && dialogueBox.activeSelf)
             {
@@ -72,12 +75,12 @@ namespace HeartQuest.UI
         // API PÚBLICA
         // ═══════════════════════════════════════
 
-        /// <summary>
-        /// Inicia una historia completa usando un ScriptableObject (DialogueData)
-        /// </summary>
         public void StartDialogueStory(HeartQuest.Core.DialogueData story)
         {
             if (story == null || story.lines == null || story.lines.Length == 0) return;
+
+            // Limpiar botones viejos si los hubiera
+            ClearChoices();
 
             currentStory = story;
             currentLineIndex = 0;
@@ -86,9 +89,6 @@ namespace HeartQuest.UI
             ShowNextLine();
         }
 
-        /// <summary>
-        /// Avanza la historia. Si se acabó, cierra la caja y aplica consecuencias.
-        /// </summary>
         private void ShowNextLine()
         {
             if (currentStory != null && currentLineIndex < currentStory.lines.Length)
@@ -97,29 +97,16 @@ namespace HeartQuest.UI
                 ShowDialogue($"<color=#00E5FF>{line.speakerName}</color>\n{line.text}", line.portrait);
                 currentLineIndex++;
             }
+            else if (currentStory != null)
+            {
+                SpawnChoices();
+            }
             else
             {
                 HideDialogue();
-                
-                // Aplicar consecuencias al terminar
-                if (currentStory != null && currentStory.moraleChangeOnComplete != 0)
-                {
-                    var gm = UnityEngine.Object.FindAnyObjectByType<AntiBullyingGame.Core.GameManager>();
-                    if (gm != null)
-                    {
-                        if (currentStory.moraleChangeOnComplete > 0)
-                            gm.AddMorale(currentStory.moraleChangeOnComplete);
-                        else
-                            gm.DeductMorale(-currentStory.moraleChangeOnComplete);
-                    }
-                }
-                currentStory = null;
             }
         }
 
-        /// <summary>
-        /// Muestra un diálogo individual con efecto de typewriter.
-        /// </summary>
         public void ShowDialogue(string text, Sprite portrait = null)
         {
             if (dialogueBox == null || dialogueText == null) return;
@@ -140,7 +127,6 @@ namespace HeartQuest.UI
                 }
             }
 
-            // Detener typewriting anterior si hay uno en curso
             if (typingCoroutine != null)
             {
                 StopCoroutine(typingCoroutine);
@@ -149,9 +135,6 @@ namespace HeartQuest.UI
             typingCoroutine = StartCoroutine(TypewriterEffect(text));
         }
 
-        /// <summary>
-        /// Oculta la caja de diálogo.
-        /// </summary>
         public void HideDialogue()
         {
             if (dialogueBox != null)
@@ -159,11 +142,9 @@ namespace HeartQuest.UI
                 dialogueBox.SetActive(false);
             }
             isTyping = false;
+            ClearChoices();
         }
 
-        /// <summary>
-        /// Muestra el texto completo de inmediato, sin animación.
-        /// </summary>
         public void CompleteText()
         {
             if (typingCoroutine != null)
@@ -173,37 +154,156 @@ namespace HeartQuest.UI
 
             if (dialogueText != null)
             {
-                dialogueText.text = currentFullText;
+                // Forzamos a que todo el texto sea visible
+                dialogueText.maxVisibleCharacters = 99999;
             }
 
             isTyping = false;
         }
 
         // ═══════════════════════════════════════
+        // SISTEMA DE ELECCIONES
+        // ═══════════════════════════════════════
+
+        private void SpawnChoices()
+        {
+            if (currentStory.choices == null || currentStory.choices.Length == 0)
+            {
+                FinishDialogueStory();
+                return;
+            }
+
+            // Ocultamos el retrato y mostramos un texto de elección
+            if (portraitImage != null) portraitImage.gameObject.SetActive(false);
+            
+            dialogueText.text = "<color=#9D4DFF>¿Qué vas a hacer?</color>";
+            dialogueText.maxVisibleCharacters = 99999;
+
+            for (int i = 0; i < currentStory.choices.Length; i++)
+            {
+                var choice = currentStory.choices[i];
+                GameObject btnObj = new GameObject("ChoiceBtn_" + i, typeof(RectTransform), typeof(Image), typeof(Button));
+                btnObj.transform.SetParent(dialogueBox.transform, false);
+                
+                RectTransform rt = btnObj.GetComponent<RectTransform>();
+                rt.anchorMin = new Vector2(0.5f, 0); rt.anchorMax = new Vector2(0.5f, 0);
+                rt.pivot = new Vector2(0.5f, 0);
+                rt.sizeDelta = new Vector2(400, 45);
+                
+                // Apilarlos desde abajo hacia arriba
+                float yPos = 30 + ((currentStory.choices.Length - 1 - i) * 55);
+                rt.anchoredPosition = new Vector2(0, yPos);
+
+                Image img = btnObj.GetComponent<Image>();
+                img.color = new Color(0.12f, 0.16f, 0.25f, 1f); // Azul oscuro cyberpunk
+
+                // Borde neón al botón
+                var outline = btnObj.AddComponent<Outline>();
+                outline.effectColor = new Color(0.6f, 0.3f, 1f, 1f); // Morado neón
+                outline.effectDistance = new Vector2(2, -2);
+
+                Button btn = btnObj.GetComponent<Button>();
+                int index = i; // Closure
+                btn.onClick.AddListener(() => OnChoiceSelected(index));
+
+                // Texto del botón
+                GameObject txtObj = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+                txtObj.transform.SetParent(btnObj.transform, false);
+                RectTransform trt = txtObj.GetComponent<RectTransform>();
+                trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+                trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
+
+                TextMeshProUGUI tmp = txtObj.GetComponent<TextMeshProUGUI>();
+                tmp.text = choice.choiceText;
+                tmp.color = Color.white;
+                tmp.alignment = TextAlignmentOptions.Center;
+                tmp.fontSize = 24;
+
+                choiceButtons.Add(btnObj);
+            }
+        }
+
+        private void OnChoiceSelected(int index)
+        {
+            var choice = currentStory.choices[index];
+            ClearChoices();
+
+            // Aplicar moral de la elección
+            if (choice.moraleChange != 0)
+            {
+                var gm = Object.FindAnyObjectByType<AntiBullyingGame.Core.GameManager>();
+                if (gm != null)
+                {
+                    if (choice.moraleChange > 0) gm.AddMorale(choice.moraleChange);
+                    else gm.DeductMorale(-choice.moraleChange);
+                }
+            }
+
+            // Continuar historia
+            if (choice.nextDialogue != null)
+            {
+                StartDialogueStory(choice.nextDialogue);
+            }
+            else
+            {
+                HideDialogue();
+                currentStory = null;
+            }
+        }
+
+        private void ClearChoices()
+        {
+            foreach(var b in choiceButtons)
+            {
+                if (b != null) Destroy(b);
+            }
+            choiceButtons.Clear();
+        }
+
+        private void FinishDialogueStory()
+        {
+            HideDialogue();
+            if (currentStory != null && currentStory.moraleChangeOnComplete != 0)
+            {
+                var gm = Object.FindAnyObjectByType<AntiBullyingGame.Core.GameManager>();
+                if (gm != null)
+                {
+                    if (currentStory.moraleChangeOnComplete > 0) gm.AddMorale(currentStory.moraleChangeOnComplete);
+                    else gm.DeductMorale(-currentStory.moraleChangeOnComplete);
+                }
+            }
+            currentStory = null;
+        }
+
+        // ═══════════════════════════════════════
         // CORRUTINAS
         // ═══════════════════════════════════════
 
-        /// <summary>
-        /// Efecto de máquina de escribir carácter por carácter.
-        /// </summary>
         private IEnumerator TypewriterEffect(string text)
         {
             isTyping = true;
-            dialogueText.text = "";
+            
+            // TextMeshPro permite parsear el Rich Text (ej: <color=...>) primero,
+            // y luego revelar los caracteres 1 a 1 usando maxVisibleCharacters.
+            dialogueText.text = text;
+            dialogueText.maxVisibleCharacters = 0;
+            dialogueText.ForceMeshUpdate(); // Construye el texto con etiquetas
 
+            int totalCharacters = dialogueText.textInfo.characterCount;
             float charDelay = 1f / charactersPerSecond;
 
-            foreach (char c in text)
+            for (int i = 1; i <= totalCharacters; i++)
             {
-                dialogueText.text += c;
+                dialogueText.maxVisibleCharacters = i;
 
-                // Reproducir sonido de tipeo
-                if (typingAudioSource != null && typingSound != null && c != ' ')
+                // Sonido
+                if (typingAudioSource != null && typingSound != null && i % 2 == 0)
                 {
                     typingAudioSource.PlayOneShot(typingSound);
                 }
 
-                // Pausa extra en signos de puntuación
+                // Pausa extra si hay puntuación
+                char c = dialogueText.textInfo.characterInfo[i - 1].character;
                 if (c == '.' || c == ',' || c == '!' || c == '?' || c == ':')
                 {
                     yield return new WaitForSeconds(pauseOnPunctuation);
@@ -215,13 +315,6 @@ namespace HeartQuest.UI
             }
 
             isTyping = false;
-
-            // Auto avance si está habilitado
-            if (autoAdvance)
-            {
-                yield return new WaitForSeconds(autoAdvanceDelay);
-                HideDialogue();
-            }
         }
     }
 }

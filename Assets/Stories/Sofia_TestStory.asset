@@ -23,7 +23,11 @@ MonoBehaviour:
   - speakerName: "Sof\xEDa"
     text: Nadie quiere ayudarme porque tienen miedo de que se la agarren con ellos...
     portrait: {fileID: 0}
-  - speakerName: "Sof\xEDa"
-    text: Gracias por escucharme, me siento un poco mejor.
-    portrait: {fileID: 0}
-  moraleChangeOnComplete: 15
+  choices:
+  - choiceText: "No te preocupes, yo te ayudar\xE9."
+    nextDialogue: {fileID: 0}
+    moraleChange: 15
+  - choiceText: Ese no es mi problema.
+    nextDialogue: {fileID: 0}
+    moraleChange: -10
+  moraleChangeOnComplete: 0

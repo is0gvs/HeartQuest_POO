@@ -11,6 +11,14 @@ namespace HeartQuest.Core
         public Sprite portrait;
     }
 
+    [System.Serializable]
+    public struct DialogueChoice
+    {
+        public string choiceText;
+        public DialogueData nextDialogue; // Siguiente historia si elige esto
+        public int moraleChange; // Cambio de moral al elegir esto
+    }
+
     /// <summary>
     /// ScriptableObject para almacenar diálogos.
     /// Permite crear "archivos" de historia que se pueden asignar a cualquier NPC.
@@ -21,7 +29,11 @@ namespace HeartQuest.Core
         [Header("Contenido de la Historia")]
         public DialogueLine[] lines;
 
-        [Header("Consecuencias")]
+        [Header("Elecciones (Opcional)")]
+        [Tooltip("Si dejas esto vacío, el diálogo simplemente terminará. Si pones opciones, el jugador deberá elegir.")]
+        public DialogueChoice[] choices;
+
+        [Header("Consecuencias por Defecto (Si no hay elecciones)")]
         [Tooltip("Cantidad de moral a sumar (positivo) o restar (negativo) al terminar de hablar.")]
         public int moraleChangeOnComplete = 0;
     }

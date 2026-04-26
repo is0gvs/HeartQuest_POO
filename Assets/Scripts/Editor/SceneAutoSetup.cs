@@ -118,14 +118,27 @@ public class SceneAutoSetup : EditorWindow
         if (sofiaStory == null)
         {
             sofiaStory = ScriptableObject.CreateInstance<HeartQuest.Core.DialogueData>();
-            sofiaStory.moraleChangeOnComplete = 15;
+            sofiaStory.moraleChangeOnComplete = 0; // Se decide en las opciones
             sofiaStory.lines = new HeartQuest.Core.DialogueLine[]
             {
                 new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Hola... ¿eres el nuevo, verdad?" },
                 new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Esos chicos de allá me quitaron mis apuntes de matemáticas y los tiraron a la basura." },
-                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Nadie quiere ayudarme porque tienen miedo de que se la agarren con ellos..." },
-                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Gracias por escucharme, me siento un poco mejor." }
+                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Nadie quiere ayudarme porque tienen miedo de que se la agarren con ellos..." }
             };
+            
+            // Agregar Elecciones
+            sofiaStory.choices = new HeartQuest.Core.DialogueChoice[]
+            {
+                new HeartQuest.Core.DialogueChoice { 
+                    choiceText = "No te preocupes, yo te ayudaré.", 
+                    moraleChange = 15 
+                },
+                new HeartQuest.Core.DialogueChoice { 
+                    choiceText = "Ese no es mi problema.", 
+                    moraleChange = -10 
+                }
+            };
+            
             AssetDatabase.CreateAsset(sofiaStory, storyPath);
             AssetDatabase.SaveAssets();
         }

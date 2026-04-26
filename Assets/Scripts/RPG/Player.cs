@@ -85,6 +85,10 @@ namespace AntiBullyingGame.RPG
 
         private void TryInteract()
         {
+            // Evitar interactuar de nuevo si el diálogo ya está abierto
+            var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>(FindObjectsInactive.Include);
+            if (ds != null && ds.gameObject.activeSelf) return;
+
             // Lanzamos un rayo invisible (Raycast) en la dirección a la que mira el jugador
             Vector2 facingDir = new Vector2(lastMoveX, lastMoveY).normalized;
             if (facingDir == Vector2.zero) facingDir = Vector2.down; // Por defecto abajo
