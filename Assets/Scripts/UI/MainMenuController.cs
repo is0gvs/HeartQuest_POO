@@ -102,6 +102,15 @@ namespace HeartQuest.UI
         // ═══════════════════════════════════════
 
         /// <summary>
+        /// Start Game
+        /// </summary>
+        public void OnStartGame()
+        {
+            Debug.Log("[HeartQuest] Starting Game...");
+            SceneManager.LoadScene(sceneToLoad);
+        }
+
+        /// <summary>
         /// Continuar partida / Nuevo Juego → carga la escena del juego.
         /// </summary>
         public void OnContinueGame()

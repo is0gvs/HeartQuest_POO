@@ -44,16 +44,8 @@ public class MainMenuAutoSetup
 
         // Background
         CreateBackground(canvasObj.transform);
-        // TopBar
-        CreateTopBar(canvasObj.transform);
-        // LeftMenu
+        // Menu de Opciones
         GameObject leftMenu = CreateLeftMenu(canvasObj.transform);
-        // CenterVisual
-        CreateCenterVisual(canvasObj.transform);
-        // RightPanel
-        CreateRightPanel(canvasObj.transform);
-        // BottomDialogue
-        CreateBottomDialogue(canvasObj.transform);
         // FadeOverlay
         GameObject fadeOverlay = CreateFadeOverlay(canvasObj.transform);
 
@@ -133,12 +125,12 @@ public class MainMenuAutoSetup
     // ════════════════════════════════════════════════
     static GameObject CreateLeftMenu(Transform parent)
     {
-        GameObject leftMenu = CreatePanel("LeftMenu", parent, new Color(panelColor.r, panelColor.g, panelColor.b, 0.6f));
+        GameObject leftMenu = CreatePanel("MainMenuPanel", parent, new Color(panelColor.r, panelColor.g, panelColor.b, 0.8f));
         RectTransform rt = leftMenu.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0, 0.1f);
-        rt.anchorMax = new Vector2(0.25f, 0.85f);
-        rt.offsetMin = new Vector2(30, 0);
-        rt.offsetMax = new Vector2(0, 0);
+        rt.anchorMin = new Vector2(0.4f, 0.2f);
+        rt.anchorMax = new Vector2(0.6f, 0.8f);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
         AddOutline(leftMenu, accentPurple, 2f);
         leftMenu.AddComponent<NeonPanelFlicker>();
 
@@ -168,8 +160,8 @@ public class MainMenuAutoSetup
         sepLE.flexibleWidth = 1;
 
         // Botones
-        string[] btnNames = { "Btn_Continue", "Btn_NewGame", "Btn_LoadGame", "Btn_Options", "Btn_Extras", "Btn_Exit" };
-        string[] btnLabels = { "► CONTINUAR", "► NUEVO JUEGO", "► CARGAR", "► OPCIONES", "► EXTRAS", "► SALIR" };
+        string[] btnNames = { "Btn_Start", "Btn_Continue", "Btn_NewGame", "Btn_Options", "Btn_Exit" };
+        string[] btnLabels = { "START", "CONTINUAR JUEGO", "NUEVO JUEGO", "OPCIONES", "SALIR" };
 
         for (int i = 0; i < btnNames.Length; i++)
         {
@@ -378,10 +370,17 @@ public class MainMenuAutoSetup
     static void ConnectButtons(GameObject leftMenu, MenuController controller)
     {
         var buttons = leftMenu.GetComponentsInChildren<Button>();
+        var so = new SerializedObject(controller);
+        var menuButtonsProp = so.FindProperty("menuButtons");
+        menuButtonsProp.ClearArray();
+        int i = 0;
+
         foreach (var btn in buttons)
         {
             string name = btn.gameObject.name;
-            if (name.Contains("Continue"))
+            if (name.Contains("Start"))
+                UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityEngine.Events.UnityAction(controller.OnStartGame));
+            else if (name.Contains("Continue"))
                 UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityEngine.Events.UnityAction(controller.OnContinueGame));
             else if (name.Contains("NewGame"))
                 UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityEngine.Events.UnityAction(controller.OnNewGame));
@@ -393,7 +392,12 @@ public class MainMenuAutoSetup
                 UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityEngine.Events.UnityAction(controller.OnExtras));
             else if (name.Contains("Exit"))
                 UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityEngine.Events.UnityAction(controller.OnExitGame));
+
+            menuButtonsProp.InsertArrayElementAtIndex(i);
+            menuButtonsProp.GetArrayElementAtIndex(i).objectReferenceValue = btn;
+            i++;
         }
+        so.ApplyModifiedProperties();
     }
 
     // ════════════════════════════════════════════════
@@ -438,8 +442,8 @@ public class MainMenuAutoSetup
         glowImg.color = new Color(accentPurple.r, accentPurple.g, accentPurple.b, 0f);
 
         // Text
-        CreateTMPText("Label", btnObj.transform, label, 20, textWhite, TextAlignmentOptions.MidlineLeft,
-            Vector2.zero, Vector2.one, new Vector2(15, 0), new Vector2(-10, 0));
+        CreateTMPText("Label", btnObj.transform, label, 24, textWhite, TextAlignmentOptions.Center,
+            Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
         // UIButtonEffects
         btnObj.AddComponent<UIButtonEffects>();
