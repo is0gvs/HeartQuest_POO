@@ -2,10 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
-using Unity.VisualScripting;
-using UnityEditor.Timeline.Actions;
 using UnityEngine;
-using static System.Collections.Specialized.BitVector32;
 
 public class DialogueManager : MonoBehaviour
 {

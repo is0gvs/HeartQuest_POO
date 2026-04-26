@@ -48,6 +48,46 @@ public class SceneAutoSetup : EditorWindow
             Debug.LogWarning($"No se encontró la escena de batalla en: {battlePath}");
         
         EditorBuildSettings.scenes = buildScenes.ToArray();
+        
+        // --- SOPORTE PARA UNITY 6 (BUILD PROFILES) ---
+        // Usamos reflexión para evitar errores de compilación si la versión exacta de Unity 6 cambia la API
+        try {
+            var buildProfileType = System.Type.GetType("UnityEditor.Build.Profile.BuildProfile, UnityEditor.CoreModule");
+            var editorUserBuildSettingsType = typeof(EditorUserBuildSettings);
+            var activeProfileProp = editorUserBuildSettingsType.GetProperty("activeBuildProfile", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+
+            if (activeProfileProp != null)
+            {
+                var activeProfile = activeProfileProp.GetValue(null);
+                if (activeProfile != null)
+                {
+                    SerializedObject so = new SerializedObject((Object)activeProfile);
+                    var scenesProp = so.FindProperty("m_Scenes");
+                    var overrideProp = so.FindProperty("m_OverrideGlobalSceneList");
+
+                    if (scenesProp != null && overrideProp != null)
+                    {
+                        overrideProp.boolValue = true;
+                        scenesProp.ClearArray();
+                        for (int i = 0; i < buildScenes.Count; i++)
+                        {
+                            scenesProp.InsertArrayElementAtIndex(i);
+                            var element = scenesProp.GetArrayElementAtIndex(i);
+                            element.FindPropertyRelative("path").stringValue = buildScenes[i].path;
+                            element.FindPropertyRelative("enabled").boolValue = true;
+                        }
+                        so.ApplyModifiedProperties();
+                        EditorUtility.SetDirty((Object)activeProfile);
+                        AssetDatabase.SaveAssets();
+                        Debug.Log($"[Unity 6] Perfil de Construcción '{activeProfile.GetType().Name}' actualizado via Reflexión.");
+                    }
+                }
+            }
+        } catch (System.Exception e) {
+            // Si falla la reflexión, simplemente ignoramos (no es crítico si no estamos en Unity 6)
+            Debug.Log("Nota: No se detectó un Perfil de Construcción activo o la API de Unity 6 es diferente.");
+        }
+        
         Debug.Log($"¡Escenas configuradas! Total: {buildScenes.Count} escenas en Build Settings.");
     }
 

@@ -16,7 +16,7 @@ namespace HeartQuest.UI
     {
         [Header("── Escenas ──")]
         [Tooltip("Nombre de la escena que se carga al presionar Continuar o Nuevo Juego")]
-        [SerializeField] private string sceneToLoad = "ClassroomScene";
+        [SerializeField] private string sceneToLoad = "Escuela";
 
         [Header("── Paneles Principales ──")]
         public GameObject leftMenu;
@@ -59,6 +59,16 @@ namespace HeartQuest.UI
         private void HandleKeyboardNavigation()
         {
             if (menuButtons.Count == 0) return;
+
+            // NO procesar input si el menú no está visible
+            if (!gameObject.activeInHierarchy) return;
+            // Verificar que el panel padre esté activo también
+            Transform p = transform;
+            while (p != null)
+            {
+                if (!p.gameObject.activeSelf) return;
+                p = p.parent;
+            }
 
             if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
             {
