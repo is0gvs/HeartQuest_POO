@@ -6,16 +6,45 @@ using System.Linq;
 
 public class AnimationBuilder
 {
+    // Cache para evitar regenerar el mismo controller múltiples veces en una sesión
+    private static Dictionary<string, AnimatorController> controllerCache = new Dictionary<string, AnimatorController>();
+
+    /// <summary>
+    /// Genera (o reutiliza) un AnimatorController para un spritesheet dado.
+    /// Si ya fue generado en esta sesión de Setup, retorna el mismo sin reconstruirlo.
+    /// </summary>
     public static AnimatorController GeneratePlayerAnimator(string spriteSheetPath)
     {
         string spriteName = System.IO.Path.GetFileNameWithoutExtension(spriteSheetPath);
         string controllerPath = "Assets/Controllers/" + spriteName + "_Controller.controller";
         
-        // Create Controller
-        if (AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath) != null)
+        // Si ya lo generamos en esta sesión, reutilizar
+        if (controllerCache.ContainsKey(controllerPath) && controllerCache[controllerPath] != null)
+        {
+            return controllerCache[controllerPath];
+        }
+
+        // Si ya existe en disco y es válido, reutilizar
+        var existing = AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath);
+        if (existing != null && existing.layers.Length > 0 && existing.parameters.Length >= 3)
+        {
+            controllerCache[controllerPath] = existing;
+            return existing;
+        }
+
+        // Crear directorios si no existen
+        if (!AssetDatabase.IsValidFolder("Assets/Controllers"))
+            AssetDatabase.CreateFolder("Assets", "Controllers");
+        if (!AssetDatabase.IsValidFolder("Assets/Animations"))
+            AssetDatabase.CreateFolder("Assets", "Animations");
+
+        // Borrar controller viejo corrupto si existe
+        if (existing != null)
         {
             AssetDatabase.DeleteAsset(controllerPath);
         }
+
+        // Crear Controller nuevo
         AnimatorController controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
         
         // Parameters
@@ -81,7 +110,21 @@ public class AnimationBuilder
         toIdle.AddCondition(AnimatorConditionMode.IfNot, 0, "isWalking");
         toIdle.duration = 0;
 
+        // Guardar todo
+        AssetDatabase.SaveAssets();
+
+        // Cachear para que no se regenere si se llama de nuevo
+        controllerCache[controllerPath] = controller;
+
         return controller;
+    }
+
+    /// <summary>
+    /// Limpia el cache. Llamar al inicio de cada Setup para forzar regeneración limpia.
+    /// </summary>
+    public static void ClearCache()
+    {
+        controllerCache.Clear();
     }
 
     private static AnimationClip CreateClip(string name, List<Sprite> frames)

@@ -63,6 +63,19 @@ public class SceneAutoSetup : EditorWindow
         // 0. Configurar automáticamente las escenas en Build Settings
         SetupBuildScenes();
 
+        // 0.5 Limpiar cache de animaciones para forzar regeneración limpia
+        AnimationBuilder.ClearCache();
+        // Borrar controllers corruptos (menos de 1KB = corrupto)
+        if (System.IO.File.Exists("Assets/Controllers/blonde_man_Controller.controller"))
+        {
+            var fi = new System.IO.FileInfo("Assets/Controllers/blonde_man_Controller.controller");
+            if (fi.Length < 1000)
+            {
+                AssetDatabase.DeleteAsset("Assets/Controllers/blonde_man_Controller.controller");
+                Debug.Log("Controller corrupto de blonde_man borrado. Se regenerará.");
+            }
+        }
+
         // 1. Force Maximize on Play
         EditorPrefs.SetBool("GameView.MaximizeOnPlay", true);
 
