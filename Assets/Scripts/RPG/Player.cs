@@ -73,7 +73,7 @@ namespace AntiBullyingGame.RPG
             currentMoveDir = new Vector3(moveX, moveY, 0).normalized;
             
             // Actualizar Animator
-            if (animator != null)
+            if (animator != null && animator.runtimeAnimatorController != null)
             {
                 bool isMoving = currentMoveDir != Vector3.zero;
                 
@@ -103,27 +103,22 @@ namespace AntiBullyingGame.RPG
             var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>(FindObjectsInactive.Include);
             if (ds != null && ds.gameObject.activeSelf) return;
 
-            // Lanzamos un rayo invisible (Raycast) en la dirección a la que mira el jugador
-            Vector2 facingDir = new Vector2(lastMoveX, lastMoveY).normalized;
-            if (facingDir == Vector2.zero) facingDir = Vector2.down; // Por defecto abajo
-
-            // Punto de origen ajustado al centro del jugador
-            Vector2 origin = transform.position + new Vector3(0, 0.5f, 0); 
+            // Usamos OverlapCircle para detectar NPCs cercanos (más fiable que Raycast)
+            float interactRadius = 2.0f;
+            Vector2 center = (Vector2)transform.position + new Vector2(0, 0.5f);
             
-            Debug.DrawRay(origin, facingDir * 1.5f, Color.green, 1f); // Para depuración en el Editor
-
-            RaycastHit2D[] hits = Physics2D.RaycastAll(origin, facingDir, 1.5f);
+            Collider2D[] hits = Physics2D.OverlapCircleAll(center, interactRadius);
             bool interacted = false;
 
             foreach (var hit in hits)
             {
-                if (hit.collider != null && hit.collider.gameObject != this.gameObject)
+                if (hit != null && hit.gameObject != this.gameObject)
                 {
-                    IInteractable interactableObj = hit.collider.GetComponent<IInteractable>();
+                    IInteractable interactableObj = hit.GetComponent<IInteractable>();
                     
                     if (interactableObj != null)
                     {
-                        Debug.Log($"Interactuando con: {hit.collider.gameObject.name}");
+                        Debug.Log($"Interactuando con: {hit.gameObject.name}");
                         interactableObj.Interact(); // Aplicamos polimorfismo
                         interacted = true;
                         break; // Solo interactuamos con el primero que encontremos

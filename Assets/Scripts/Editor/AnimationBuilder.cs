@@ -12,6 +12,10 @@ public class AnimationBuilder
         string controllerPath = "Assets/Controllers/" + spriteName + "_Controller.controller";
         
         // Create Controller
+        if (AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath) != null)
+        {
+            AssetDatabase.DeleteAsset(controllerPath);
+        }
         AnimatorController controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
         
         // Parameters
@@ -104,7 +108,13 @@ public class AnimationBuilder
         }
         
         AnimationUtility.SetObjectReferenceCurve(clip, curveBinding, keyframes);
-        AssetDatabase.CreateAsset(clip, "Assets/Animations/" + name + ".anim");
+        
+        string clipPath = "Assets/Animations/" + name + ".anim";
+        if (AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath) != null)
+        {
+            AssetDatabase.DeleteAsset(clipPath);
+        }
+        AssetDatabase.CreateAsset(clip, clipPath);
         return clip;
     }
 }

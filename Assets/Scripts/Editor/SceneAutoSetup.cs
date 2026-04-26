@@ -10,9 +10,59 @@ using UnityEngine.UI;
 
 public class SceneAutoSetup : EditorWindow
 {
-    [MenuItem("POO Game/Master Final Delivery Setup")]
+    [MenuItem("POO Game/1. Configurar Escenas en Build")]
+    public static void SetupBuildScenes()
+    {
+        // Buscar la escena de la escuela en todas las ubicaciones posibles
+        string escuelaPath = null;
+        string[] possiblePaths = { "Assets/Escuela.unity", "Assets/Scenes/Escuela.unity" };
+        foreach (var p in possiblePaths)
+        {
+            if (System.IO.File.Exists(p)) { escuelaPath = p; break; }
+        }
+        
+        // Si no la encontramos, guardar la escena actual
+        if (escuelaPath == null)
+        {
+            var currentScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+            escuelaPath = string.IsNullOrEmpty(currentScene.path) ? "Assets/Escuela.unity" : currentScene.path;
+            if (string.IsNullOrEmpty(currentScene.path) || currentScene.name == "Untitled")
+            {
+                UnityEditor.SceneManagement.EditorSceneManager.SaveScene(currentScene, "Assets/Escuela.unity");
+                escuelaPath = "Assets/Escuela.unity";
+            }
+        }
+
+        string battlePath = "Assets/Examples/Scenes/main scene.unity";
+
+        List<EditorBuildSettingsScene> buildScenes = new List<EditorBuildSettingsScene>();
+        
+        if (System.IO.File.Exists(escuelaPath))
+            buildScenes.Add(new EditorBuildSettingsScene(escuelaPath, true));
+        else
+            Debug.LogWarning($"No se encontró la escena de la Escuela");
+            
+        if (System.IO.File.Exists(battlePath))
+            buildScenes.Add(new EditorBuildSettingsScene(battlePath, true));
+        else
+            Debug.LogWarning($"No se encontró la escena de batalla en: {battlePath}");
+        
+        EditorBuildSettings.scenes = buildScenes.ToArray();
+        Debug.Log($"¡Escenas configuradas! Total: {buildScenes.Count} escenas en Build Settings.");
+    }
+
+    [MenuItem("POO Game/2. Master Final Delivery Setup")]
     public static void Setup()
     {
+        if (Application.isPlaying)
+        {
+            Debug.LogError("¡ERROR! Estás intentando regenerar la escena mientras el juego está en PLAY. Por favor, detén el juego (presiona el botón de Play para salir del modo juego) antes de usar este menú.");
+            return;
+        }
+
+        // 0. Configurar automáticamente las escenas en Build Settings
+        SetupBuildScenes();
+
         // 1. Force Maximize on Play
         EditorPrefs.SetBool("GameView.MaximizeOnPlay", true);
 
@@ -48,8 +98,8 @@ public class SceneAutoSetup : EditorWindow
         {
             bgRenderer.sprite = classroomSprite;
             backgroundObj.transform.position = new Vector3(0, 0, 0); 
-            // Restaurar la escala de la escena a 1.0
-            backgroundObj.transform.localScale = new Vector3(1f, 1f, 1f);
+            // Restaurar la escala de la escena pero más grande
+            backgroundObj.transform.localScale = new Vector3(1.5f, 1.5f, 1f);
         }
 
         // --- SISTEMA DE FÍSICAS (BARRERAS INVISIBLES) ---
@@ -58,23 +108,23 @@ public class SceneAutoSetup : EditorWindow
 
         // Limite Superior (Pizarra / Muro)
         var topWall = backgroundObj.AddComponent<BoxCollider2D>();
-        topWall.size = new Vector2(10f, 1f);
-        topWall.offset = new Vector2(0f, 2.2f);
+        topWall.size = new Vector2(15f, 1f);
+        topWall.offset = new Vector2(0f, 3.3f);
 
         // Limite Inferior
         var bottomWall = backgroundObj.AddComponent<BoxCollider2D>();
-        bottomWall.size = new Vector2(10f, 1f);
-        bottomWall.offset = new Vector2(0f, -2.4f);
+        bottomWall.size = new Vector2(15f, 1f);
+        bottomWall.offset = new Vector2(0f, -3.6f);
 
         // Limite Izquierdo
         var leftWall = backgroundObj.AddComponent<BoxCollider2D>();
-        leftWall.size = new Vector2(1f, 6f);
-        leftWall.offset = new Vector2(-4.6f, 0f);
+        leftWall.size = new Vector2(1f, 10f);
+        leftWall.offset = new Vector2(-6.9f, 0f);
 
         // Limite Derecho
         var rightWall = backgroundObj.AddComponent<BoxCollider2D>();
-        rightWall.size = new Vector2(1f, 6f);
-        rightWall.offset = new Vector2(4.6f, 0f);
+        rightWall.size = new Vector2(1f, 10f);
+        rightWall.offset = new Vector2(6.9f, 0f);
 
         // 5. Build Environment Collision/Grid (Optional for now, but keeping an empty grid)
         GameObject gridObj = new GameObject("Environment_Grid", typeof(Grid));
@@ -166,6 +216,47 @@ public class SceneAutoSetup : EditorWindow
         nCol.size = new Vector2(0.8f, 0.8f);
         nCol.offset = new Vector2(0, 0.4f);
 
+        // 7.5 BULLIES (3 Personajes en un rincón)
+        string bullyStoryPath = "Assets/Stories/BullyEncounter.asset";
+        var bullyStory = AssetDatabase.LoadAssetAtPath<HeartQuest.Core.DialogueData>(bullyStoryPath);
+        if (bullyStory == null)
+        {
+            bullyStory = ScriptableObject.CreateInstance<HeartQuest.Core.DialogueData>();
+            bullyStory.moraleChangeOnComplete = -10;
+            bullyStory.triggersBattle = true; // ESTO INICIA LA BATALLA UNDERTALE
+            bullyStory.lines = new HeartQuest.Core.DialogueLine[]
+            {
+                new HeartQuest.Core.DialogueLine { speakerName = "Banda de Bullys", text = "¿Qué estás mirando, perdedor?" },
+                new HeartQuest.Core.DialogueLine { speakerName = "Banda de Bullys", text = "Te equivocaste de pasillo. ¡Prepárate!" }
+            };
+            AssetDatabase.CreateAsset(bullyStory, bullyStoryPath);
+        }
+
+        string[] bullyNames = { "Max", "Leo", "Tyson" };
+        Vector3[] bullyPositions = { new Vector3(-4f, 1f, 0), new Vector3(-5f, 0.5f, 0), new Vector3(-4f, 0f, 0) };
+
+        for (int i = 0; i < 3; i++)
+        {
+            GameObject bObj = new GameObject("Bully_" + bullyNames[i]);
+            bObj.transform.position = bullyPositions[i];
+            bObj.AddComponent<SpriteRenderer>().sortingOrder = 9;
+            // Usamos a blonde_man temporalmente como sprite del Bully
+            bObj.AddComponent<Animator>().runtimeAnimatorController = AnimationBuilder.GeneratePlayerAnimator(p1Path);
+            bObj.GetComponent<SpriteRenderer>().sprite = AssetDatabase.LoadAllAssetsAtPath(p1Path).OfType<Sprite>().FirstOrDefault();
+            
+            var bClass = bObj.AddComponent<AntiBullyingGame.RPG.Bully>();
+            var soBully = new SerializedObject(bClass);
+            soBully.FindProperty("entityName").stringValue = bullyNames[i];
+            soBully.FindProperty("story").objectReferenceValue = bullyStory;
+            soBully.ApplyModifiedProperties();
+
+            var bRb = bObj.AddComponent<Rigidbody2D>();
+            bRb.bodyType = RigidbodyType2D.Static;
+            var bCol = bObj.AddComponent<BoxCollider2D>();
+            bCol.size = new Vector2(0.8f, 0.8f);
+            bCol.offset = new Vector2(0, 0.4f);
+        }
+
         // 7.8 GameManager
         GameObject gmObj = new GameObject("GameManager");
         gmObj.AddComponent<GameManager>();
@@ -196,29 +287,41 @@ public class SceneAutoSetup : EditorWindow
         Sprite titleSprite = AssetDatabase.LoadAssetAtPath<Sprite>(titleScreenPath);
         if (titleSprite != null) {
             panelImg.sprite = titleSprite;
-            panelImg.color = Color.white; // No tint
+            panelImg.color = Color.white;
         } else {
-            panelImg.color = new Color(0.1f, 0.1f, 0.1f, 1f); // Dark fallback
+            panelImg.color = new Color(0.1f, 0.1f, 0.1f, 1f);
         }
         
         RectTransform panelRT = panelObj.GetComponent<RectTransform>();
         panelRT.anchorMin = Vector2.zero; panelRT.anchorMax = Vector2.one; // Fullscreen
         panelRT.offsetMin = Vector2.zero; panelRT.offsetMax = Vector2.zero;
 
-        // Boton START (Hacemos que sea transparente y cubra TODA la pantalla)
+        // Boton START (Visible)
         GameObject btnObj = new GameObject("StartButton", typeof(RectTransform), typeof(Image), typeof(UnityEngine.UI.Button));
         btnObj.transform.SetParent(panelObj.transform, false);
         btnObj.layer = 5; // Layer UI
         Image btnImg = btnObj.GetComponent<Image>();
-        btnImg.color = new Color(1f, 1f, 1f, 0f); // 100% Transparente
+        btnImg.color = new Color(0f, 0.8f, 0.2f, 1f); // Verde visible
         RectTransform btnRTC = btnObj.GetComponent<RectTransform>();
-        btnRTC.anchorMin = Vector2.zero; 
-        btnRTC.anchorMax = Vector2.one; // Fullscreen
-        btnRTC.offsetMin = Vector2.zero; 
-        btnRTC.offsetMax = Vector2.zero;
+        btnRTC.anchorMin = new Vector2(0.5f, 0.5f);
+        btnRTC.anchorMax = new Vector2(0.5f, 0.5f);
+        btnRTC.sizeDelta = new Vector2(300, 100);
+        btnRTC.anchoredPosition = new Vector2(0, -150);
+        
+        // Texto del botón
+        GameObject txtObj = new GameObject("Text", typeof(RectTransform));
+        txtObj.transform.SetParent(btnObj.transform, false);
+        var txt = txtObj.AddComponent<TMPro.TextMeshProUGUI>();
+        txt.text = "INICIAR JUEGO";
+        txt.alignment = TMPro.TextAlignmentOptions.Center;
+        txt.color = Color.white;
+        txt.fontSize = 36;
+        RectTransform txtRT = txtObj.GetComponent<RectTransform>();
+        txtRT.anchorMin = Vector2.zero; txtRT.anchorMax = Vector2.one;
+        txtRT.offsetMin = Vector2.zero; txtRT.offsetMax = Vector2.zero;
         
         // Conectar el sistema con el Script que congela el juego
-        var startScript = canvasObj.AddComponent<StartMenu>();
+        var startScript = canvasObj.AddComponent<AntiBullyingGame.RPG.StartMenu>();
         startScript.startButton = btnObj.GetComponent<UnityEngine.UI.Button>();
         startScript.startMenuPanel = panelObj;
 
@@ -387,13 +490,16 @@ public class SceneAutoSetup : EditorWindow
         soDS.FindProperty("dialogueBox").objectReferenceValue = dialogueObj;
         soDS.ApplyModifiedProperties();
 
+        // Empezar con el diálogo DESACTIVADO para que no bloquee el movimiento
+        dialogueObj.SetActive(false);
+
         // 10. Camera Configuration (The Fix for the Skybox)
         var cam = Camera.main;
         if (cam != null)
         {
             cam.orthographic = true;
-            // Acercamos la cámara porque redujimos el tamaño del salón
-            cam.orthographicSize = 2.8f; 
+            // Aumentamos la cámara porque ampliamos el tamaño del salón
+            cam.orthographicSize = 4f; 
             cam.clearFlags = CameraClearFlags.SolidColor;  // REMOVES THE 3D HORIZON
             cam.backgroundColor = new Color(0.1f, 0.1f, 0.12f);
             
@@ -406,7 +512,10 @@ public class SceneAutoSetup : EditorWindow
             follow.smoothSpeed = 0.1f;
         }
 
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(currentScene);
+        if (!Application.isPlaying)
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(currentScene);
+        }
         Debug.Log("MASTER DELIVERY READY! Fixes injected. Press Play to see the classroom.");
     }
 

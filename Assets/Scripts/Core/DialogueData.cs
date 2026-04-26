@@ -40,5 +40,9 @@ namespace HeartQuest.Core
         [Header("Consecuencias por Defecto (Si no hay elecciones)")]
         [Tooltip("Cantidad de moral a sumar (positivo) o restar (negativo) al terminar de hablar.")]
         public int moraleChangeOnComplete = 0;
+
+        [Header("Combate")]
+        [Tooltip("Si es verdadero, al terminar el diálogo se cargará la escena de batalla.")]
+        public bool triggersBattle = false;
     }
 }

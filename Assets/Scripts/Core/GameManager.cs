@@ -35,6 +35,7 @@ namespace AntiBullyingGame.Core
         // Lista de objetos que "observan" a este GameManager (Patrón de Diseño Observer)
         private List<IObserver> observers = new List<IObserver>();
 
+
         // Métodos de la interfaz ISubject
         public void Attach(IObserver observer)
         {
@@ -100,6 +101,13 @@ namespace AntiBullyingGame.Core
         {
             IsInTowerDefenseMode = true;
             Debug.Log("Moral demasiado baja: ¡Cambiando al estado de Defender!");
+        }
+
+        public void StartBattle()
+        {
+            Debug.Log("Iniciando Batalla Undertale...");
+            // Carga la escena principal del paquete de Undertale
+            UnityEngine.SceneManagement.SceneManager.LoadScene("main scene");
         }
     }
 }
