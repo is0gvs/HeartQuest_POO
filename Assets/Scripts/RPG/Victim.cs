@@ -1,26 +1,29 @@
 using UnityEngine;
+using AntiBullyingGame.Interfaces;
 
 namespace AntiBullyingGame.RPG
 {
     /// <summary>
-    /// El estudiante que necesita ayuda en los pasillos.
+    /// NPC que representa a un estudiante siendo acosado.
+    /// Implementa IInteractable (Polimorfismo por Interfaz).
     /// </summary>
-    public class Victim : NPC
+    public class Victim : Character, IInteractable
     {
-        [Header("Victim Settings")]
-        [SerializeField] private int gratitudeLevel = 15;
+        [Header("Historia de la Víctima")]
+        public HeartQuest.Core.DialogueData story;
 
-        // Sobreescribimos Interact para la Víctima (POO: Polimorfismo)
-        public override void Interact()
+        public void Interact()
         {
-            Speak("Gracias por acercarte... la estoy pasando mal.");
-            
-            // Evitamos el Singleton prohibido en la rúbrica usando FindObjectOfType
-            Core.GameManager gm = UnityEngine.Object.FindObjectOfType<Core.GameManager>();
-            if (gm != null)
+            var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>();
+            if (ds != null && story != null)
             {
-                gm.AddMorale(gratitudeLevel);
-                ChangeMorale(20); 
+                ds.StartDialogueStory(story);
+            }
+            else
+            {
+                Speak("Gracias por acercarte... la estoy pasando mal.");
+                var gm = Object.FindAnyObjectByType<Core.GameManager>();
+                if (gm != null) gm.AddMorale(10);
             }
         }
     }

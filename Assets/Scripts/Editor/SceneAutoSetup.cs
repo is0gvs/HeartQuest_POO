@@ -109,7 +109,30 @@ public class SceneAutoSetup : EditorWindow
         var npcClass = npcObj.AddComponent<Victim>();
         var soNpc = new SerializedObject(npcClass);
         soNpc.FindProperty("entityName").stringValue = "Sofía";
+        
+        // --- Generar Historia de Prueba para Sofía ---
+        string storyPath = "Assets/Stories/Sofia_TestStory.asset";
+        if (!AssetDatabase.IsValidFolder("Assets/Stories")) AssetDatabase.CreateFolder("Assets", "Stories");
+        
+        var sofiaStory = AssetDatabase.LoadAssetAtPath<HeartQuest.Core.DialogueData>(storyPath);
+        if (sofiaStory == null)
+        {
+            sofiaStory = ScriptableObject.CreateInstance<HeartQuest.Core.DialogueData>();
+            sofiaStory.moraleChangeOnComplete = 15;
+            sofiaStory.lines = new HeartQuest.Core.DialogueLine[]
+            {
+                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Hola... ¿eres el nuevo, verdad?" },
+                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Esos chicos de allá me quitaron mis apuntes de matemáticas y los tiraron a la basura." },
+                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Nadie quiere ayudarme porque tienen miedo de que se la agarren con ellos..." },
+                new HeartQuest.Core.DialogueLine { speakerName = "Sofía", text = "Gracias por escucharme, me siento un poco mejor." }
+            };
+            AssetDatabase.CreateAsset(sofiaStory, storyPath);
+            AssetDatabase.SaveAssets();
+        }
+        
+        soNpc.FindProperty("story").objectReferenceValue = sofiaStory;
         soNpc.ApplyModifiedProperties();
+
         npcObj.GetComponent<SpriteRenderer>().sprite = AssetDatabase.LoadAllAssetsAtPath(p2Path).OfType<Sprite>().FirstOrDefault();
         
         // Físicas para NPC
@@ -174,6 +197,58 @@ public class SceneAutoSetup : EditorWindow
         var startScript = canvasObj.AddComponent<StartMenu>();
         startScript.startButton = btnObj.GetComponent<UnityEngine.UI.Button>();
         startScript.startMenuPanel = panelObj;
+
+        // 9.5 Dialogue System (Estilo Undertale)
+        GameObject dialogueObj = new GameObject("DialogueBox", typeof(RectTransform), typeof(Image));
+        dialogueObj.transform.SetParent(canvasObj.transform, false);
+        dialogueObj.layer = 5;
+        dialogueObj.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.95f); // Fondo oscuro
+        
+        RectTransform dRT = dialogueObj.GetComponent<RectTransform>();
+        dRT.anchorMin = new Vector2(0.1f, 0.05f); 
+        dRT.anchorMax = new Vector2(0.9f, 0.05f);
+        dRT.pivot = new Vector2(0.5f, 0);
+        dRT.sizeDelta = new Vector2(0, 200); // Altura de 200
+        dRT.anchoredPosition = Vector2.zero;
+
+        // Añadir el borde Neón
+        var outline = dialogueObj.AddComponent<UnityEngine.UI.Outline>();
+        outline.effectColor = new Color(0f, 0.898f, 1f, 1f); // Cian
+        outline.effectDistance = new Vector2(3, -3);
+
+        // Retrato (Portrait)
+        GameObject portraitObj = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
+        portraitObj.transform.SetParent(dialogueObj.transform, false);
+        RectTransform pRT = portraitObj.GetComponent<RectTransform>();
+        pRT.anchorMin = new Vector2(0, 0.5f);
+        pRT.anchorMax = new Vector2(0, 0.5f);
+        pRT.pivot = new Vector2(0, 0.5f);
+        pRT.sizeDelta = new Vector2(150, 150);
+        pRT.anchoredPosition = new Vector2(100, 0); // Ajustado a la derecha del borde
+        portraitObj.GetComponent<Image>().color = new Color(0.3f, 0.3f, 0.3f, 1f); // Placeholder gris
+
+        // Texto del Diálogo (TMPro)
+        GameObject textObj = new GameObject("Text", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
+        textObj.transform.SetParent(dialogueObj.transform, false);
+        RectTransform tRT = textObj.GetComponent<RectTransform>();
+        tRT.anchorMin = Vector2.zero;
+        tRT.anchorMax = Vector2.one;
+        tRT.offsetMin = new Vector2(210, 20); // Margen para que no pise el retrato
+        tRT.offsetMax = new Vector2(-20, -20);
+        
+        var tmpro = textObj.GetComponent<TMPro.TextMeshProUGUI>();
+        tmpro.text = "";
+        tmpro.fontSize = 35;
+        tmpro.color = Color.white;
+        tmpro.alignment = TMPro.TextAlignmentOptions.TopLeft;
+
+        // Configurar el componente DialogueSystem
+        var ds = dialogueObj.AddComponent<HeartQuest.UI.DialogueSystem>();
+        var soDS = new SerializedObject(ds);
+        soDS.FindProperty("dialogueText").objectReferenceValue = tmpro;
+        soDS.FindProperty("portraitImage").objectReferenceValue = portraitObj.GetComponent<Image>();
+        soDS.FindProperty("dialogueBox").objectReferenceValue = dialogueObj;
+        soDS.ApplyModifiedProperties();
 
         // 10. Camera Configuration (The Fix for the Skybox)
         var cam = Camera.main;

@@ -29,7 +29,10 @@ namespace HeartQuest.UI
         [SerializeField] private bool autoAdvance = false;
         [SerializeField] private float autoAdvanceDelay = 2f;
 
-        // Estado interno
+        // Estado interno de la conversación
+        private HeartQuest.Core.DialogueData currentStory;
+        private int currentLineIndex = 0;
+
         private Coroutine typingCoroutine;
         private bool isTyping = false;
         private string currentFullText = "";
@@ -58,8 +61,8 @@ namespace HeartQuest.UI
                     }
                     else
                     {
-                        // Cerrar el diálogo
-                        HideDialogue();
+                        // Avanzar a la siguiente línea de la historia
+                        ShowNextLine();
                     }
                 }
             }
@@ -70,10 +73,53 @@ namespace HeartQuest.UI
         // ═══════════════════════════════════════
 
         /// <summary>
-        /// Muestra un diálogo con efecto de typewriter.
+        /// Inicia una historia completa usando un ScriptableObject (DialogueData)
         /// </summary>
-        /// <param name="text">El texto completo a mostrar.</param>
-        /// <param name="portrait">Sprite opcional del personaje que habla.</param>
+        public void StartDialogueStory(HeartQuest.Core.DialogueData story)
+        {
+            if (story == null || story.lines == null || story.lines.Length == 0) return;
+
+            currentStory = story;
+            currentLineIndex = 0;
+            dialogueBox.SetActive(true);
+            
+            ShowNextLine();
+        }
+
+        /// <summary>
+        /// Avanza la historia. Si se acabó, cierra la caja y aplica consecuencias.
+        /// </summary>
+        private void ShowNextLine()
+        {
+            if (currentStory != null && currentLineIndex < currentStory.lines.Length)
+            {
+                var line = currentStory.lines[currentLineIndex];
+                ShowDialogue($"<color=#00E5FF>{line.speakerName}</color>\n{line.text}", line.portrait);
+                currentLineIndex++;
+            }
+            else
+            {
+                HideDialogue();
+                
+                // Aplicar consecuencias al terminar
+                if (currentStory != null && currentStory.moraleChangeOnComplete != 0)
+                {
+                    var gm = UnityEngine.Object.FindAnyObjectByType<AntiBullyingGame.Core.GameManager>();
+                    if (gm != null)
+                    {
+                        if (currentStory.moraleChangeOnComplete > 0)
+                            gm.AddMorale(currentStory.moraleChangeOnComplete);
+                        else
+                            gm.DeductMorale(-currentStory.moraleChangeOnComplete);
+                    }
+                }
+                currentStory = null;
+            }
+        }
+
+        /// <summary>
+        /// Muestra un diálogo individual con efecto de typewriter.
+        /// </summary>
         public void ShowDialogue(string text, Sprite portrait = null)
         {
             if (dialogueBox == null || dialogueText == null) return;

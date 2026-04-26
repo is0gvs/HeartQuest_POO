@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48523a17e88479544aecb45b66eb2bb6, type: 3}
+  m_Name: Sofia_TestStory
+  m_EditorClassIdentifier: Assembly-CSharp::HeartQuest.Core.DialogueData
+  lines:
+  - speakerName: "Sof\xEDa"
+    text: "Hola... \xBFeres el nuevo, verdad?"
+    portrait: {fileID: 0}
+  - speakerName: "Sof\xEDa"
+    text: "Esos chicos de all\xE1 me quitaron mis apuntes de matem\xE1ticas y los
+      tiraron a la basura."
+    portrait: {fileID: 0}
+  - speakerName: "Sof\xEDa"
+    text: Nadie quiere ayudarme porque tienen miedo de que se la agarren con ellos...
+    portrait: {fileID: 0}
+  - speakerName: "Sof\xEDa"
+    text: Gracias por escucharme, me siento un poco mejor.
+    portrait: {fileID: 0}
+  moraleChangeOnComplete: 15

@@ -1,30 +1,29 @@
 using UnityEngine;
+using AntiBullyingGame.Interfaces;
 
 namespace AntiBullyingGame.RPG
 {
     /// <summary>
-    /// El antagonista en la fase de exploración.
-    /// Hereda de NPC (Polimorfismo en la Interacción).
+    /// NPC que representa a un acosador escolar.
+    /// Implementa IInteractable (Polimorfismo por Interfaz).
     /// </summary>
-    public class Bully : NPC
+    public class Bully : Character, IInteractable
     {
-        [Header("Bully Settings")]
-        [SerializeField] private int aggressionLevel = 10;
+        [Header("Historia del Bully")]
+        public HeartQuest.Core.DialogueData story;
 
-        // Sobreescribimos Interact para que el Bully tenga un comportamiento agresivo (POO: Polimorfismo)
-        public override void Interact()
+        public void Interact()
         {
-            Speak("¿Qué miras? ¡No te metas en lo que no te importa!");
-            
-            // Reemplazo de Singleton usando búsqueda referenciada para cumplir rúbrica
-            Core.GameManager gm = UnityEngine.Object.FindObjectOfType<Core.GameManager>();
-            if (gm != null)
+            var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>();
+            if (ds != null && story != null)
             {
-                gm.DeductMorale(aggressionLevel);
+                ds.StartDialogueStory(story);
             }
             else
             {
-                Debug.LogWarning("Falta el GameManager en la escena.");
+                Speak("¿Qué me miras? ¡Largo de aquí!");
+                var gm = Object.FindAnyObjectByType<Core.GameManager>();
+                if (gm != null) gm.DeductMorale(5);
             }
         }
     }
