@@ -136,7 +136,7 @@ namespace AntiBullyingGame.Core
 
         public void StartBattle()
         {
-            Debug.Log("Iniciando Batalla Undertale...");
+            Debug.Log("Iniciando Batalla AntiBullying...");
             
             // Ocultar la UI de la escuela para que no tape la batalla
             GameObject ui = GameObject.Find("UI_Presentation");
@@ -145,8 +145,8 @@ namespace AntiBullyingGame.Core
             // Asegurar que el tiempo esté corriendo antes del cambio
             Time.timeScale = 1f;
 
-            // Carga la escena principal del paquete de Undertale usando su ruta completa para evitar errores de Perfil en Unity 6
-            UnityEngine.SceneManagement.SceneManager.LoadScene("Assets/Examples/Scenes/main scene.unity");
+            // Carga la escena de batalla unificada
+            UnityEngine.SceneManagement.SceneManager.LoadScene("BattleScene");
         }
     }
 }

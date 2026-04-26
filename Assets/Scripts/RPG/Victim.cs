@@ -7,12 +7,12 @@ namespace AntiBullyingGame.RPG
     /// NPC que representa a un estudiante siendo acosado.
     /// Implementa IInteractable (Polimorfismo por Interfaz).
     /// </summary>
-    public class Victim : Character, IInteractable
+    public class Victim : NPC
     {
         [Header("Historia de la Víctima")]
         public HeartQuest.Core.DialogueData story;
 
-        public void Interact()
+        public override void Interact()
         {
             var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>(FindObjectsInactive.Include);
             if (ds != null && story != null)

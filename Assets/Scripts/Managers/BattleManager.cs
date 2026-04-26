@@ -83,12 +83,11 @@ public class BattleManager : MonoBehaviour
 
     void Start()
     {
-        //We set the selectionInt (the int responsible for knowing which button's which) to the fight button int, aka 0, & set it's min & max values
         selectionInt = 0;
         maxSelectionInt = 3;
         minSelectionInt = 0;
         attackMgr = AttackManager.instance;
-        playerVariables = FindObjectOfType<PlayerVars>();
+        playerVariables = FindAnyObjectByType<PlayerVars>();
     }
 
     void Update()
@@ -296,7 +295,7 @@ public class BattleManager : MonoBehaviour
             }
             else
             {
-                DialogueManager.instance.dialogueTxt = actingMgr.flavorText[UnityEngine.Random.Range(0, actingMgr.flavorText.Capacity)];
+                DialogueManager.instance.dialogueTxt = actingMgr.flavorText[UnityEngine.Random.Range(0, actingMgr.flavorText.Count)];
             }
             
         };
@@ -341,7 +340,7 @@ public class BattleManager : MonoBehaviour
             }
             else
             {
-                DialogueManager.instance.dialogueTxt = actingMgr.flavorText[UnityEngine.Random.Range(0, actingMgr.flavorText.Capacity)];
+                DialogueManager.instance.dialogueTxt = actingMgr.flavorText[UnityEngine.Random.Range(0, actingMgr.flavorText.Count)];
             }
             ItemManager.instance.time = 0;
             soul.enabled = true;

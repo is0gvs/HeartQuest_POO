@@ -7,12 +7,12 @@ namespace AntiBullyingGame.RPG
     /// NPC que representa a un acosador escolar.
     /// Implementa IInteractable (Polimorfismo por Interfaz).
     /// </summary>
-    public class Bully : Character, IInteractable
+    public class Bully : NPC
     {
         [Header("Historia del Bully")]
         public HeartQuest.Core.DialogueData story;
 
-        public void Interact()
+        public override void Interact()
         {
             var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>(FindObjectsInactive.Include);
             if (ds != null && story != null)
