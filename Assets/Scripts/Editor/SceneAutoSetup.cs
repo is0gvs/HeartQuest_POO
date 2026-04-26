@@ -10,7 +10,7 @@ using UnityEngine.UI;
 
 public class SceneAutoSetup : EditorWindow
 {
-    [MenuItem("POO Game/Master Final Delivery Setup")]
+    // [MenuItem("POO Game/Master Final Delivery Setup")] // Removido a petición del usuario
     public static void Setup()
     {
         // 1. Force Maximize on Play
@@ -188,40 +188,6 @@ public class SceneAutoSetup : EditorWindow
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
         
-        // Panel de Inicio (Imagen de título)
-        GameObject panelObj = new GameObject("StartScreenPanel", typeof(RectTransform), typeof(Image));
-        panelObj.transform.SetParent(canvasObj.transform, false);
-        panelObj.layer = 5; // Layer UI
-        Image panelImg = panelObj.GetComponent<Image>();
-        Sprite titleSprite = AssetDatabase.LoadAssetAtPath<Sprite>(titleScreenPath);
-        if (titleSprite != null) {
-            panelImg.sprite = titleSprite;
-            panelImg.color = Color.white; // No tint
-        } else {
-            panelImg.color = new Color(0.1f, 0.1f, 0.1f, 1f); // Dark fallback
-        }
-        
-        RectTransform panelRT = panelObj.GetComponent<RectTransform>();
-        panelRT.anchorMin = Vector2.zero; panelRT.anchorMax = Vector2.one; // Fullscreen
-        panelRT.offsetMin = Vector2.zero; panelRT.offsetMax = Vector2.zero;
-
-        // Boton START (Hacemos que sea transparente y cubra TODA la pantalla)
-        GameObject btnObj = new GameObject("StartButton", typeof(RectTransform), typeof(Image), typeof(UnityEngine.UI.Button));
-        btnObj.transform.SetParent(panelObj.transform, false);
-        btnObj.layer = 5; // Layer UI
-        Image btnImg = btnObj.GetComponent<Image>();
-        btnImg.color = new Color(1f, 1f, 1f, 0f); // 100% Transparente
-        RectTransform btnRTC = btnObj.GetComponent<RectTransform>();
-        btnRTC.anchorMin = Vector2.zero; 
-        btnRTC.anchorMax = Vector2.one; // Fullscreen
-        btnRTC.offsetMin = Vector2.zero; 
-        btnRTC.offsetMax = Vector2.zero;
-        
-        // Conectar el sistema con el Script que congela el juego
-        var startScript = canvasObj.AddComponent<StartMenu>();
-        startScript.startButton = btnObj.GetComponent<UnityEngine.UI.Button>();
-        startScript.startMenuPanel = panelObj;
-
         // 9.5 RPG Stats UI (Top Left, Estilo Undertale Moderno)
         GameObject statsPanelObj = new GameObject("PlayerStatsUI", typeof(RectTransform), typeof(Image));
         statsPanelObj.transform.SetParent(canvasObj.transform, false);

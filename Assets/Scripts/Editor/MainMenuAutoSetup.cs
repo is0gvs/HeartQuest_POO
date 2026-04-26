@@ -14,7 +14,7 @@ public class MainMenuAutoSetup
     static Color textWhite = new Color(0.9f, 0.92f, 0.95f, 1f);
     static Color textDim = new Color(0.5f, 0.55f, 0.65f, 1f);
 
-    [MenuItem("POO Game/Setup Cyberpunk Main Menu")]
+    // [MenuItem("POO Game/Setup Cyberpunk Main Menu")] // Removido a petición del usuario
     public static void SetupMainMenu()
     {
         // Limpiar escena
