@@ -27,7 +27,7 @@ public class SceneAutoSetup : EditorWindow
         string titleScreenPath = "Assets/Sprites/Backgrounds/TitleScreen_BG.png";
         string classroomBgPath = "Assets/Sprites/Backgrounds/Classroom_BG.png";
         ConfigureSingleSprite(titleScreenPath, 16);
-        ConfigureSingleSprite(classroomBgPath, 16);
+        ConfigureSingleSprite(classroomBgPath, 32);
 
         // 3. Cleanup Scene safely
         var currentScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
@@ -58,23 +58,23 @@ public class SceneAutoSetup : EditorWindow
 
         // Limite Superior (Pizarra / Muro)
         var topWall = backgroundObj.AddComponent<BoxCollider2D>();
-        topWall.size = new Vector2(40f, 6f);
-        topWall.offset = new Vector2(0f, 13f);
+        topWall.size = new Vector2(10f, 1f);
+        topWall.offset = new Vector2(0f, 2.2f);
 
         // Limite Inferior
         var bottomWall = backgroundObj.AddComponent<BoxCollider2D>();
-        bottomWall.size = new Vector2(40f, 2f);
-        bottomWall.offset = new Vector2(0f, -14f);
+        bottomWall.size = new Vector2(10f, 1f);
+        bottomWall.offset = new Vector2(0f, -2.4f);
 
         // Limite Izquierdo
         var leftWall = backgroundObj.AddComponent<BoxCollider2D>();
-        leftWall.size = new Vector2(2f, 30f);
-        leftWall.offset = new Vector2(-19.5f, 0f);
+        leftWall.size = new Vector2(1f, 6f);
+        leftWall.offset = new Vector2(-4.6f, 0f);
 
         // Limite Derecho
         var rightWall = backgroundObj.AddComponent<BoxCollider2D>();
-        rightWall.size = new Vector2(2f, 30f);
-        rightWall.offset = new Vector2(19.5f, 0f);
+        rightWall.size = new Vector2(1f, 6f);
+        rightWall.offset = new Vector2(4.6f, 0f);
 
         // 5. Build Environment Collision/Grid (Optional for now, but keeping an empty grid)
         GameObject gridObj = new GameObject("Environment_Grid", typeof(Grid));
@@ -82,7 +82,7 @@ public class SceneAutoSetup : EditorWindow
 
         // 6. Player
         GameObject playerObj = new GameObject("PlayerAccountant");
-        playerObj.transform.position = new Vector3(0, -2, 0);
+        playerObj.transform.position = new Vector3(0, -1, 0);
         var sr = playerObj.AddComponent<SpriteRenderer>();
         var anim = playerObj.AddComponent<Animator>();
         var pClass = playerObj.AddComponent<Player>();
@@ -103,7 +103,7 @@ public class SceneAutoSetup : EditorWindow
 
         // 7. NPC (Victima)
         GameObject npcObj = new GameObject("Classmate_Sofia");
-        npcObj.transform.position = new Vector3(4, -1, 0); // Spaced appropriately
+        npcObj.transform.position = new Vector3(2, -0.5f, 0); // Spaced appropriately
         npcObj.AddComponent<SpriteRenderer>().sortingOrder = 9;
         npcObj.AddComponent<Animator>().runtimeAnimatorController = AnimationBuilder.GeneratePlayerAnimator(p2Path);
         var npcClass = npcObj.AddComponent<Victim>();
@@ -180,9 +180,9 @@ public class SceneAutoSetup : EditorWindow
         if (cam != null)
         {
             cam.orthographic = true;
-            // Restauramos el orthographicSize a 5f
-            cam.orthographicSize = 5f; 
-            cam.clearFlags = CameraClearFlags.SolidColor; // REMOVES THE 3D HORIZON
+            // Acercamos la cámara porque redujimos el tamaño del salón
+            cam.orthographicSize = 2.8f; 
+            cam.clearFlags = CameraClearFlags.SolidColor;  // REMOVES THE 3D HORIZON
             cam.backgroundColor = new Color(0.1f, 0.1f, 0.12f);
             
             // Clean up old follow component if exists
