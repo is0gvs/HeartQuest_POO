@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using AntiBullyingGame.Managers;
 
 namespace AntiBullyingGame.UI
 {
@@ -33,27 +34,45 @@ namespace AntiBullyingGame.UI
             SceneManager.LoadScene(sceneToLoad);
         }
 
-        public void StartGame()
+        private void EnsureSaveManagerExists()
         {
-            Debug.Log("Start pressed...");
-            // You can load a scene or open a sub-menu here
-            SceneManager.LoadScene(sceneToLoad);
+            if (SaveManager.Instance == null)
+            {
+                new GameObject("SaveManager").AddComponent<SaveManager>();
+            }
         }
 
         public void ContinueGame()
         {
-            Debug.Log("Continuar juego...");
+            EnsureSaveManagerExists();
+            if (SaveManager.Instance.HasSaveFile())
+            {
+                Debug.Log("Continuando desde partida guardada...");
+                SaveManager.Instance.loadOnSceneLoad = true;
+                SceneManager.LoadScene(sceneToLoad);
+            }
+            else
+            {
+                Debug.LogWarning("No hay archivo de guardado, iniciando juego nuevo...");
+                SaveManager.Instance.loadOnSceneLoad = false;
+                SceneManager.LoadScene(sceneToLoad);
+            }
         }
 
         public void NewGame()
         {
-            Debug.Log("Nuevo juego...");
+            Debug.Log("Iniciando nuevo juego...");
+            EnsureSaveManagerExists();
+            SaveManager.Instance.CreateNewProfile();
+            SaveManager.Instance.loadOnSceneLoad = false;
             SceneManager.LoadScene(sceneToLoad);
         }
 
         public void LoadGame()
         {
-            Debug.Log("Cargar juego...");
+            Debug.Log("Cargando partida...");
+            // Por ahora asume que carga el mismo archivo que continuar
+            ContinueGame();
         }
 
         public void ShowOptions()
