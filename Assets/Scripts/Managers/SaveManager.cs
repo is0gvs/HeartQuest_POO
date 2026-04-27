@@ -159,12 +159,21 @@ namespace AntiBullyingGame.Managers
                 data.position[0] = player.transform.position.x;
                 data.position[1] = player.transform.position.y;
                 data.position[2] = player.transform.position.z;
-                
+            }
+
+            // Guardar Moral desde el GameManager, que controla la UI
+            GameManager gm = FindAnyObjectByType<GameManager>();
+            if (gm != null) 
+            {
+                data.morale = gm.CurrentMorale;
+            } 
+            else if (player != null) 
+            {
                 data.morale = player.Morale;
             }
             else
             {
-                Debug.LogWarning("[SaveManager] No se encontró al jugador en la escena actual para guardar su estado.");
+                Debug.LogWarning("[SaveManager] No se encontró al jugador ni al GameManager en la escena actual para guardar su estado.");
             }
 
             SaveGame(data);
@@ -189,15 +198,23 @@ namespace AntiBullyingGame.Managers
                 if (player != null)
                 {
                     player.transform.position = new Vector3(data.position[0], data.position[1], data.position[2]);
-                    
-                    // Ajustar la moral.
                     player.SetMorale(data.morale);
-                    
+                }
+
+                // Sincronizar con el GameManager para que la UI se actualice
+                GameManager gm = FindAnyObjectByType<GameManager>();
+                if (gm != null)
+                {
+                    gm.SetMorale(data.morale);
+                }
+
+                if (player != null || gm != null)
+                {
                     Debug.Log("[SaveManager] Estado del jugador aplicado exitosamente.");
                 }
                 else
                 {
-                    Debug.LogWarning("[SaveManager] No se encontró al jugador en la escena para aplicar el estado.");
+                    Debug.LogWarning("[SaveManager] No se encontró al jugador ni al GameManager en la escena para aplicar el estado.");
                 }
             }
         }
