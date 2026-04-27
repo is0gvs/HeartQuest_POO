@@ -24,10 +24,11 @@ public class BuildFullGameWorkflow : Editor
             System.IO.Directory.CreateDirectory("Assets/Scenes");
         }
 
+        // 1. Generar Menú Principal
         Debug.Log("<color=yellow>--- 1. CONSTRUYENDO MENÚ PRINCIPAL ---</color>");
+        string menuPath = "Assets/Scenes/MainMenu.unity";
         var menuScene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
         MainMenuAutoSetup.SetupMainMenu();
-        string menuPath = "Assets/Scenes/MainMenu.unity";
         EditorSceneManager.SaveScene(menuScene, menuPath);
 
         Debug.Log("<color=yellow>--- 2. CONSTRUYENDO SALÓN DE CLASES ---</color>");

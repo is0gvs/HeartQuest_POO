@@ -32,7 +32,7 @@ public class Attacking : MonoBehaviour
 
     void Start()
     {
-        enemy = FindObjectOfType<EnemyVars>();     
+        enemy = FindAnyObjectByType<EnemyVars>();     
     }
     float PointerProgressToAttackMultiplier(float progress)
     {

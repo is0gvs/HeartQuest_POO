@@ -12,7 +12,7 @@ public class ProjectileLogic : MonoBehaviour
     public float shownTime;
     void Start()
     {
-        enemy = FindObjectOfType<EnemyVars>().GetComponent<EnemyVars>();
+        enemy = FindAnyObjectByType<EnemyVars>().GetComponent<EnemyVars>();
     }
     void Awake()
     {

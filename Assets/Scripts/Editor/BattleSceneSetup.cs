@@ -161,7 +161,9 @@ public class BattleSceneSetup : Editor
             var txtGO = new GameObject("Label"); txtGO.transform.parent = bGO.transform;
             txtGO.transform.localPosition = Vector3.zero;
             var tmp = txtGO.AddComponent<TMPro.TextMeshPro>();
-            tmp.text = btnNames[i]; tmp.fontSize = 0.65f;
+            tmp.text = btnNames[i]; 
+            tmp.rectTransform.sizeDelta = new Vector2(3f, 0.8f);
+            tmp.enableAutoSizing = true; tmp.fontSizeMin = 2f; tmp.fontSizeMax = 6f;
             tmp.color = Color.white; tmp.alignment = TMPro.TextAlignmentOptions.Center;
             tmp.fontStyle = TMPro.FontStyles.Bold; tmp.sortingOrder = 4;
 
@@ -195,7 +197,10 @@ public class BattleSceneSetup : Editor
 
             var aTxtGO = new GameObject("Label"); aTxtGO.transform.parent = aGO.transform; aTxtGO.transform.localPosition = Vector3.zero;
             var aTmp = aTxtGO.AddComponent<TMPro.TextMeshPro>();
-            aTmp.text = actNames[i]; aTmp.fontSize = 0.55f; aTmp.color = Color.white; aTmp.alignment = TMPro.TextAlignmentOptions.Center; aTmp.sortingOrder = 4;
+            aTmp.text = actNames[i];
+            aTmp.rectTransform.sizeDelta = new Vector2(2.3f, 0.6f);
+            aTmp.enableAutoSizing = true; aTmp.fontSizeMin = 2f; aTmp.fontSizeMax = 5f;
+            aTmp.color = Color.white; aTmp.alignment = TMPro.TextAlignmentOptions.Center; aTmp.sortingOrder = 4;
 
             var aspGO = new GameObject("SoulPos"); aspGO.transform.parent = aGO.transform; aspGO.transform.localPosition = new Vector3(-1.0f,0,0);
 
@@ -232,7 +237,10 @@ public class BattleSceneSetup : Editor
 
             var iTxtGO = new GameObject("Label"); iTxtGO.transform.parent = iGO.transform; iTxtGO.transform.localPosition = Vector3.zero;
             var iTmp = iTxtGO.AddComponent<TMPro.TextMeshPro>();
-            iTmp.text = itmNames[i]; iTmp.fontSize = 0.55f; iTmp.color = Color.white; iTmp.alignment = TMPro.TextAlignmentOptions.Center; iTmp.sortingOrder = 4;
+            iTmp.text = itmNames[i];
+            iTmp.rectTransform.sizeDelta = new Vector2(2.4f, 0.6f);
+            iTmp.enableAutoSizing = true; iTmp.fontSizeMin = 2f; iTmp.fontSizeMax = 5f;
+            iTmp.color = Color.white; iTmp.alignment = TMPro.TextAlignmentOptions.Center; iTmp.sortingOrder = 4;
 
             var ispGO = new GameObject("SoulPos"); ispGO.transform.parent = iGO.transform; ispGO.transform.localPosition = new Vector3(-1.0f,0,0);
 
@@ -246,26 +254,26 @@ public class BattleSceneSetup : Editor
         }
 
         // ── Resto de la UI (Textos, Barra HP, etc) ───────────────────────────
-        var hpBgGO = new GameObject("HPBar_BG"); hpBgGO.transform.parent = ui.transform; hpBgGO.transform.position = new Vector3(1.5f,-4.7f,0);
+        var hpBgGO = new GameObject("HPBar_BG"); hpBgGO.transform.parent = ui.transform; hpBgGO.transform.position = new Vector3(0.5f,-4.7f,0);
         var hpBgSR = hpBgGO.AddComponent<SpriteRenderer>(); hpBgSR.sprite = sq; hpBgSR.drawMode = SpriteDrawMode.Sliced; hpBgSR.size = new Vector2(3f,0.25f); hpBgSR.color = new Color(0.2f,0f,0f); hpBgSR.sortingOrder = 2;
 
-        var hpFillGO = new GameObject("HPBar_Fill"); hpFillGO.transform.parent = ui.transform; hpFillGO.transform.position = new Vector3(1.5f,-4.7f,0);
+        var hpFillGO = new GameObject("HPBar_Fill"); hpFillGO.transform.parent = ui.transform; hpFillGO.transform.position = new Vector3(0.5f,-4.7f,0);
         var hpFillSR = hpFillGO.AddComponent<SpriteRenderer>(); hpFillSR.sprite = sq; hpFillSR.drawMode = SpriteDrawMode.Sliced; hpFillSR.size = new Vector2(3f,0.25f); hpFillSR.color = new Color(0.2f,0.8f,0.4f); hpFillSR.sortingOrder = 3;
 
-        var hpTxtGO = new GameObject("HPText"); hpTxtGO.transform.parent = ui.transform; hpTxtGO.transform.position = new Vector3(-0.5f,-4.7f,0);
-        var hpTmp = hpTxtGO.AddComponent<TMPro.TextMeshPro>(); hpTmp.text = "ESTADO  20/20"; hpTmp.fontSize = 0.5f; hpTmp.color = Color.white; hpTmp.sortingOrder = 4;
+        var hpTxtGO = new GameObject("HPText"); hpTxtGO.transform.parent = ui.transform; hpTxtGO.transform.position = new Vector3(-2f,-4.7f,0);
+        var hpTmp = hpTxtGO.AddComponent<TMPro.TextMeshPro>(); hpTmp.text = "ESTADO  20/20"; hpTmp.fontSize = 2f; hpTmp.color = Color.white; hpTmp.sortingOrder = 4;
 
         var actTxtGO = new GameObject("ActingText"); actTxtGO.transform.parent = ui.transform; actTxtGO.transform.position = new Vector3(-5.2f,-3.2f,0);
-        var actTmp = actTxtGO.AddComponent<TMPro.TextMeshPro>(); actTmp.text = "* Te interpones entre Mateo y su víctima."; actTmp.fontSize = 0.6f; actTmp.color = Color.white; actTmp.sortingOrder = 4;
+        var actTmp = actTxtGO.AddComponent<TMPro.TextMeshPro>(); actTmp.text = "* Te interpones entre Mateo y su víctima."; actTmp.rectTransform.sizeDelta = new Vector2(10f, 2f); actTmp.enableAutoSizing = true; actTmp.fontSizeMin = 2f; actTmp.fontSizeMax = 3.5f; actTmp.color = Color.white; actTmp.sortingOrder = 4;
 
         var pdTxtGO = new GameObject("PlayerDlgText"); pdTxtGO.transform.parent = ui.transform; pdTxtGO.transform.position = new Vector3(-5.2f,-4.9f,0);
-        var pdTmp = pdTxtGO.AddComponent<TMPro.TextMeshPro>(); pdTmp.fontSize = 0.55f; pdTmp.color = Color.white; pdTmp.sortingOrder = 4;
+        var pdTmp = pdTxtGO.AddComponent<TMPro.TextMeshPro>(); pdTmp.rectTransform.sizeDelta = new Vector2(10f, 2f); pdTmp.enableAutoSizing = true; pdTmp.fontSizeMin = 2f; pdTmp.fontSizeMax = 3.5f; pdTmp.color = Color.white; pdTmp.sortingOrder = 4;
 
         var edBgGO = new GameObject("EnemyDlgBG"); edBgGO.transform.parent = ui.transform; edBgGO.transform.position = new Vector3(0f,0.4f,0);
-        var edBgSR = edBgGO.AddComponent<SpriteRenderer>(); edBgSR.sprite = MakeHollowButton(Color.white); edBgSR.drawMode = SpriteDrawMode.Sliced; edBgSR.size = new Vector2(8f,1.2f); edBgSR.color = Color.white; edBgSR.sortingOrder = 4; edBgGO.SetActive(false);
+        var edBgSR = edBgGO.AddComponent<SpriteRenderer>(); edBgSR.sprite = MakeHollowButton(Color.white); edBgSR.drawMode = SpriteDrawMode.Sliced; edBgSR.size = new Vector2(8f,1.5f); edBgSR.color = Color.white; edBgSR.sortingOrder = 4; edBgGO.SetActive(false);
         
         var edTxtGO = new GameObject("EnemyDlgText"); edTxtGO.transform.parent = edBgGO.transform; edTxtGO.transform.localPosition = Vector3.zero;
-        var edTmp = edTxtGO.AddComponent<TMPro.TextMeshPro>(); edTmp.fontSize = 0.55f; edTmp.color = Color.white; edTmp.alignment = TMPro.TextAlignmentOptions.Center; edTmp.sortingOrder = 5;
+        var edTmp = edTxtGO.AddComponent<TMPro.TextMeshPro>(); edTmp.rectTransform.sizeDelta = new Vector2(7f, 1f); edTmp.enableAutoSizing = true; edTmp.fontSizeMin = 2f; edTmp.fontSizeMax = 4f; edTmp.color = Color.white; edTmp.alignment = TMPro.TextAlignmentOptions.Center; edTmp.sortingOrder = 5;
 
         var dmgGO = new GameObject("DamageFlash"); dmgGO.transform.parent = ui.transform; var dmgSR = dmgGO.AddComponent<SpriteRenderer>(); dmgSR.sprite = sq; dmgSR.drawMode = SpriteDrawMode.Sliced; dmgSR.size = new Vector2(20,12); dmgSR.color = new Color(1,0,0,0.4f); dmgSR.sortingOrder = 20; dmgGO.SetActive(false);
         var mercyGO = new GameObject("MercyMenu"); mercyGO.transform.parent = ui.transform; mercyGO.SetActive(false);
@@ -312,7 +320,7 @@ public class BattleSceneSetup : Editor
         var itmBtnProp = imSO.FindProperty("buttons"); itmBtnProp.arraySize = 4;
         for (int i = 0; i < 4; i++) itmBtnProp.GetArrayElementAtIndex(i).objectReferenceValue = itmBtns[i];
         var useTxtGO = new GameObject("UseText"); useTxtGO.transform.parent = ui.transform; useTxtGO.transform.position = new Vector3(-5.2f,-4.9f,0);
-        var useTmp = useTxtGO.AddComponent<TMPro.TextMeshPro>(); useTmp.fontSize = 0.55f; useTmp.color = Color.white; useTmp.sortingOrder = 4;
+        var useTmp = useTxtGO.AddComponent<TMPro.TextMeshPro>(); useTmp.rectTransform.sizeDelta = new Vector2(10f, 2f); useTmp.enableAutoSizing = true; useTmp.fontSizeMin = 2f; useTmp.fontSizeMax = 3.5f; useTmp.color = Color.white; useTmp.sortingOrder = 4;
         imSO.FindProperty("useText").objectReferenceValue = useTmp;
         imSO.ApplyModifiedProperties();
 

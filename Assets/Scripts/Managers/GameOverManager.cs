@@ -18,7 +18,7 @@ public class GameOverManager : MonoBehaviour
     bool initiating;
     void Start()
     {
-        player = FindObjectOfType<PlayerMovement>();
+        player = FindAnyObjectByType<PlayerMovement>();
         playerSprite = player.GetComponent<SpriteRenderer>();
     }
     void Update()

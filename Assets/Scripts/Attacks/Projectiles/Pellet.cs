@@ -14,7 +14,7 @@ public class Pellet : MonoBehaviour, IFightObject
 
     public void Tick()
     {
-        playerTransform = FindObjectOfType<PlayerMovement>().transform;
+        playerTransform = FindAnyObjectByType<PlayerMovement>().transform;
         time += Time.deltaTime;
 
         if (type == PelletType.FollowDirect)

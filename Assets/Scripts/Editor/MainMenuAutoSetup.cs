@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.UI;
-using HeartQuest.UI;
-using TMPro;
+using AntiBullyingGame.UI;
 
 public class MainMenuAutoSetup
 {
+<<<<<<< Updated upstream
+    // [MenuItem("POO Game/Setup Main Menu UI")] // Removido: usar solo Build_Heartquest
+=======
     // Colores cyberpunk
     static Color bgColor = new Color(0.039f, 0.059f, 0.110f, 1f);       // #0A0F1C
     static Color panelColor = new Color(0.071f, 0.102f, 0.169f, 0.85f); // #121A2B
@@ -14,56 +16,109 @@ public class MainMenuAutoSetup
     static Color textWhite = new Color(0.9f, 0.92f, 0.95f, 1f);
     static Color textDim = new Color(0.5f, 0.55f, 0.65f, 1f);
 
-    // [MenuItem("POO Game/Setup Cyberpunk Main Menu")] // Removido a petición del usuario
+    [MenuItem("POO Game/Setup Cyberpunk Main Menu")]
+>>>>>>> Stashed changes
     public static void SetupMainMenu()
     {
-        // Limpiar escena
-        var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
-        foreach (var obj in scene.GetRootGameObjects())
+        // 1. Limpiamos la escena actual
+        var currentScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+        foreach (var obj in currentScene.GetRootGameObjects())
         {
             if (obj.name != "Main Camera" && obj.name != "Directional Light")
                 GameObject.DestroyImmediate(obj);
         }
 
-        // Configurar cámara
+        // 1.5 Configurar cámara para el menú
         var cam = Camera.main;
-        if (cam != null) cam.backgroundColor = bgColor;
+        if (cam != null)
+        {
+            cam.orthographic = true;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0.08f, 0.08f, 0.12f); // Fondo oscuro elegante
+        }
 
-        // EventSystem
+        // 2. Crear EventSystem (Necesario para que los botones detecten clicks)
         if (Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+        {
             new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.EventSystems.StandaloneInputModule));
+        }
 
-        // Canvas
-        GameObject canvasObj = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+        // 3. Crear Canvas Principal
+        GameObject canvasObj = new GameObject("MainMenuCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         Canvas canvas = canvasObj.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        
         CanvasScaler scaler = canvasObj.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
-        scaler.matchWidthOrHeight = 0.5f;
 
-        // Background
-        CreateBackground(canvasObj.transform);
-        // Menu de Opciones
-        GameObject leftMenu = CreateLeftMenu(canvasObj.transform);
-        // FadeOverlay
-        GameObject fadeOverlay = CreateFadeOverlay(canvasObj.transform);
+        // 4. Añadir el Controller que creamos antes
+        var controller = canvasObj.AddComponent<MainMenuController>();
 
-        // MenuController
-        var controller = canvasObj.AddComponent<MenuController>();
+        // 5. Crear Panel Principal (Main Menu)
+        GameObject mainPanel = CreatePanel("MainPanel", canvasObj.transform);
+        mainPanel.GetComponent<Image>().color = new Color(0.15f, 0.15f, 0.2f, 1f); // Fondo azul marino oscuro
+
+        // Añadir Título del Juego
+        GameObject titleObj = new GameObject("TitleText", typeof(RectTransform), typeof(Text));
+        titleObj.transform.SetParent(mainPanel.transform, false);
+        Text titleText = titleObj.GetComponent<Text>();
+        titleText.text = "HEARTQUEST POO";
+        titleText.fontSize = 120;
+        titleText.fontStyle = FontStyle.Bold;
+        titleText.alignment = TextAnchor.MiddleCenter;
+        titleText.color = Color.white;
+        RectTransform titleRT = titleObj.GetComponent<RectTransform>();
+        titleRT.sizeDelta = new Vector2(1200, 200);
+        titleRT.anchoredPosition = new Vector2(0, 250);
+
+        // 6. Crear Panel de Opciones
+        GameObject optionsPanel = CreatePanel("OptionsPanel", canvasObj.transform);
+        optionsPanel.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 1f); // Un poco más oscuro
+        optionsPanel.SetActive(false); // Oculto por defecto
+
+        // Añadir Título de Opciones
+        GameObject optTitle = new GameObject("OptionsTitle", typeof(RectTransform), typeof(Text));
+        optTitle.transform.SetParent(optionsPanel.transform, false);
+        Text optText = optTitle.GetComponent<Text>();
+        optText.text = "OPCIONES";
+        optText.fontSize = 90;
+        optText.fontStyle = FontStyle.Bold;
+        optText.alignment = TextAnchor.MiddleCenter;
+        optText.color = Color.white;
+        RectTransform optTitleRT = optTitle.GetComponent<RectTransform>();
+        optTitleRT.sizeDelta = new Vector2(800, 150);
+        optTitleRT.anchoredPosition = new Vector2(0, 250);
+
+        // 7. Crear Botones en Main Panel
+        Button playBtn = CreateButton("PlayButton", mainPanel.transform, "JUGAR", new Vector2(0, 0));
+        Button optBtn = CreateButton("OptionsButton", mainPanel.transform, "OPCIONES", new Vector2(0, -150));
+        Button quitBtn = CreateButton("QuitButton", mainPanel.transform, "SALIR", new Vector2(0, -300));
+
+        // 8. Crear Botones en Options Panel
+        Button backBtn = CreateButton("BackButton", optionsPanel.transform, "VOLVER", new Vector2(0, -300));
+
+        // 9. Asignar referencias en el Controller
         var so = new SerializedObject(controller);
-        so.FindProperty("leftMenu").objectReferenceValue = leftMenu;
-        so.FindProperty("fadeOverlay").objectReferenceValue = fadeOverlay.GetComponent<CanvasGroup>();
-        so.FindProperty("sceneToLoad").stringValue = "ClassroomScene";
-
-        // Conectar botones al controller
-        ConnectButtons(leftMenu, controller);
+        so.FindProperty("mainPanel").objectReferenceValue = mainPanel;
+        so.FindProperty("optionsPanel").objectReferenceValue = optionsPanel;
+        so.FindProperty("sceneToLoad").stringValue = "ClassroomScene"; 
         so.ApplyModifiedProperties();
 
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
-        Debug.Log("<color=#9D4DFF>♥ HeartQuest Cyberpunk Menu creado exitosamente ♥</color>");
+        // 10. Conectar Eventos (OnClicks) de Unity automáticamente usando UnityAction
+        UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(playBtn.onClick, new UnityEngine.Events.UnityAction(controller.PlayGame));
+        UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(optBtn.onClick, new UnityEngine.Events.UnityAction(controller.ShowOptions));
+        UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(quitBtn.onClick, new UnityEngine.Events.UnityAction(controller.QuitGame));
+        UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(backBtn.onClick, new UnityEngine.Events.UnityAction(controller.ShowMainPanel));
+
+        // 11. Guardar cambios en la escena
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(currentScene);
+        Debug.Log("¡El Menú Principal ha sido inyectado automáticamente con éxito!");
     }
 
+<<<<<<< Updated upstream
+    private static GameObject CreatePanel(string name, Transform parent)
+=======
     // ════════════════════════════════════════════════
     // BACKGROUND
     // ════════════════════════════════════════════════
@@ -123,14 +178,36 @@ public class MainMenuAutoSetup
     // ════════════════════════════════════════════════
     // LEFT MENU
     // ════════════════════════════════════════════════
+    [MenuItem("POO Game/Fix Menu Position")]
+    public static void FixMenuPosition()
+    {
+        var panel = GameObject.Find("MainMenuPanel");
+        if (panel != null)
+        {
+            RectTransform rt = panel.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(400, 500);
+            rt.anchoredPosition = Vector2.zero;
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+            Debug.Log("<color=#00E5FF>♥ Menú centrado correctamente ♥</color>");
+        }
+        else
+        {
+            Debug.LogWarning("No se encontró MainMenuPanel en la escena. Asegúrate de estar en la escena correcta.");
+        }
+    }
+
     static GameObject CreateLeftMenu(Transform parent)
     {
         GameObject leftMenu = CreatePanel("MainMenuPanel", parent, new Color(panelColor.r, panelColor.g, panelColor.b, 0.8f));
         RectTransform rt = leftMenu.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0.4f, 0.2f);
-        rt.anchorMax = new Vector2(0.6f, 0.8f);
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(400, 500);
+        rt.anchoredPosition = Vector2.zero;
         AddOutline(leftMenu, accentPurple, 2f);
         leftMenu.AddComponent<NeonPanelFlicker>();
 
@@ -378,7 +455,7 @@ public class MainMenuAutoSetup
         foreach (var btn in buttons)
         {
             string name = btn.gameObject.name;
-            if (name.Contains("Start"))
+            if (name.Contains("Start") || name.Contains("Btn_Start"))
                 UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityEngine.Events.UnityAction(controller.OnStartGame));
             else if (name.Contains("Continue"))
                 UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityEngine.Events.UnityAction(controller.OnContinueGame));
@@ -405,99 +482,44 @@ public class MainMenuAutoSetup
     // ════════════════════════════════════════════════
 
     static GameObject CreatePanel(string name, Transform parent, Color color)
+>>>>>>> Stashed changes
     {
         GameObject panel = new GameObject(name, typeof(RectTransform), typeof(Image));
         panel.transform.SetParent(parent, false);
-        panel.GetComponent<Image>().color = color;
-        return panel;
-    }
-
-    static void CreateNeonButton(string name, Transform parent, string label)
-    {
-        GameObject btnObj = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
-        btnObj.transform.SetParent(parent, false);
-
-        Image img = btnObj.GetComponent<Image>();
-        img.color = new Color(panelColor.r, panelColor.g, panelColor.b, 0.9f);
-
-        Button btn = btnObj.GetComponent<Button>();
-        ColorBlock cb = btn.colors;
-        cb.normalColor = Color.white;
-        cb.highlightedColor = new Color(1.2f, 1.2f, 1.2f, 1f);
-        cb.pressedColor = new Color(0.8f, 0.8f, 0.8f, 1f);
-        cb.fadeDuration = 0.1f;
-        btn.colors = cb;
-
-        LayoutElement le = btnObj.AddComponent<LayoutElement>();
-        le.preferredHeight = 45;
-        le.flexibleWidth = 1;
-
-        AddOutline(btnObj, new Color(accentPurple.r, accentPurple.g, accentPurple.b, 0.5f), 1.5f);
-
-        // Glow border child
-        GameObject glowBorder = new GameObject("GlowBorder", typeof(RectTransform), typeof(Image));
-        glowBorder.transform.SetParent(btnObj.transform, false);
-        StretchFull(glowBorder);
-        Image glowImg = glowBorder.GetComponent<Image>();
-        glowImg.color = new Color(accentPurple.r, accentPurple.g, accentPurple.b, 0f);
-
-        // Text
-        CreateTMPText("Label", btnObj.transform, label, 24, textWhite, TextAlignmentOptions.Center,
-            Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-
-        // UIButtonEffects
-        btnObj.AddComponent<UIButtonEffects>();
-    }
-
-    static void CreateXPBar(Transform parent, Vector2 anchorMin, Vector2 anchorMax)
-    {
-        GameObject xpBg = new GameObject("XPBar_BG", typeof(RectTransform), typeof(Image));
-        xpBg.transform.SetParent(parent, false);
-        RectTransform bgRT = xpBg.GetComponent<RectTransform>();
-        bgRT.anchorMin = anchorMin; bgRT.anchorMax = anchorMax;
-        bgRT.offsetMin = new Vector2(5, 4); bgRT.offsetMax = new Vector2(-5, -4);
-        xpBg.GetComponent<Image>().color = new Color(0.03f, 0.04f, 0.08f, 1f);
-
-        GameObject xpFill = new GameObject("XPBar_Fill", typeof(RectTransform), typeof(Image));
-        xpFill.transform.SetParent(xpBg.transform, false);
-        RectTransform fillRT = xpFill.GetComponent<RectTransform>();
-        fillRT.anchorMin = Vector2.zero; fillRT.anchorMax = new Vector2(0.35f, 1f);
-        fillRT.offsetMin = new Vector2(2, 2); fillRT.offsetMax = new Vector2(-2, -2);
-        xpFill.GetComponent<Image>().color = accentCyan;
-    }
-
-    static GameObject CreateTMPText(string name, Transform parent, string text, int fontSize, Color color,
-        TextAlignmentOptions alignment, Vector2 anchorMin, Vector2 anchorMax, Vector2 offsetMin, Vector2 offsetMax)
-    {
-        GameObject obj = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
-        obj.transform.SetParent(parent, false);
-        RectTransform rt = obj.GetComponent<RectTransform>();
-        rt.anchorMin = anchorMin; rt.anchorMax = anchorMax;
-        rt.offsetMin = offsetMin; rt.offsetMax = offsetMax;
-
-        TextMeshProUGUI tmp = obj.GetComponent<TextMeshProUGUI>();
-        tmp.text = text;
-        tmp.fontSize = fontSize;
-        tmp.color = color;
-        tmp.alignment = alignment;
-        tmp.enableAutoSizing = false;
-        tmp.overflowMode = TextOverflowModes.Ellipsis;
-        return obj;
-    }
-
-    static void StretchFull(GameObject obj)
-    {
-        RectTransform rt = obj.GetComponent<RectTransform>();
+        RectTransform rt = panel.GetComponent<RectTransform>();
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
+        return panel;
     }
 
-    static void AddOutline(GameObject obj, Color color, float size)
+    private static Button CreateButton(string name, Transform parent, string textStr, Vector2 pos)
     {
-        Outline outline = obj.AddComponent<Outline>();
-        outline.effectColor = color;
-        outline.effectDistance = new Vector2(size, -size);
+        GameObject btnObj = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+        btnObj.transform.SetParent(parent, false);
+        RectTransform rt = btnObj.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(400, 100);
+        rt.anchoredPosition = pos;
+
+        Image img = btnObj.GetComponent<Image>();
+        img.color = new Color(0.2f, 0.5f, 0.8f, 1f); // Color azul brillante para botones
+
+        GameObject textObj = new GameObject("Text", typeof(RectTransform), typeof(Text));
+        textObj.transform.SetParent(btnObj.transform, false);
+        Text txt = textObj.GetComponent<Text>();
+        txt.text = textStr;
+        txt.fontSize = 45;
+        txt.fontStyle = FontStyle.Bold;
+        txt.color = Color.white;
+        txt.alignment = TextAnchor.MiddleCenter;
+        
+        RectTransform textRT = textObj.GetComponent<RectTransform>();
+        textRT.anchorMin = Vector2.zero;
+        textRT.anchorMax = Vector2.one;
+        textRT.offsetMin = Vector2.zero;
+        textRT.offsetMax = Vector2.zero;
+
+        return btnObj.GetComponent<Button>();
     }
 }

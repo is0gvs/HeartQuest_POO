@@ -42,7 +42,7 @@ namespace AntiBullyingGame.RPG
             Debug.Log($"[{entityName}] dice: {message}");
             
             // Si el sistema de diálogo Cyberpunk está en la escena, lo usamos
-            var dialogueSystem = Object.FindFirstObjectByType<HeartQuest.UI.DialogueSystem>();
+            var dialogueSystem = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>();
             if (dialogueSystem != null)
             {
                 dialogueSystem.ShowDialogue($"[{entityName}]: {message}");
