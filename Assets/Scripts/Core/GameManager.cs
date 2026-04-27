@@ -96,6 +96,13 @@ namespace AntiBullyingGame.Core
             NotifyObservers(); 
         }
 
+        public void SetMorale(int amount)
+        {
+            currentMorale = Mathf.Clamp(amount, 0, maxMorale);
+            Debug.Log($"Moral actual: {currentMorale}");
+            NotifyObservers(); 
+        }
+
         public void DeductMorale(int amount)
         {
             currentMorale -= amount;
