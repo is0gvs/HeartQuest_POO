@@ -55,6 +55,26 @@ namespace AntiBullyingGame.Managers
             Debug.Log($"[SaveManager] Nuevo perfil asignado: {currentSaveFileName}");
         }
 
+        public string[] GetAllProfiles()
+        {
+            if (!Directory.Exists(Application.persistentDataPath)) return new string[0];
+            string[] files = Directory.GetFiles(Application.persistentDataPath, "save_*.json");
+            System.Array.Sort(files, (a, b) => File.GetLastWriteTime(b).CompareTo(File.GetLastWriteTime(a)));
+            
+            string[] fileNames = new string[files.Length];
+            for (int i = 0; i < files.Length; i++)
+            {
+                fileNames[i] = Path.GetFileName(files[i]);
+            }
+            return fileNames;
+        }
+
+        public void SetCurrentProfile(string fileName)
+        {
+            currentSaveFileName = fileName;
+            Debug.Log($"[SaveManager] Perfil activo cambiado a: {currentSaveFileName}");
+        }
+
         private void OnEnable()
         {
             SceneManager.sceneLoaded += OnSceneLoaded;
