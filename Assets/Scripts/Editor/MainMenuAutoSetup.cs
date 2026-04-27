@@ -88,9 +88,12 @@ public class MainMenuAutoSetup
         optTitleRT.anchoredPosition = new Vector2(0, 250);
 
         // 7. Crear Botones en Main Panel
-        Button playBtn = CreateButton("PlayButton", mainPanel.transform, "JUGAR", new Vector2(0, 0));
-        Button optBtn = CreateButton("OptionsButton", mainPanel.transform, "OPCIONES", new Vector2(0, -150));
-        Button quitBtn = CreateButton("QuitButton", mainPanel.transform, "SALIR", new Vector2(0, -300));
+        Button startBtn = CreateButton("StartButton", mainPanel.transform, "START", new Vector2(0, 150));
+        Button continueBtn = CreateButton("ContinueButton", mainPanel.transform, "CONTINUAR JUEGO", new Vector2(0, 30));
+        Button newGameBtn = CreateButton("NewGameButton", mainPanel.transform, "NUEVO JUEGO", new Vector2(0, -90));
+        Button loadBtn = CreateButton("LoadButton", mainPanel.transform, "CARGAR JUEGO", new Vector2(0, -210));
+        Button optBtn = CreateButton("OptionsButton", mainPanel.transform, "OPCIONES", new Vector2(0, -330));
+        Button quitBtn = CreateButton("QuitButton", mainPanel.transform, "SALIR", new Vector2(0, -450));
 
         // 8. Crear Botones en Options Panel
         Button backBtn = CreateButton("BackButton", optionsPanel.transform, "VOLVER", new Vector2(0, -300));
@@ -103,7 +106,10 @@ public class MainMenuAutoSetup
         so.ApplyModifiedProperties();
 
         // 10. Conectar Eventos (OnClicks) de Unity automáticamente usando UnityAction
-        UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(playBtn.onClick, new UnityEngine.Events.UnityAction(controller.PlayGame));
+        UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(startBtn.onClick, new UnityEngine.Events.UnityAction(controller.StartGame));
+        UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(continueBtn.onClick, new UnityEngine.Events.UnityAction(controller.ContinueGame));
+        UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(newGameBtn.onClick, new UnityEngine.Events.UnityAction(controller.NewGame));
+        UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(loadBtn.onClick, new UnityEngine.Events.UnityAction(controller.LoadGame));
         UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(optBtn.onClick, new UnityEngine.Events.UnityAction(controller.ShowOptions));
         UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(quitBtn.onClick, new UnityEngine.Events.UnityAction(controller.QuitGame));
         UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(backBtn.onClick, new UnityEngine.Events.UnityAction(controller.ShowMainPanel));
@@ -130,7 +136,7 @@ public class MainMenuAutoSetup
         GameObject btnObj = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
         btnObj.transform.SetParent(parent, false);
         RectTransform rt = btnObj.GetComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(400, 100);
+        rt.sizeDelta = new Vector2(500, 100);
         rt.anchoredPosition = pos;
 
         Image img = btnObj.GetComponent<Image>();

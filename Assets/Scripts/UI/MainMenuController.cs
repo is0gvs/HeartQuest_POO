@@ -14,6 +14,29 @@ namespace AntiBullyingGame.UI
             SceneManager.LoadScene(sceneToLoad);
         }
 
+        public void StartGame()
+        {
+            Debug.Log("Start pressed...");
+            // You can load a scene or open a sub-menu here
+            SceneManager.LoadScene(sceneToLoad);
+        }
+
+        public void ContinueGame()
+        {
+            Debug.Log("Continuar juego...");
+        }
+
+        public void NewGame()
+        {
+            Debug.Log("Nuevo juego...");
+            SceneManager.LoadScene(sceneToLoad);
+        }
+
+        public void LoadGame()
+        {
+            Debug.Log("Cargar juego...");
+        }
+
         public void ShowOptions()
         {
             if (mainPanel != null) mainPanel.SetActive(false);
