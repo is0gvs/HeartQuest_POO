@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using AntiBullyingGame.Managers;
 
 namespace AntiBullyingGame.UI
 {
@@ -38,113 +39,18 @@ namespace AntiBullyingGame.UI
         public void StartGame()
         {
             Debug.Log("Start pressed...");
-            // You can load a scene or open a sub-menu here
             SceneManager.LoadScene(sceneToLoad);
+        }
+
+        private void EnsureSaveManagerExists()
+        {
+            if (SaveManager.Instance == null)
+            {
+                new GameObject("SaveManager").AddComponent<SaveManager>();
+            }
         }
 
         public void ContinueGame()
-        {
-            Debug.Log("Continuar juego...");
-        }
-
-        public void NewGame()
-        {
-            Debug.Log("Nuevo juego...");
-            SceneManager.LoadScene(sceneToLoad);
-        }
-
-        public void ShowLoadPanel()
-        {
-            if (mainPanel != null) mainPanel.SetActive(false);
-            if (optionsPanel != null) optionsPanel.SetActive(false);
-            
-            if (loadPanel == null)
-            {
-                CreateRuntimeLoadPanel();
-            }
-
-            if (loadPanel != null) 
-            {
-                loadPanel.SetActive(true);
-                PopulateLoadList();
-            }
-        }
-
-        private void CreateRuntimeLoadPanel()
-        {
-            Canvas canvas = GetComponentInParent<Canvas>();
-            if (canvas == null) return;
-
-            loadPanel = new GameObject("RuntimeLoadPanel", typeof(RectTransform), typeof(Image));
-            loadPanel.transform.SetParent(canvas.transform, false);
-            
-            RectTransform panelRT = loadPanel.GetComponent<RectTransform>();
-            panelRT.anchorMin = Vector2.zero;
-            panelRT.anchorMax = Vector2.one;
-            panelRT.offsetMin = Vector2.zero;
-            panelRT.offsetMax = Vector2.zero;
-            
-            Image img = loadPanel.GetComponent<Image>();
-            img.color = new Color(0.1f, 0.1f, 0.15f, 0.95f);
-            
-            // Título
-            GameObject titleObj = new GameObject("Title", typeof(RectTransform), typeof(Text));
-            titleObj.transform.SetParent(loadPanel.transform, false);
-            Text titleTxt = titleObj.GetComponent<Text>();
-            titleTxt.text = "CARGAR PARTIDA";
-            titleTxt.fontSize = 80;
-            titleTxt.fontStyle = FontStyle.Bold;
-            titleTxt.alignment = TextAnchor.MiddleCenter;
-            titleTxt.color = Color.white;
-            titleTxt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            
-            RectTransform titleRT = titleObj.GetComponent<RectTransform>();
-            titleRT.sizeDelta = new Vector2(800, 100);
-            titleRT.anchoredPosition = new Vector2(0, 350);
-
-            // Botón Volver
-            GameObject backBtnObj = new GameObject("BackBtn", typeof(RectTransform), typeof(Image), typeof(Button));
-            backBtnObj.transform.SetParent(loadPanel.transform, false);
-            RectTransform backRT = backBtnObj.GetComponent<RectTransform>();
-            backRT.sizeDelta = new Vector2(300, 80);
-            backRT.anchoredPosition = new Vector2(0, -400);
-            backBtnObj.GetComponent<Image>().color = new Color(0.8f, 0.2f, 0.2f, 1f); 
-            
-            Button backBtn = backBtnObj.GetComponent<Button>();
-            backBtn.onClick.AddListener(ShowMainPanel);
-            
-            GameObject backTxtObj = new GameObject("Text", typeof(RectTransform), typeof(Text));
-            backTxtObj.transform.SetParent(backBtnObj.transform, false);
-            Text backTxt = backTxtObj.GetComponent<Text>();
-            backTxt.text = "VOLVER";
-            backTxt.fontSize = 30;
-            backTxt.alignment = TextAnchor.MiddleCenter;
-            backTxt.color = Color.white;
-            backTxt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            
-            RectTransform backTxtRT = backTxtObj.GetComponent<RectTransform>();
-            backTxtRT.anchorMin = Vector2.zero;
-            backTxtRT.anchorMax = Vector2.one;
-            backTxtRT.offsetMin = Vector2.zero;
-            backTxtRT.offsetMax = Vector2.zero;
-
-            // Área de contenido
-            GameObject contentObj = new GameObject("Content", typeof(RectTransform), typeof(VerticalLayoutGroup));
-            contentObj.transform.SetParent(loadPanel.transform, false);
-            loadContentTransform = contentObj.transform;
-            
-            RectTransform contentRT = contentObj.GetComponent<RectTransform>();
-            contentRT.sizeDelta = new Vector2(600, 500);
-            contentRT.anchoredPosition = new Vector2(0, 0);
-
-            VerticalLayoutGroup vlg = contentObj.GetComponent<VerticalLayoutGroup>();
-            vlg.spacing = 15;
-            vlg.childAlignment = TextAnchor.UpperCenter;
-            vlg.childControlHeight = false;
-            vlg.childControlWidth = false;
-        }
-
-        private void PopulateLoadList()
         {
             EnsureSaveManagerExists();
             if (SaveManager.Instance.HasSaveFile())
@@ -161,7 +67,7 @@ namespace AntiBullyingGame.UI
             }
         }
 
-        public void LoadSpecificProfile(string profileName)
+        public void NewGame()
         {
             Debug.Log("Iniciando nuevo juego...");
             EnsureSaveManagerExists();
@@ -279,14 +185,11 @@ namespace AntiBullyingGame.UI
             if (profiles.Length == 0)
             {
                 Debug.Log("No hay perfiles guardados.");
-                // Opcional: Crear un texto que diga "Vacio"
                 return;
             }
 
             foreach (string profile in profiles)
             {
-                // Para no depender de un prefab, creamos el botón dinámicamente o clonamos uno existente
-                // Aquí instanciamos un botón simple por código
                 GameObject btnObj = new GameObject($"Btn_{profile}", typeof(RectTransform), typeof(Image), typeof(Button));
                 btnObj.transform.SetParent(loadContentTransform, false);
                 
@@ -299,7 +202,7 @@ namespace AntiBullyingGame.UI
                 GameObject textObj = new GameObject("Text", typeof(RectTransform), typeof(Text));
                 textObj.transform.SetParent(btnObj.transform, false);
                 Text txt = textObj.GetComponent<Text>();
-                txt.text = profile.Replace(".json", ""); // Mostrar nombre sin extensión
+                txt.text = profile.Replace(".json", "");
                 txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
                 txt.fontSize = 24;
                 txt.alignment = TextAnchor.MiddleCenter;
@@ -312,7 +215,7 @@ namespace AntiBullyingGame.UI
                 textRt.offsetMax = Vector2.zero;
 
                 Button btn = btnObj.GetComponent<Button>();
-                string profileToLoad = profile; // Capturar variable para el closure
+                string profileToLoad = profile;
                 btn.onClick.AddListener(() => LoadSpecificProfile(profileToLoad));
             }
         }
@@ -320,6 +223,7 @@ namespace AntiBullyingGame.UI
         public void LoadSpecificProfile(string profileName)
         {
             Debug.Log($"Cargando perfil específico: {profileName}");
+            EnsureSaveManagerExists();
             SaveManager.Instance.SetCurrentProfile(profileName);
             SaveManager.Instance.loadOnSceneLoad = true;
             SceneManager.LoadScene(sceneToLoad);
@@ -327,7 +231,6 @@ namespace AntiBullyingGame.UI
 
         public void LoadGame()
         {
-            // Redirigir el botón principal para mostrar el panel de carga en vez de cargar directamente
             ShowLoadPanel();
         }
 
