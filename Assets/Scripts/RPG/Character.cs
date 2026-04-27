@@ -56,5 +56,11 @@ namespace AntiBullyingGame.RPG
             morale = Mathf.Clamp(morale, 0, 100); // Evitar que la moral sea menor a 0 o mayor a 100
             Debug.Log($"{entityName} cambió su moral a {morale}");
         }
+
+        // Método para establecer la moral directamente (útil al cargar la partida)
+        public void SetMorale(int value)
+        {
+            morale = Mathf.Clamp(value, 0, 100);
+        }
     }
 }

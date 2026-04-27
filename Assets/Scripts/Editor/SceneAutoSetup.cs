@@ -20,7 +20,8 @@ public class SceneAutoSetup : EditorWindow
         }
 
         // 0. Configurar automáticamente las escenas en Build Settings
-        SetupBuildScenes();
+        // Comentado porque SetupBuildScenes no existe en el contexto actual
+        // SetupBuildScenes();
 
         // 0.5 Limpiar cache de animaciones para forzar regeneración limpia
         AnimationBuilder.ClearCache();
@@ -554,9 +555,10 @@ public class SceneAutoSetup : EditorWindow
         menuCtrl.menuButtons = buttons;
         menuCtrl.leftMenu = buttonContainer;
         
-        var startLogic = canvasObj.AddComponent<AntiBullyingGame.RPG.StartMenu>();
-        startLogic.startButton = buttons[1]; // Nueva Partida
-        startLogic.startMenuPanel = panelObj;
+        // Comentado porque StartMenu ya no existe, la lógica la maneja MenuController.
+        // var startLogic = canvasObj.AddComponent<AntiBullyingGame.RPG.StartMenu>();
+        // startLogic.startButton = buttons[1]; // Nueva Partida
+        // startLogic.startMenuPanel = panelObj;
     }
 
     private static GameObject CreateCyberBtn(string label, Transform parent)

@@ -115,12 +115,22 @@ namespace HeartQuest.UI
         /// </summary>
         public void OnContinueGame()
         {
-            Debug.Log($"[HeartQuest] Cargando escena: {sceneToLoad}");
-            SceneManager.LoadScene(sceneToLoad);
+            Debug.Log($"[HeartQuest] Cargando escena: {sceneToLoad} para continuar la partida");
+            // Set the flag in SaveManager so it loads the data after the scene is loaded
+            if (AntiBullyingGame.Managers.SaveManager.Instance != null && AntiBullyingGame.Managers.SaveManager.Instance.HasSaveFile())
+            {
+                AntiBullyingGame.Managers.SaveManager.Instance.loadOnSceneLoad = true;
+                SceneManager.LoadScene(sceneToLoad);
+            }
+            else
+            {
+                Debug.LogWarning("[HeartQuest] No hay archivo de guardado para continuar.");
+                // Opcional: Podrías mostrar un mensaje en la UI diciendo "No hay partida guardada"
+            }
         }
 
         /// <summary>
-        /// Nuevo Juego → misma funcionalidad por ahora, expansible.
+        /// Nuevo Juego → carga la escena del juego sin cargar datos guardados.
         /// </summary>
         public void OnNewGame()
         {
@@ -129,11 +139,11 @@ namespace HeartQuest.UI
         }
 
         /// <summary>
-        /// Cargar Partida → placeholder, muestra mensaje.
+        /// Cargar Partida → hace lo mismo que Continuar.
         /// </summary>
         public void OnLoadGame()
         {
-            Debug.Log("[HeartQuest] Sistema de guardado no implementado aún.");
+            OnContinueGame();
         }
 
         /// <summary>
