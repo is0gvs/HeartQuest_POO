@@ -17,8 +17,14 @@ public class MainMenuAutoSetup
     [MenuItem("POO Game/Setup Cyberpunk Main Menu")]
     public static void SetupMainMenu()
     {
-        // 1. Limpiamos la escena actual
-        var currentScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+        // 0. Abrir la escena MainMenu específicamente
+        string scenePath = "Assets/Scenes/MainMenu.unity";
+        
+        // Guardar escena actual si tiene cambios antes de abrir la otra
+        UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
+
+        // Abrir la escena de MainMenu
+        var currentScene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
         foreach (var obj in currentScene.GetRootGameObjects())
         {
             if (obj.name != "Main Camera" && obj.name != "Directional Light")
