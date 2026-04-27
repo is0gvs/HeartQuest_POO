@@ -10,7 +10,9 @@ namespace AntiBullyingGame.Managers
     {
         public static SaveManager Instance { get; private set; }
 
-        private string saveFilePath;
+        private string currentSaveFileName = "save_default.json";
+        private string CurrentSaveFilePath => Path.Combine(Application.persistentDataPath, currentSaveFileName);
+        
         public bool loadOnSceneLoad = false;
 
         private void Awake()
@@ -20,13 +22,37 @@ namespace AntiBullyingGame.Managers
                 Instance = this;
                 DontDestroyOnLoad(gameObject);
                 
-                // Define la ruta del archivo. Application.persistentDataPath es un directorio seguro.
-                saveFilePath = Path.Combine(Application.persistentDataPath, "save.json");
+                SetMostRecentProfile();
             }
             else
             {
                 Destroy(gameObject);
             }
+        }
+
+        public void SetMostRecentProfile()
+        {
+            if (!Directory.Exists(Application.persistentDataPath)) return;
+
+            string[] files = Directory.GetFiles(Application.persistentDataPath, "save_*.json");
+            if (files.Length > 0)
+            {
+                // Ordenar por fecha de modificación descendente (el más reciente primero)
+                System.Array.Sort(files, (a, b) => File.GetLastWriteTime(b).CompareTo(File.GetLastWriteTime(a)));
+                currentSaveFileName = Path.GetFileName(files[0]);
+                Debug.Log($"[SaveManager] Perfil más reciente encontrado: {currentSaveFileName}");
+            }
+            else
+            {
+                currentSaveFileName = "save_default.json";
+                Debug.Log("[SaveManager] No se encontraron perfiles. Usando nombre por defecto.");
+            }
+        }
+
+        public void CreateNewProfile()
+        {
+            currentSaveFileName = $"save_{System.DateTime.Now:yyyyMMdd_HHmmss}.json";
+            Debug.Log($"[SaveManager] Nuevo perfil asignado: {currentSaveFileName}");
         }
 
         private void OnEnable()
@@ -56,8 +82,8 @@ namespace AntiBullyingGame.Managers
             try
             {
                 string json = JsonUtility.ToJson(data, true); // true para formato bonito/legible
-                File.WriteAllText(saveFilePath, json);
-                Debug.Log($"[SaveManager] Partida guardada exitosamente en: {saveFilePath}");
+                File.WriteAllText(CurrentSaveFilePath, json);
+                Debug.Log($"[SaveManager] Partida guardada exitosamente en: {CurrentSaveFilePath}");
             }
             catch (System.Exception e)
             {
@@ -72,7 +98,7 @@ namespace AntiBullyingGame.Managers
             {
                 try
                 {
-                    string json = File.ReadAllText(saveFilePath);
+                    string json = File.ReadAllText(CurrentSaveFilePath);
                     SaveData data = JsonUtility.FromJson<SaveData>(json);
                     Debug.Log("[SaveManager] Partida cargada exitosamente.");
                     return data;
@@ -95,7 +121,7 @@ namespace AntiBullyingGame.Managers
             {
                 try
                 {
-                    File.Delete(saveFilePath);
+                    File.Delete(CurrentSaveFilePath);
                     Debug.Log("[SaveManager] Partida eliminada.");
                 }
                 catch (System.Exception e)
@@ -108,7 +134,7 @@ namespace AntiBullyingGame.Managers
         // VERIFY
         public bool HasSaveFile()
         {
-            return File.Exists(saveFilePath);
+            return File.Exists(CurrentSaveFilePath);
         }
 
         #endregion

@@ -44,6 +44,7 @@ namespace AntiBullyingGame.UI
         {
             Debug.Log("Iniciando nuevo juego...");
             EnsureSaveManagerExists();
+            SaveManager.Instance.CreateNewProfile();
             SaveManager.Instance.loadOnSceneLoad = false;
             SceneManager.LoadScene(sceneToLoad);
         }
