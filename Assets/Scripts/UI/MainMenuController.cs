@@ -254,6 +254,7 @@ namespace AntiBullyingGame.UI
 
         public void SetFullscreen(bool isFullscreen)
         {
+            Debug.Log("Fullscreen cambiado: " + isFullscreen);
             Screen.fullScreen = isFullscreen;
         }
 
