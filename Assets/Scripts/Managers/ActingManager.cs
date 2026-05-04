@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using System.Linq;
 
 public class ActingManager : MonoBehaviour
 {
@@ -132,7 +131,6 @@ public class ActingManager : MonoBehaviour
     {
         if (selectionInt == 0)
         {
-            OnActing(0);
             OnActing(0);
             totalMercy += buttons[0].actVars.curMercy;
         }
