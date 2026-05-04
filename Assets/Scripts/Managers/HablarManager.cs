@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -8,17 +7,17 @@ using UnityEngine;
 /// Manages the HABLAR dialogue-choice submenu.
 /// Shows dialogue options as text INSIDE the battle box using the existing
 /// actingText TMP reference. No extra scene GameObjects needed.
+/// (POO: Responsabilidad Única — solo maneja el submenú de HABLAR)
 /// </summary>
 public class HablarManager : MonoBehaviour
 {
-    /// <summary>Singleton instance. Auto-creates on BattleManager's GameObject if missing.</summary>
+    // ── Singleton ─────────────────────────────────────────────────────────
     public static HablarManager instance
     {
         get
         {
             if (_instance == null)
             {
-                // Attach to BattleManager's GameObject so it lives in the scene
                 BattleManager bm = BattleManager.battleInstance;
                 if (bm != null)
                     _instance = bm.gameObject.AddComponent<HablarManager>();
@@ -33,7 +32,7 @@ public class HablarManager : MonoBehaviour
     }
     private static HablarManager _instance;
 
-    // ── Built-in dialogue options ─────────────────────────────────────────
+    // ── Opciones del submenú ──────────────────────────────────────────────
     private static readonly string[] optionLabels = new[]
     {
         "Hablar con calma",
@@ -43,20 +42,24 @@ public class HablarManager : MonoBehaviour
 
     private static readonly string[][] dialogueLines = new[]
     {
-        new[] { "Le dices que sus palabras duelen.",  "Intentas entenderlo." },
-        new[] { "Le pides que se detenga.",           "Le hablas con calma." },
-        new[] { "Compartes cómo te sientes.",         "Mantienes la calma."  }
+        new[] { "Le dices que sus palabras duelen.", "Intentas entenderlo." },
+        new[] { "Le pides que se detenga.",          "Le hablas con calma." },
+        new[] { "Compartes cómo te sientes.",        "Mantienes la calma."  }
     };
 
     private readonly int[] mercyValues = { 10, 8, 12 };
     private int[] rotationIdx;
 
-    // ── State ─────────────────────────────────────────────────────────────
-    private bool   isOpen;
-    private int    selectionInt;
-    private float  inputDelay;
-    private TextMeshPro displayText; // the actingText inside the battle box
+    // ── Estado ────────────────────────────────────────────────────────────
+    private bool        isOpen;
+    private int         selectionInt;
+    private float       inputDelay;
+    private TextMeshPro displayText;
+    private float       originalFontSize;
+    private TextAlignmentOptions originalAlignment;
+    private bool        originalWordWrap;
 
+    // ── Unity ─────────────────────────────────────────────────────────────
     void Awake()
     {
         if (_instance == null) _instance = this;
@@ -68,56 +71,88 @@ public class HablarManager : MonoBehaviour
     {
         if (!isOpen) return;
 
-        // ── Navigation ────────────────────────────────────────────────────
-        if (Input.GetKeyDown(KeyCode.LeftArrow))  selectionInt = Mathf.Max(0, selectionInt - 1);
-        if (Input.GetKeyDown(KeyCode.RightArrow)) selectionInt = Mathf.Min(optionLabels.Length - 1, selectionInt + 1);
-        if (Input.GetKeyDown(KeyCode.UpArrow))    selectionInt = Mathf.Max(0, selectionInt - 1);
-        if (Input.GetKeyDown(KeyCode.DownArrow))  selectionInt = Mathf.Min(optionLabels.Length - 1, selectionInt + 1);
+        // Navegación
+        if (Input.GetKeyDown(KeyCode.UpArrow)   || Input.GetKeyDown(KeyCode.LeftArrow))
+            selectionInt = Mathf.Max(0, selectionInt - 1);
+
+        if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.RightArrow))
+            selectionInt = Mathf.Min(optionLabels.Length - 1, selectionInt + 1);
 
         RefreshDisplay();
 
-        // ── Confirm ───────────────────────────────────────────────────────
+        // Confirmar
         inputDelay += Time.deltaTime;
         if (inputDelay > 0.25f && Input.GetKeyDown(KeyCode.Return))
         {
-            isOpen = false;
-            BattleManager.battleInstance.isHablando = false;
-            OnConfirm(selectionInt);
+            int confirmedIdx = selectionInt;
+            CloseSubmenu();
+            OnConfirm(confirmedIdx);
         }
     }
 
-    // ── Public API ────────────────────────────────────────────────────────
+    // ── API pública ───────────────────────────────────────────────────────
 
     /// <summary>
-    /// Opens the HABLAR submenu. Displays the 3 options as text inside the
-    /// battle box using the existing actingText TMP reference.
+    /// Abre el submenú HABLAR mostrando las 3 opciones dentro del recuadro.
     /// </summary>
     public void AbrirMenuHablar()
     {
         BattleManager bm = BattleManager.battleInstance;
         if (bm == null) return;
 
-        // Use the actingText TMP to display options inside the battle box
         displayText = bm.actingMgr.actingText;
         if (displayText == null)
         {
-            Debug.LogWarning("HablarManager: actingText es null. No se puede mostrar el submenú.");
+            Debug.LogWarning("[HablarManager] actingText es null. Verifica la referencia en ActingManager.");
             return;
         }
 
+        // Guardar configuración original del TMP
+        originalFontSize  = displayText.fontSize;
+        originalAlignment = displayText.alignment;
+        originalWordWrap  = displayText.enableWordWrapping;
+
+        // Aplicar formato del submenú
+        if (bm.battleBox != null)
+            displayText.fontSize = bm.battleBox.size.y * 0.18f;
+
+        displayText.alignment          = TextAlignmentOptions.Left;
+        displayText.enableWordWrapping = false;
         displayText.gameObject.SetActive(true);
-        selectionInt = 0;
-        inputDelay   = 0f;
-        isOpen       = true;
+
+        // Inicializar estado — selección en 0 ANTES de abrir
+        selectionInt  = 0;
+        inputDelay    = 0f;
         bm.isHablando = true;
 
+        // Dibujar con cursor en posición correcta ANTES de activar input
+        isOpen = false;
         RefreshDisplay();
-        Debug.Log("HablarManager: submenú HABLAR abierto.");
+        isOpen = true;
+
+        Debug.Log("[HablarManager] Submenú HABLAR abierto.");
     }
 
-    // ── Internal ──────────────────────────────────────────────────────────
+    // ── Privados ──────────────────────────────────────────────────────────
 
-    /// <summary>Shows the option list with a cursor on the selected one.</summary>
+    /// <summary>Cierra el submenú y restaura la configuración del TMP.</summary>
+    private void CloseSubmenu()
+    {
+        isOpen = false;
+
+        BattleManager bm = BattleManager.battleInstance;
+        if (bm != null) bm.isHablando = false;
+
+        if (displayText != null)
+        {
+            displayText.fontSize          = originalFontSize;
+            displayText.alignment         = originalAlignment;
+            displayText.enableWordWrapping = originalWordWrap;
+            displayText.text              = "";
+        }
+    }
+
+    /// <summary>Dibuja las 3 opciones con el cursor ♥ en la opción seleccionada.</summary>
     private void RefreshDisplay()
     {
         if (displayText == null) return;
@@ -125,51 +160,55 @@ public class HablarManager : MonoBehaviour
         string result = "";
         for (int i = 0; i < optionLabels.Length; i++)
         {
-            string cursor = (i == selectionInt) ? "<color=yellow>♥ " : "  ";
-            string end    = (i == selectionInt) ? "</color>" : "";
-            result += cursor + optionLabels[i] + end + "\n";
+            if (i == selectionInt)
+                result += "<color=yellow>♥ </color>" + optionLabels[i] + "\n";
+            else
+                result += "  " + optionLabels[i] + "\n";
         }
         displayText.text = result;
     }
 
-    /// <summary>Fires when the player confirms a HABLAR choice.</summary>
+    /// <summary>Se ejecuta cuando el jugador confirma una opción.</summary>
     private void OnConfirm(int idx)
     {
         BattleManager bm = BattleManager.battleInstance;
         if (bm == null) return;
 
-        // ── Get player dialogue line (rotating) ──────────────────────────
+        // Línea del jugador (rotación)
         int rot = rotationIdx[idx];
         string playerLine = dialogueLines[idx][rot % dialogueLines[idx].Length];
         rotationIdx[idx] = (rot + 1) % dialogueLines[idx].Length;
 
-        int mercyGain = mercyValues[idx];
+        // Mercy
+        bm.actingMgr.totalMercy += mercyValues[idx];
+        Debug.Log($"[HablarManager] Opción {idx} — Mercy +{mercyValues[idx]} → total {bm.actingMgr.totalMercy}");
 
-        // ── Apply mercy ──────────────────────────────────────────────────
-        bm.actingMgr.totalMercy += mercyGain;
-        Debug.Log($"HablarManager: opción {idx}. Mercy +{mercyGain} → total {bm.actingMgr.totalMercy}");
+        // Respuesta del bully
+        string bullyResponse = (bm.enemyDialogue != null && bm.enemyDialogue.Count > 0)
+            ? bm.enemyDialogue[UnityEngine.Random.Range(0, bm.enemyDialogue.Count)]
+            : "...";
 
-        // ── Set dialogue text ────────────────────────────────────────────
+        // shouldTalk = false siempre — nunca activar EnemyTalking ni el panel flotante
+        DialogueManager.instance.shouldTalk = false;
+
+        // Cadena: diálogo jugador → diálogo bully → minijuego → turno del jugador
         DialogueManager.instance.dialogueTxt = playerLine;
 
-        if (bm.enemyDialogue != null && bm.enemyDialogue.Count > 0)
-            DialogueManager.instance.enemyTxt =
-                bm.enemyDialogue[UnityEngine.Random.Range(0, bm.enemyDialogue.Count)];
-        else
-            DialogueManager.instance.enemyTxt = "...";
-
-        DialogueManager.instance.shouldTalk = true;
-
-        // ── Chain: dialogue → heart minigame → ActingSequence ────────────
-        Action doneTalking = () =>
+        Action afterBullyTalk = () =>
         {
-            DialogueManager.instance.shouldTalk = false;
             HeartMinigame.instance.StartMinigame(() =>
             {
                 bm.StartCoroutine(bm.ActingSequence());
             });
         };
 
-        DialogueManager.instance.Talking(doneTalking);
+        Action afterPlayerTalk = () =>
+        {
+            DialogueManager.instance.shouldTalk = false;
+            DialogueManager.instance.dialogueTxt = bullyResponse;
+            DialogueManager.instance.Talking(afterBullyTalk);
+        };
+
+        DialogueManager.instance.Talking(afterPlayerTalk);
     }
 }

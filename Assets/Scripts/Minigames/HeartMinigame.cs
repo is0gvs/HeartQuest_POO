@@ -3,10 +3,9 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// Self-contained heart dodge minigame.
-/// The soul moves inside battleBounds while the bully fires pellets.
-/// Runs for minigameDuration seconds, then fires onComplete.
-/// Auto-creates if no instance exists — no scene setup required.
+/// Self-contained heart dodge minigame with GRAVITY.
+/// The soul falls downward and can jump (press-only) off the bottom wall.
+/// Left/Right movement is free. Auto-creates if no instance exists.
 /// </summary>
 public class HeartMinigame : MonoBehaviour
 {
@@ -25,12 +24,17 @@ public class HeartMinigame : MonoBehaviour
     }
     private static HeartMinigame _instance;
 
-    // ── Config ────────────────────────────────────────────────────────────
-    public float soulSpeed       = 5f;
-    public float pelletSpeed     = 3.5f;
-    public float spawnInterval   = 1.2f;
+    // ── Config (Inspector-tunable) ────────────────────────────────────────
+    [Header("Gravity")]
+    public float gravityForce    = 9f;
+    public float jumpForce       = 7f;
+    public float horizontalSpeed = 4f;
+
+    [Header("Pellets")]
+    public float pelletSpeed      = 3.5f;
+    public float spawnInterval    = 1.2f;
     public float minigameDuration = 6f;
-    public int   pelletDamage    = 1;
+    public int   pelletDamage     = 1;
 
     // ── Runtime ───────────────────────────────────────────────────────────
     private bool      isActive;
@@ -39,6 +43,7 @@ public class HeartMinigame : MonoBehaviour
     private Coroutine timerCo;
     private Transform soulTransform;
     private Rect      bounds;
+    private Vector2   velocity;      // manual physics velocity
 
     void Awake()
     {
@@ -95,11 +100,16 @@ public class HeartMinigame : MonoBehaviour
 
         onComplete = callback;
         isActive   = true;
+        velocity   = Vector2.zero;
 
-        // Enable and centre the soul
+        // Enable and place the soul at the bottom-center (grounded)
         SpriteRenderer sr = soulTransform.GetComponent<SpriteRenderer>();
-        if (sr != null) sr.enabled = true;
-        soulTransform.position = new Vector3(bounds.center.x, bounds.center.y, soulTransform.position.z);
+        if (sr != null)
+        {
+            sr.enabled = true;
+            sr.sortingOrder = 5; // render above the battle box
+        }
+        soulTransform.position = new Vector3(bounds.center.x, bounds.yMin, 0f);
 
         spawnCo = StartCoroutine(SpawnLoop());
         timerCo = StartCoroutine(Timer());
@@ -110,16 +120,57 @@ public class HeartMinigame : MonoBehaviour
     /// <summary>Immediately stops without calling onComplete.</summary>
     public void StopMinigame() => End(false);
 
-    // ── Internal ──────────────────────────────────────────────────────────
+    // ── Internal — Gravity-based movement ─────────────────────────────────
 
     private void MoveSoul()
     {
+        float dt = Time.deltaTime;
+
+        // ── Gravity (always pulling down) ────────────────────────────────
+        velocity.y -= gravityForce * dt;
+
+        // ── Horizontal input ─────────────────────────────────────────────
         float h = Input.GetAxisRaw("Horizontal");
-        float v = Input.GetAxisRaw("Vertical");
-        Vector3 move = new Vector3(h, v, 0f).normalized * soulSpeed * Time.deltaTime;
-        Vector3 pos  = soulTransform.position + move;
-        pos.x = Mathf.Clamp(pos.x, bounds.xMin, bounds.xMax);
-        pos.y = Mathf.Clamp(pos.y, bounds.yMin, bounds.yMax);
+        velocity.x = h * horizontalSpeed;
+
+        // ── Jump (press-only, when grounded) ─────────────────────────────
+        bool grounded = soulTransform.position.y <= bounds.yMin + 0.05f;
+        if (grounded && (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.Z)))
+        {
+            velocity.y = jumpForce;
+        }
+
+        // ── Apply velocity ───────────────────────────────────────────────
+        Vector3 pos = soulTransform.position;
+        pos.x += velocity.x * dt;
+        pos.y += velocity.y * dt;
+
+        // ── Clamp inside battleBounds ────────────────────────────────────
+        // Bottom wall
+        if (pos.y <= bounds.yMin)
+        {
+            pos.y = bounds.yMin;
+            velocity.y = 0f;
+        }
+        // Top wall
+        if (pos.y >= bounds.yMax)
+        {
+            pos.y = bounds.yMax;
+            velocity.y = 0f;
+        }
+        // Left wall
+        if (pos.x <= bounds.xMin)
+        {
+            pos.x = bounds.xMin;
+            velocity.x = 0f;
+        }
+        // Right wall
+        if (pos.x >= bounds.xMax)
+        {
+            pos.x = bounds.xMax;
+            velocity.x = 0f;
+        }
+
         soulTransform.position = pos;
     }
 
@@ -179,6 +230,7 @@ public class HeartMinigame : MonoBehaviour
     {
         if (!isActive) return;
         isActive = false;
+        velocity = Vector2.zero;
 
         if (spawnCo != null) StopCoroutine(spawnCo);
         if (timerCo != null) StopCoroutine(timerCo);

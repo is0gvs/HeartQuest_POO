@@ -38,6 +38,11 @@ public class DialogueManager : MonoBehaviour
         audioHolder = new GameObject("Audio Holder");
         audioHolder.transform.parent = transform;
         canNarrate = true;
+
+        // Fix: same off-screen pivot issue as ActingText
+        if (text != null)
+            text.rectTransform.pivot = new Vector2(0f, 0.5f);
+
         StartCoroutine(StartTalking(null));
     }
     IEnumerator StartTalking(Action action)

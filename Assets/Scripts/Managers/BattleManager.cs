@@ -139,19 +139,23 @@ public class BattleManager : MonoBehaviour
                 Selected();
             }
         }
-        if (!isFighting)
+        // Bug fix: Only disable PlayerMovement during menu phase, NOT the whole GO.
+        // The soul SpriteRenderer lives on the same GO as PlayerVars — calling
+        // SetActive(false) was also hiding the selection cursor during menu navigation.
+        if (playerVariables != null)
         {
-            playerVariables.gameObject.SetActive(false);
+            var pm = playerVariables.GetComponent<PlayerMovement>();
+            if (pm != null) pm.enabled = isFighting;
         }
-        if (isFighting)
+
+        // Bug fix: Null-guard to prevent NullReferenceException every frame when
+        // any Inspector reference is missing.
+        if (playerVariables != null && healthTxt != null && healthMeter != null)
         {
-            playerVariables.gameObject.SetActive(true);
+            float xScale = Mathf.Clamp01(playerVariables.health / 20f);
+            healthTxt.text = playerVariables.health + "   /   20";
+            healthMeter.transform.localScale = new Vector3(xScale,healthMeter.transform.localScale.y, healthMeter.transform.localScale.z);
         }
-        float xScale = (1f * playerVariables.health)/ 20;
-        //setting how will the health value be showed in-game
-        healthTxt.text = playerVariables.health + "   /   20";
-        //the health meter, grabs the health value & divides it by 20, while also multiplying it with the transform's scale
-        healthMeter.transform.localScale = new Vector3(xScale,healthMeter.transform.localScale.y, healthMeter.transform.localScale.z);
 
     }
 
