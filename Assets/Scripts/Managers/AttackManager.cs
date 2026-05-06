@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class AttackManager : MonoBehaviour
@@ -13,6 +12,18 @@ public class AttackManager : MonoBehaviour
     public bool attackFinished;
 
     List<IFightObject> attackObject = new();
+
+    void Start()
+    {
+        if (attacksScriptable == null)
+        {
+            attacksScriptable = Resources.Load<Attacks>("Attacks");
+            if (attacksScriptable != null)
+                Debug.LogWarning("AttackManager: 'attacksScriptable' no estaba asignado. Se cargó desde Resources/Attacks. Asígnalo en el Inspector.");
+            else
+                Debug.LogWarning("AttackManager: No se encontró ScriptableObject 'Attacks'. Crea uno en Assets/Resources/Attacks y asígnalo.");
+        }
+    }
 
     public void StartAttack(IEnumerator attack, Action onFinish)
     {

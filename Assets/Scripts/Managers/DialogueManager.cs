@@ -2,10 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
-using Unity.VisualScripting;
-using UnityEditor.Timeline.Actions;
 using UnityEngine;
-using static System.Collections.Specialized.BitVector32;
 
 public class DialogueManager : MonoBehaviour
 {
@@ -41,6 +38,11 @@ public class DialogueManager : MonoBehaviour
         audioHolder = new GameObject("Audio Holder");
         audioHolder.transform.parent = transform;
         canNarrate = true;
+
+        // Fix: same off-screen pivot issue as ActingText
+        if (text != null)
+            text.rectTransform.pivot = new Vector2(0f, 0.5f);
+
         StartCoroutine(StartTalking(null));
     }
     IEnumerator StartTalking(Action action)

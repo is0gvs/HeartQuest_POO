@@ -14,16 +14,18 @@ public class Buttons : MonoBehaviour
     public Sprite buttonSelected;
     public bool selected;
     public Transform soulPosition;
+    private SpriteRenderer sr;
 
     void Awake()
     {
         instance = this.gameObject;
-        instanceSprite = instance.GetComponent<SpriteRenderer>().sprite;
+        sr = instance.GetComponent<SpriteRenderer>();
+        instanceSprite = sr.sprite;
         currentSprite = instanceSprite;
     }
 
     void Update()
     {
-        instance.GetComponent<SpriteRenderer>().sprite = currentSprite;   
+        sr.sprite = currentSprite;
     }
 }
