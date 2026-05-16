@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.Serialization.Json;
 using TMPro;
 using UnityEngine;
 
@@ -9,6 +8,9 @@ public class BattleManager : MonoBehaviour
 {
     [HideInInspector]
     public bool isFighting;
+    [HideInInspector]
+    public bool isHablando;
+    private Coroutine resizeCoroutine;
     [HideInInspector]
     public static BattleManager battleInstance;
     private AttackManager attackMgr;
@@ -34,17 +36,16 @@ public class BattleManager : MonoBehaviour
     public TextMeshPro healthTxt;
     public float damage;
     /// <summary>
-    /// The attacking method, gets called when the player selects the fight button, responsible for initiating attacks
+    /// Opens the HABLAR submenu. HablarManager auto-creates if not in scene.
     /// </summary>
-    public void Attacking()
+    public void Hablar()
     {
         if (!isFighting)
         {
             actingMgr.actingText.gameObject.SetActive(false);
             AudioManager.instance.Selecting();
-            StartCoroutine(AttackSequence());
+            HablarManager.instance.AbrirMenuHablar();
         }
-       
     }
     /// <summary>
     /// The acting method, gets called when the player selects the act button, responsible for initiating acts
@@ -86,60 +87,75 @@ public class BattleManager : MonoBehaviour
         selectionInt = 0;
         maxSelectionInt = 3;
         minSelectionInt = 0;
-        attackMgr = AttackManager.instance;
         playerVariables = FindAnyObjectByType<PlayerVars>();
+
+        // Inspector-first: use the singleton set in Awake.
+        // Fallback only if Inspector ref was missed.
+        attackMgr = AttackManager.instance;
+        if (attackMgr == null)
+        {
+            attackMgr = FindAnyObjectByType<AttackManager>();
+            if (attackMgr != null)
+                Debug.LogWarning("BattleManager: 'attackMgr' no estaba asignado. Se encontró por fallback. Asígnalo en el Inspector.");
+            else
+                Debug.LogWarning("BattleManager: No existe AttackManager en la escena. El turno del enemigo se saltará.");
+        }
+
+        if (attackingSys == null)
+        {
+            attackingSys = FindAnyObjectByType<Attacking>();
+            if (attackingSys != null)
+                Debug.LogWarning("BattleManager: 'attackingSys' no estaba asignado. Se encontró por fallback. Asígnalo en el Inspector.");
+            else
+                Debug.LogWarning("BattleManager: No existe Attacking en la escena. El minijuego de ataque se saltará.");
+        }
     }
 
     void Update()
     {
-        //when the player is not fighting nor acting, these if statements get called
-        if (!isFighting && !actingMgr.isActing && !ItemManager.instance.isMenu)
+        //when the player is not fighting nor acting nor in HABLAR submenu, these if statements get called
+        if (!isFighting && !actingMgr.isActing && !ItemManager.instance.isMenu && !isHablando)
         {
             if (selectionInt > maxSelectionInt)
             {
-                //if we overflow, automatically select the fight button
                 selectionInt = 0;
             }
             if (selectionInt < minSelectionInt)
             {
-                //if we underflow, automatically select the mercy button
                 selectionInt = 3;
             }
             if (Input.GetKeyDown(KeyCode.LeftArrow))
             {
-                //if we press the left arrow key, reduce the selection int
                 selectionInt--;
             }
             if (Input.GetKeyDown(KeyCode.RightArrow))
             {
-                //the opposite of what I just said above
                 selectionInt++;
             }
             Selection();
 
             if (Input.GetKeyDown(KeyCode.Return))
             {
-                //when we press the Enter key, the selected method will be called
                 Selected();
             }
-            if (!attackMgr.attackFinished)
-            {
-                battleBox.size = new Vector2(11.5f,3);
-            }
         }
-        if (!isFighting)
+        // Bug fix: Only disable PlayerMovement during menu phase, NOT the whole GO.
+        // The soul SpriteRenderer lives on the same GO as PlayerVars — calling
+        // SetActive(false) was also hiding the selection cursor during menu navigation.
+        if (playerVariables != null)
         {
-            playerVariables.gameObject.SetActive(false);
+            var pm = playerVariables.GetComponent<PlayerMovement>();
+            if (pm != null) pm.enabled = isFighting;
         }
-        if (isFighting)
+
+        // Bug fix: Null-guard to prevent NullReferenceException every frame when
+        // any Inspector reference is missing.
+        if (playerVariables != null && healthTxt != null && healthMeter != null)
         {
-            playerVariables.gameObject.SetActive(true);
+            float xScale = Mathf.Clamp01(playerVariables.health / 20f);
+            healthTxt.text = playerVariables.health + "   /   20";
+            healthMeter.transform.localScale = new Vector3(xScale,healthMeter.transform.localScale.y, healthMeter.transform.localScale.z);
         }
-        float xScale = (1f * playerVariables.health)/ 20;
-        //setting how will the health value be showed in-game
-        healthTxt.text = playerVariables.health + "   /   20";
-        //the health meter, grabs the health value & divides it by 20, while also multiplying it with the transform's scale
-        healthMeter.transform.localScale = new Vector3(xScale,healthMeter.transform.localScale.y, healthMeter.transform.localScale.z);
 
     }
 
@@ -237,7 +253,7 @@ public class BattleManager : MonoBehaviour
     {
         if (selectionInt == 0)
         {
-            Attacking();
+            Hablar();
         }
         if (selectionInt == 1)
         {
@@ -259,29 +275,45 @@ public class BattleManager : MonoBehaviour
     IEnumerator AttackSequence()
     {
         isFighting = true;
-        //The action that will get called once we finish resizing the battle box
+
         Action onBoxFinish = () =>
         {
             actingMgr.actingText.gameObject.SetActive(true);
         };
-        //The action that will get called once we finish the round
+
         isFinished = () =>
         {
-            StartCoroutine(ResizeBattleBox(new Vector2(11.5f, 3), onBoxFinish));
+            SafeResize(new Vector2(11.5f, 3), onBoxFinish);
             attackMgr.attackFinished = !attackMgr.attackFinished;
             isFighting = false;
         };
-        //Starting the attack (go look in the "Attacking" script if curious).
-        attackingSys.StartAttacking(playerVariables.atkValue);
-        //Setting the fight bool to true;
+
         playerVariables.GetComponent<SpriteRenderer>().enabled = false;
-        yield return new WaitForSeconds(attackingSys.maxTime);
-        //Once we finish waiting for the player to attack, we move the player's soul to the middle of the battle box.
+
+        if (attackingSys != null)
+        {
+            attackingSys.StartAttacking(playerVariables.atkValue);
+            yield return new WaitForSeconds(attackingSys.maxTime);
+        }
+        else
+        {
+            Debug.LogWarning("No hay objeto Attacking en la escena. Saltando minijuego de ataque del jugador para evitar errores.");
+            yield return new WaitForSeconds(1f);
+        }
+
         playerVariables.transform.position = new Vector2(0, -1.7f);
-        StartCoroutine(ResizeBattleBox(new Vector2(3, 3), null));
+        SafeResize(new Vector2(3, 3), null);
         actingMgr.actingText.gameObject.SetActive(false);
         playerVariables.GetComponent<SpriteRenderer>().enabled = true;
-        attackMgr.StartAttack(attackMgr.attacksScriptable.GetAttack(), isFinished);
+        if (attackMgr != null && attackMgr.attacksScriptable != null)
+        {
+            attackMgr.StartAttack(attackMgr.attacksScriptable.GetAttack(), isFinished);
+        }
+        else
+        {
+            Debug.LogWarning("Falta AttackManager en la escena. Saltando turno del enemigo.");
+            isFinished?.Invoke();
+        }
     }
   public IEnumerator ActingSequence()
     {
@@ -307,7 +339,7 @@ public class BattleManager : MonoBehaviour
         {
             soul.enabled = true;
             soul.transform.position = buttons[1].soulPosition.position;
-            StartCoroutine(ResizeBattleBox(new Vector2(11.5f, 3f), boxAction));
+            SafeResize(new Vector2(11.5f, 3f), boxAction);
             actingMgr.isActing = false;
             isFighting = false;
             actingMgr.actingText.gameObject.SetActive(true);
@@ -318,12 +350,20 @@ public class BattleManager : MonoBehaviour
         };
         yield return new WaitForSeconds(1);
         playerVariables.transform.position = new Vector2(0, -1.7f);
-        StartCoroutine(ResizeBattleBox(new Vector2(3, 3), boxAction));
+        SafeResize(new Vector2(3, 3), boxAction);
         actingMgr.actingText.gameObject.SetActive(false);
         actingMgr.isActing = false;
         isFighting = true;
         actingMgr.time = 0;
-        attackMgr.StartAttack(attackMgr.attacksScriptable.GetAttack(), isFinished);
+        if (attackMgr != null && attackMgr.attacksScriptable != null)
+        {
+            attackMgr.StartAttack(attackMgr.attacksScriptable.GetAttack(), isFinished);
+        }
+        else
+        {
+            Debug.LogWarning("Falta AttackManager en la escena. Saltando turno del enemigo.");
+            isFinished?.Invoke();
+        }
     }
 
     public IEnumerator ItemSequence()
@@ -345,7 +385,7 @@ public class BattleManager : MonoBehaviour
             ItemManager.instance.time = 0;
             soul.enabled = true;
             soul.transform.position = buttons[2].soulPosition.position;
-            StartCoroutine(ResizeBattleBox(new Vector2(11.5f, 3f), null));
+            SafeResize(new Vector2(11.5f, 3f), null);
             actingMgr.isActing = false;
             isFighting = false;
             actingMgr.actingText.gameObject.SetActive(true);
@@ -357,20 +397,34 @@ public class BattleManager : MonoBehaviour
         };
         yield return new WaitForSeconds(1);
         playerVariables.transform.position = new Vector2(0, -1.7f);
-        StartCoroutine(ResizeBattleBox(new Vector2(3, 3), null));
+        SafeResize(new Vector2(3, 3), null);
         ItemManager.instance.itemObjects.SetActive(false);
         isFighting = true;
         ItemManager.instance.isMenu = false;
         ItemManager.instance.useText.text = "";
         actingMgr.time = 0;
-        attackMgr.StartAttack(attackMgr.attacksScriptable.GetAttack(), isFinished);
+        if (attackMgr != null && attackMgr.attacksScriptable != null)
+        {
+            attackMgr.StartAttack(attackMgr.attacksScriptable.GetAttack(), isFinished);
+        }
+        else
+        {
+            Debug.LogWarning("Falta AttackManager en la escena. Saltando turno del enemigo.");
+            isFinished?.Invoke();
+        }
     }
     /// <summary>
-    /// The coroutine behind the resizing system, I think you can figure this one out for yourself.
+    /// Stops any active resize and starts a new one.
     /// </summary>
-    /// <param name="targetSize"></param>
-    /// <param name="onFinish"></param>
-    /// <returns></returns>
+    void SafeResize(Vector2 targetSize, Action onFinish)
+    {
+        if (resizeCoroutine != null) StopCoroutine(resizeCoroutine);
+        resizeCoroutine = StartCoroutine(ResizeBattleBox(targetSize, onFinish));
+    }
+
+    /// <summary>
+    /// The coroutine behind the resizing system.
+    /// </summary>
     IEnumerator ResizeBattleBox(Vector2 targetSize, Action onFinish)
     {
         Vector2 startSize = battleBox.size;

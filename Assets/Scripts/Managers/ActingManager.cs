@@ -3,14 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using System.Linq;
 
 public class ActingManager : MonoBehaviour
 {
     int maxSelectionInt;
     int minSelectionInt;
     public int selectionInt;
-    bool isFighting;
     public string spareMessage;
     public List<ActingButtons> buttons;
     public SpriteRenderer soul;
@@ -24,13 +22,16 @@ public class ActingManager : MonoBehaviour
     public bool canAct = true;
     void Start()
     {
-        isFighting = BattleManager.battleInstance.isFighting;
         maxSelectionInt = 3;
         minSelectionInt = 0;
+        // Fix: default TMP pivot (0.5,0.5) with position x=-5.2 pushed the left edge
+        // off-screen (~x=-10.2). Left-anchor pivot keeps text inside the battle box.
+        if (actingText != null)
+            actingText.rectTransform.pivot = new Vector2(0f, 0.5f);
     }
     void Update()
     {
-        if (!isFighting && isActing)
+        if (!BattleManager.battleInstance.isFighting && isActing)
         {
             if (selectionInt > maxSelectionInt)
             {
@@ -132,7 +133,6 @@ public class ActingManager : MonoBehaviour
     {
         if (selectionInt == 0)
         {
-            OnActing(0);
             OnActing(0);
             totalMercy += buttons[0].actVars.curMercy;
         }

@@ -16,20 +16,21 @@ public class ItemManager : MonoBehaviour
     public SpriteRenderer soul;
     public TextMeshPro useText;
     public GameObject itemObjects;
-    bool isFighting;
     public float time;
     public bool isMenu;
     public bool canAct = true;
     void Start()
     {
-        isFighting = BattleManager.battleInstance.isFighting;
         maxSelectionInt = 3;
         minSelectionInt = 0;
+        // Fix: same off-screen pivot issue as ActingText
+        if (useText != null)
+            useText.rectTransform.pivot = new Vector2(0f, 0.5f);
     }
 
     void Update()
     {
-        if (!isFighting && isMenu)
+        if (!BattleManager.battleInstance.isFighting && isMenu)
         {
             if (selectionInt > maxSelectionInt)
             {
