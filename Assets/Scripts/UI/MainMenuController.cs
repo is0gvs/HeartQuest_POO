@@ -15,8 +15,13 @@ namespace AntiBullyingGame.UI
         public Toggle fullscreenToggle;
         public string sceneToLoad = "ClassroomScene";
 
+        private const string VOLUME_KEY = "GameVolume";
+        private const string FULLSCREEN_KEY = "Fullscreen";
+
         private void Start()
         {
+            LoadSettings();
+
             // Sincronizar los controles UI con los valores actuales al iniciar
             if (volumeSlider != null)
             {
@@ -29,6 +34,44 @@ namespace AntiBullyingGame.UI
                 fullscreenToggle.isOn = Screen.fullScreen;
                 fullscreenToggle.onValueChanged.AddListener(SetFullscreen);
             }
+        }
+
+        private void LoadSettings()
+        {
+            // Volumen
+            float savedVolume = PlayerPrefs.GetFloat(VOLUME_KEY, 1f);
+            AudioListener.volume = savedVolume;
+
+            // Fullscreen
+            int fullscreen = PlayerPrefs.GetInt(FULLSCREEN_KEY, 1);
+            bool isFullscreen = fullscreen == 1;
+
+            Screen.fullScreen = isFullscreen;
+
+            Debug.Log("[Settings] Configuración cargada.");
+        }
+
+        public void SetVolume(float volume)
+        {
+            AudioListener.volume = volume;
+
+            // Guardar volumen
+            PlayerPrefs.SetFloat(VOLUME_KEY, volume);
+            PlayerPrefs.Save();
+
+            Debug.Log("[Settings] Volumen guardado: " + volume);
+        }
+
+
+        public void SetFullscreen(bool isFullscreen)
+        {
+            Screen.fullScreen = isFullscreen;
+
+            // Guardar fullscreen
+            PlayerPrefs.SetInt(FULLSCREEN_KEY, isFullscreen ? 1 : 0);
+            PlayerPrefs.Save();
+
+            Debug.Log("[Settings] Fullscreen guardado: " + isFullscreen);
         }
 
         public void PlayGame()
@@ -245,17 +288,6 @@ namespace AntiBullyingGame.UI
             if (optionsPanel != null) optionsPanel.SetActive(false);
             if (loadPanel != null) loadPanel.SetActive(false);
             if (mainPanel != null) mainPanel.SetActive(true);
-        }
-
-        public void SetVolume(float volume)
-        {
-            AudioListener.volume = volume;
-        }
-
-        public void SetFullscreen(bool isFullscreen)
-        {
-            Debug.Log("Fullscreen cambiado: " + isFullscreen);
-            Screen.fullScreen = isFullscreen;
         }
 
         public void QuitGame()
