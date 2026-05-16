@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEngine.UI;
 using AntiBullyingGame.UI;
 
+
 public class MainMenuAutoSetup
 {
     // [MenuItem("POO Game/Setup Main Menu UI")] // Removido: usar solo Build_Heartquest
@@ -14,14 +15,16 @@ public class MainMenuAutoSetup
     static Color textWhite = new Color(0.9f, 0.92f, 0.95f, 1f);
     static Color textDim = new Color(0.5f, 0.55f, 0.65f, 1f);
 
+
     [MenuItem("POO Game/Setup Cyberpunk Main Menu")]
     public static void SetupMainMenu()
     {
         // 0. Abrir la escena MainMenu específicamente
         string scenePath = "Assets/Scenes/MainMenu.unity";
-        
+       
         // Guardar escena actual si tiene cambios antes de abrir la otra
         UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
+
 
         // Abrir la escena de MainMenu
         var currentScene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
@@ -30,6 +33,7 @@ public class MainMenuAutoSetup
             if (obj.name != "Main Camera" && obj.name != "Directional Light")
                 GameObject.DestroyImmediate(obj);
         }
+
 
         // 1.5 Configurar cámara para el menú
         var cam = Camera.main;
@@ -40,41 +44,47 @@ public class MainMenuAutoSetup
             cam.backgroundColor = new Color(0.08f, 0.08f, 0.12f); // Fondo oscuro elegante
         }
 
+
         // 2. Crear EventSystem (Necesario para que los botones detecten clicks)
         if (Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
         {
             new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.EventSystems.StandaloneInputModule));
         }
 
+
         // 3. Crear Canvas Principal
         GameObject canvasObj = new GameObject("MainMenuCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         Canvas canvas = canvasObj.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        
+       
         CanvasScaler scaler = canvasObj.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
 
+
         // 4. Añadir el Controller que creamos antes
         var controller = canvasObj.AddComponent<MainMenuController>();
+
 
         // Cargar fuente bonita (Roboto-Bold)
         Font customFont = AssetDatabase.LoadAssetAtPath<Font>("Assets/TextMesh Pro/Examples & Extras/Fonts/Roboto-Bold.ttf");
 
+
         // 5. Crear Panel Principal (Main Menu)
         GameObject mainPanel = CreatePanel("MainPanel", canvasObj.transform);
-        
+       
         // Remover el componente Image por defecto y usar RawImage para garantizar que cargue cualquier textura
         GameObject.DestroyImmediate(mainPanel.GetComponent<Image>());
         RawImage mainPanelRawImage = mainPanel.AddComponent<RawImage>();
-        
+       
         // Cargar la textura de fondo
         string bgPath = "Assets/Sprites/Backgrounds/BMain.jpg";
         Texture2D bgTex = AssetDatabase.LoadAssetAtPath<Texture2D>(bgPath);
 
+
         if (bgTex != null)
         {
-            mainPanelRawImage.color = Color.white; 
+            mainPanelRawImage.color = Color.white;
             mainPanelRawImage.texture = bgTex;
         }
         else
@@ -83,10 +93,12 @@ public class MainMenuAutoSetup
             Debug.LogError("No se pudo cargar la textura de fondo en: " + bgPath);
         }
 
+
         // 5.5 Crear un panel oscuro superpuesto para mejorar la legibilidad de la UI
         GameObject overlayObj = CreatePanel("Overlay", mainPanel.transform);
         Image overlayImage = overlayObj.GetComponent<Image>();
         overlayImage.color = new Color(0.2f, 0.1f, 0.05f, 0.6f); // Tonos tierra cálidos semi-transparentes
+
 
         // Añadir Título del Juego
         GameObject titleObj = new GameObject("TitleText", typeof(RectTransform), typeof(Text));
@@ -98,19 +110,22 @@ public class MainMenuAutoSetup
         titleText.fontStyle = FontStyle.Bold;
         titleText.alignment = TextAnchor.MiddleCenter;
         titleText.color = new Color(0.95f, 0.82f, 0.55f, 1f); // Dorado arena suave
-        
+       
         Outline titleOutline = titleObj.AddComponent<Outline>();
         titleOutline.effectColor = new Color(0.3f, 0.15f, 0.05f, 1f); // Marrón oscuro de sombra
         titleOutline.effectDistance = new Vector2(4, -4);
+
 
         RectTransform titleRT = titleObj.GetComponent<RectTransform>();
         titleRT.sizeDelta = new Vector2(1400, 250);
         titleRT.anchoredPosition = new Vector2(0, 350);
 
+
         // 6. Crear Panel de Opciones
         GameObject optionsPanel = CreatePanel("OptionsPanel", canvasObj.transform);
         optionsPanel.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 1f); // Un poco más oscuro
         optionsPanel.SetActive(false); // Oculto por defecto
+
 
         // Añadir Título de Opciones
         GameObject optTitle = new GameObject("OptionsTitle", typeof(RectTransform), typeof(Text));
@@ -126,10 +141,12 @@ public class MainMenuAutoSetup
         optTitleRT.sizeDelta = new Vector2(800, 150);
         optTitleRT.anchoredPosition = new Vector2(0, 250);
 
+
         // 6.5 Crear Panel de Carga (LoadPanel)
         GameObject loadPanel = CreatePanel("LoadPanel", canvasObj.transform);
-        loadPanel.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 1f); 
+        loadPanel.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 1f);
         loadPanel.SetActive(false); // Oculto por defecto
+
 
         // Añadir Título de Carga
         GameObject loadTitle = new GameObject("LoadTitle", typeof(RectTransform), typeof(Text));
@@ -145,12 +162,14 @@ public class MainMenuAutoSetup
         loadTitleRT.sizeDelta = new Vector2(1000, 150);
         loadTitleRT.anchoredPosition = new Vector2(0, 350);
 
+
         // Crear ScrollRect simplificado (solo Content con VerticalLayout)
         GameObject scrollObj = new GameObject("ScrollArea", typeof(RectTransform));
         scrollObj.transform.SetParent(loadPanel.transform, false);
         RectTransform scrollRT = scrollObj.GetComponent<RectTransform>();
         scrollRT.sizeDelta = new Vector2(600, 600);
         scrollRT.anchoredPosition = new Vector2(0, 0);
+
 
         GameObject contentObj = new GameObject("Content", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
         contentObj.transform.SetParent(scrollObj.transform, false);
@@ -161,14 +180,17 @@ public class MainMenuAutoSetup
         contentRT.sizeDelta = new Vector2(0, 0);
         contentRT.anchoredPosition = Vector2.zero;
 
+
         VerticalLayoutGroup vlg = contentObj.GetComponent<VerticalLayoutGroup>();
         vlg.spacing = 20;
         vlg.childAlignment = TextAnchor.UpperCenter;
         vlg.childControlHeight = false;
         vlg.childControlWidth = false;
 
+
         ContentSizeFitter csf = contentObj.GetComponent<ContentSizeFitter>();
         csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
 
         // 7. Crear Botones en Main Panel
         Button newGameBtn = CreateButton("NewGameButton", mainPanel.transform, "NUEVO JUEGO", new Vector2(0, 100), customFont);
@@ -177,20 +199,43 @@ public class MainMenuAutoSetup
         Button optBtn = CreateButton("OptionsButton", mainPanel.transform, "OPCIONES", new Vector2(0, -200), customFont);
         Button quitBtn = CreateButton("QuitButton", mainPanel.transform, "SALIR", new Vector2(0, -300), customFont);
 
+
+
+
+        // Crear Slider de Volumen
+        Slider volumeSlider = CreateVolumeSlider(optionsPanel.transform, controller, customFont);
+
+
+        // Crear Toggle Fullscreen
+        Toggle fullscreenToggle = CreateFullscreenToggle(optionsPanel.transform, controller, customFont);
+
+
         // 8. Crear Botones en Options Panel y Load Panel
         Button backBtn = CreateButton("BackButton", optionsPanel.transform, "VOLVER", new Vector2(0, -300), customFont);
-        Button loadBackBtn = CreateButton("BackButton", loadPanel.transform, "VOLVER", new Vector2(0, -400), customFont);
-
+        Button loadBackBtn = CreateButton("LoadBackButton", loadPanel.transform, "VOLVER", new Vector2(0, -400), customFont);
         // 9. Asignar referencias en el Controller
         var so = new SerializedObject(controller);
         so.FindProperty("mainPanel").objectReferenceValue = mainPanel;
         so.FindProperty("optionsPanel").objectReferenceValue = optionsPanel;
         so.FindProperty("loadPanel").objectReferenceValue = loadPanel;
         so.FindProperty("loadContentTransform").objectReferenceValue = contentObj.transform;
-        so.FindProperty("sceneToLoad").stringValue = "ClassroomScene"; 
+        so.FindProperty("sceneToLoad").stringValue = "ClassroomScene";
+        so.FindProperty("volumeSlider").objectReferenceValue = volumeSlider;
+        so.FindProperty("fullscreenToggle").objectReferenceValue = fullscreenToggle;
         so.ApplyModifiedProperties();
 
+
         // 10. Conectar Eventos (OnClicks) de Unity automáticamente usando UnityAction
+        UnityEditor.Events.UnityEventTools.AddPersistentListener(
+            volumeSlider.onValueChanged,
+            controller.SetVolume
+        );
+
+
+        UnityEditor.Events.UnityEventTools.AddPersistentListener(
+            fullscreenToggle.onValueChanged,
+            controller.SetFullscreen
+        );
         UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(newGameBtn.onClick, new UnityEngine.Events.UnityAction(controller.NewGame));
         UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(continueBtn.onClick, new UnityEngine.Events.UnityAction(controller.ContinueGame));
         UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(loadBtn.onClick, new UnityEngine.Events.UnityAction(controller.ShowLoadPanel));
@@ -199,11 +244,13 @@ public class MainMenuAutoSetup
         UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(backBtn.onClick, new UnityEngine.Events.UnityAction(controller.ShowMainPanel));
         UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(loadBackBtn.onClick, new UnityEngine.Events.UnityAction(controller.ShowMainPanel));
 
+
         // 11. Guardar cambios en la escena automáticamente
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(currentScene);
         UnityEditor.SceneManagement.EditorSceneManager.SaveScene(currentScene);
         Debug.Log("¡El Menú Principal ha sido inyectado y guardado automáticamente con éxito!");
     }
+
 
     private static GameObject CreatePanel(string name, Transform parent)
     {
@@ -217,6 +264,7 @@ public class MainMenuAutoSetup
         return panel;
     }
 
+
     private static Button CreateButton(string name, Transform parent, string textStr, Vector2 pos, Font customFont = null)
     {
         GameObject btnObj = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
@@ -225,12 +273,15 @@ public class MainMenuAutoSetup
         rt.sizeDelta = new Vector2(500, 80);
         rt.anchoredPosition = pos;
 
+
         Image img = btnObj.GetComponent<Image>();
         img.color = new Color(0.45f, 0.28f, 0.18f, 0.95f); // Marrón cálido (Tierra)
+
 
         Outline outlineBtn = btnObj.AddComponent<Outline>();
         outlineBtn.effectColor = new Color(0.85f, 0.65f, 0.4f, 0.8f); // Borde dorado suave
         outlineBtn.effectDistance = new Vector2(2, -2);
+
 
         GameObject textObj = new GameObject("Text", typeof(RectTransform), typeof(Text));
         textObj.transform.SetParent(btnObj.transform, false);
@@ -241,17 +292,223 @@ public class MainMenuAutoSetup
         txt.fontStyle = FontStyle.Bold;
         txt.color = new Color(0.98f, 0.92f, 0.85f, 1f); // Texto crema pálido
         txt.alignment = TextAnchor.MiddleCenter;
-        
+       
         Shadow textShadow = textObj.AddComponent<Shadow>();
         textShadow.effectColor = Color.black;
         textShadow.effectDistance = new Vector2(2, -2);
-        
+       
         RectTransform textRT = textObj.GetComponent<RectTransform>();
         textRT.anchorMin = Vector2.zero;
         textRT.anchorMax = Vector2.one;
         textRT.offsetMin = Vector2.zero;
         textRT.offsetMax = Vector2.zero;
 
+
         return btnObj.GetComponent<Button>();
     }
+    private static Slider CreateVolumeSlider(Transform parent, MainMenuController controller, Font font)
+    {
+        GameObject container = new GameObject("VolumeContainer", typeof(RectTransform));
+        container.transform.SetParent(parent, false);
+
+
+        RectTransform containerRT = container.GetComponent<RectTransform>();
+        containerRT.sizeDelta = new Vector2(700, 120);
+        containerRT.anchoredPosition = new Vector2(0, 80);
+
+
+        // LABEL
+        GameObject labelObj = new GameObject("Label", typeof(Text));
+        labelObj.transform.SetParent(container.transform, false);
+
+
+        Text label = labelObj.GetComponent<Text>();
+        label.text = "VOLUMEN";
+        label.font = font;
+        label.fontSize = 50;
+        label.fontStyle = FontStyle.Bold;
+        label.color = new Color(0.98f, 0.92f, 0.85f, 1f);
+        label.alignment = TextAnchor.MiddleCenter;
+
+
+        RectTransform labelRT = labelObj.GetComponent<RectTransform>();
+        labelRT.sizeDelta = new Vector2(600, 70);
+        labelRT.anchoredPosition = new Vector2(0, 35);
+
+
+        // SLIDER
+        GameObject sliderObj = new GameObject("VolumeSlider",
+            typeof(RectTransform),
+            typeof(Slider));
+
+
+        sliderObj.transform.SetParent(container.transform, false);
+
+
+        RectTransform sliderRT = sliderObj.GetComponent<RectTransform>();
+        sliderRT.sizeDelta = new Vector2(550, 28);
+        sliderRT.anchoredPosition = new Vector2(0, -30);
+
+
+        // Background
+        GameObject background = new GameObject("Background", typeof(Image));
+        background.transform.SetParent(sliderObj.transform, false);
+
+
+        Image bgImage = background.GetComponent<Image>();
+        bgImage.color = new Color(0.25f, 0.18f, 0.12f, 1f);
+
+
+        RectTransform bgRT = background.GetComponent<RectTransform>();
+        bgRT.anchorMin = Vector2.zero;
+        bgRT.anchorMax = Vector2.one;
+        bgRT.offsetMin = Vector2.zero;
+        bgRT.offsetMax = Vector2.zero;
+
+
+        // Fill Area
+        GameObject fillArea = new GameObject("Fill Area", typeof(RectTransform));
+        fillArea.transform.SetParent(sliderObj.transform, false);
+
+
+        RectTransform fillAreaRT = fillArea.GetComponent<RectTransform>();
+        fillAreaRT.anchorMin = Vector2.zero;
+        fillAreaRT.anchorMax = Vector2.one;
+        fillAreaRT.offsetMin = new Vector2(10, 0);
+        fillAreaRT.offsetMax = new Vector2(-10, 0);
+
+
+        // Fill
+        GameObject fill = new GameObject("Fill", typeof(Image));
+        fill.transform.SetParent(fillArea.transform, false);
+
+
+        Image fillImage = fill.GetComponent<Image>();
+        fillImage.color = new Color(0.85f, 0.65f, 0.4f, 1f);
+
+
+        RectTransform fillRT = fill.GetComponent<RectTransform>();
+        fillRT.anchorMin = Vector2.zero;
+        fillRT.anchorMax = Vector2.one;
+        fillRT.offsetMin = Vector2.zero;
+        fillRT.offsetMax = Vector2.zero;
+
+
+        // Handle Slide Area
+        GameObject handleArea = new GameObject("Handle Slide Area", typeof(RectTransform));
+        handleArea.transform.SetParent(sliderObj.transform, false);
+
+
+        RectTransform handleAreaRT = handleArea.GetComponent<RectTransform>();
+        handleAreaRT.anchorMin = Vector2.zero;
+        handleAreaRT.anchorMax = Vector2.one;
+        handleAreaRT.offsetMin = new Vector2(10, 0);
+        handleAreaRT.offsetMax = new Vector2(-10, 0);
+
+
+        // Handle
+        GameObject handle = new GameObject("Handle", typeof(Image));
+        handle.transform.SetParent(handleArea.transform, false);
+
+
+        Image handleImage = handle.GetComponent<Image>();
+        handleImage.color = new Color(0.98f, 0.92f, 0.85f, 1f);
+
+
+        RectTransform handleRT = handle.GetComponent<RectTransform>();
+        handleRT.sizeDelta = new Vector2(32, 32);
+
+
+        Slider slider = sliderObj.GetComponent<Slider>();
+        slider.fillRect = fillRT;
+        slider.handleRect = handleRT;
+        slider.targetGraphic = handleImage;
+        slider.direction = Slider.Direction.LeftToRight;
+        slider.minValue = 0f;
+        slider.maxValue = 1f;
+        slider.value = 1f;
+
+
+        controller.volumeSlider = slider;
+
+
+        return slider;
+    }
+
+
+    private static Toggle CreateFullscreenToggle(Transform parent, MainMenuController controller, Font font)
+    {
+        GameObject toggleObj = new GameObject("FullscreenToggle",
+            typeof(RectTransform),
+            typeof(Toggle));
+
+
+        toggleObj.transform.SetParent(parent, false);
+
+
+        RectTransform rt = toggleObj.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(600, 70);
+        rt.anchoredPosition = new Vector2(0, -80);
+
+
+        // Background Box
+        GameObject bg = new GameObject("Background", typeof(Image));
+        bg.transform.SetParent(toggleObj.transform, false);
+
+
+        Image bgImg = bg.GetComponent<Image>();
+        bgImg.color = new Color(0.25f, 0.18f, 0.12f, 1f);
+
+
+        RectTransform bgRT = bg.GetComponent<RectTransform>();
+        bgRT.sizeDelta = new Vector2(42, 42);
+        bgRT.anchoredPosition = new Vector2(-180, 0);
+
+
+        // Checkmark
+        GameObject checkmark = new GameObject("Checkmark", typeof(Image));
+        checkmark.transform.SetParent(bg.transform, false);
+
+
+        Image checkImg = checkmark.GetComponent<Image>();
+        checkImg.color = new Color(0.85f, 0.65f, 0.4f, 1f);
+
+
+        RectTransform checkRT = checkmark.GetComponent<RectTransform>();
+        checkRT.anchorMin = Vector2.zero;
+        checkRT.anchorMax = Vector2.one;
+        checkRT.offsetMin = new Vector2(5, 5);
+        checkRT.offsetMax = new Vector2(-5, -5);
+
+
+        // Label
+        GameObject labelObj = new GameObject("Label", typeof(Text));
+        labelObj.transform.SetParent(toggleObj.transform, false);
+
+
+        Text label = labelObj.GetComponent<Text>();
+        label.text = "FULLSCREEN";
+        label.font = font;
+        label.fontSize = 50;
+        label.fontStyle = FontStyle.Bold;
+        label.color = new Color(0.98f, 0.92f, 0.85f, 1f);
+        label.alignment = TextAnchor.MiddleLeft;
+
+
+        RectTransform labelRT = labelObj.GetComponent<RectTransform>();
+        labelRT.sizeDelta = new Vector2(500, 70);
+        labelRT.anchoredPosition = new Vector2(140, 0);
+
+
+        Toggle toggle = toggleObj.GetComponent<Toggle>();
+        toggle.graphic = checkImg;
+        toggle.targetGraphic = bgImg;
+
+
+        controller.fullscreenToggle = toggle;
+
+
+        return toggle;
+    }
 }
+
