@@ -166,13 +166,15 @@ namespace AntiBullyingGame.Managers
         {
             SaveData data = new SaveData();
 
-            // 1. Obtener Vida
+            data.position = new float[3];
+
+            // 1. VIDA
             if (PlayerVars.instance != null)
             {
-                data.health = PlayerVars.instance.health;
+                data.health = (int)PlayerVars.instance.health; // evita error float -> int
             }
 
-            // 2. Obtener Posición y Moral
+            // 2. POSICIÓN
             Player player = FindAnyObjectByType<Player>();
             if (player != null)
             {
@@ -181,21 +183,26 @@ namespace AntiBullyingGame.Managers
                 data.position[2] = player.transform.position.z;
             }
 
-            // Guardar Moral desde el GameManager, que controla la UI
+            // 3. MORAL
             GameManager gm = FindAnyObjectByType<GameManager>();
-            if (gm != null) 
+            if (gm != null)
             {
                 data.morale = gm.CurrentMorale;
-            } 
-            else if (player != null) 
+            }
+            else if (player != null)
             {
                 data.morale = player.Morale;
             }
-            else
+
+            // 4. INVENTARIO (AQUÍ ESTABA EL ERROR)
+            InventoryManager inv = FindAnyObjectByType<InventoryManager>();
+
+            if (inv != null)
             {
-                Debug.LogWarning("[SaveManager] No se encontró al jugador ni al GameManager en la escena actual para guardar su estado.");
+                data.inventory = inv.inventory.ToSaveData();
             }
 
+            // GUARDAR TODO
             SaveGame(data);
         }
 
@@ -217,7 +224,14 @@ namespace AntiBullyingGame.Managers
                 Player player = FindAnyObjectByType<Player>();
                 if (player != null)
                 {
-                    player.transform.position = new Vector3(data.position[0], data.position[1], data.position[2]);
+                    if (data.position != null && data.position.Length >= 3)
+                    {
+                        player.transform.position = new Vector3(
+                            data.position[0],
+                            data.position[1],
+                            data.position[2]
+                        );
+                    }
                     player.SetMorale(data.morale);
                 }
 
@@ -226,6 +240,12 @@ namespace AntiBullyingGame.Managers
                 if (gm != null)
                 {
                     gm.SetMorale(data.morale);
+                }
+
+                InventoryManager inv = FindAnyObjectByType<InventoryManager>();
+                if (inv != null)
+                {
+                    inv.LoadInventory(data.inventory);
                 }
 
                 if (player != null || gm != null)

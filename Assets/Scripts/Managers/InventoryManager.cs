@@ -1,58 +1,70 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class InventoryManager : MonoBehaviour
 {
-    private InventoryItem head;
-    private InventoryItem tail;
-    private InventoryItem current;
+    public static InventoryManager instance;
 
-    // Agregar item
-    public void AddItem(string itemName)
+    public InventoryLinkedList inventory = new InventoryLinkedList();
+
+    private void Awake()
     {
-        InventoryItem newItem = new InventoryItem(itemName);
-
-        if (head == null)
+        if (instance == null)
         {
-            head = newItem;
-            tail = newItem;
-            current = newItem;
+            instance = this;
         }
         else
         {
-            tail.next = newItem;
-            newItem.previous = tail;
-            tail = newItem;
-        }
-
-        Debug.Log("Item agregado: " + itemName);
-    }
-
-    // Mostrar item actual
-    public void ShowCurrentItem()
-    {
-        if (current != null)
-        {
-            Debug.Log("Item actual: " + current.itemName);
+            Destroy(gameObject);
         }
     }
 
-    // Siguiente item
-    public void NextItem()
+    private void Start()
     {
-        if (current != null && current.next != null)
+        // Items iniciales
+        if (inventory.Count == 0)
         {
-            current = current.next;
-            ShowCurrentItem();
+            inventory.AddItem(new InventoryItem("Lapiz", 5));
+            inventory.AddItem(new InventoryItem("Carta", 10));
+            inventory.AddItem(new InventoryItem("Cuaderno", 15));
+        }
+
+        inventory.PrintInventory();
+    }
+
+    public void UseItem(int index)
+    {
+        InventoryItem item = inventory.GetItem(index);
+
+        if (item != null)
+        {
+            Debug.Log($"Usaste {item.itemName} y curaste {item.healAmount} HP");
+
+            if (PlayerVars.instance != null)
+            {
+                PlayerVars.instance.Heal(item.healAmount);
+            }
+
+            inventory.RemoveItem(item.itemName);
         }
     }
 
-    // Item anterior
-    public void PreviousItem()
+    //Convertir inventario a SaveData
+    public List<InventorySaveData> GetInventoryData()
     {
-        if (current != null && current.previous != null)
+        return inventory.ToSaveData();
+    }
+
+    //Importar inventario
+    public void LoadInventory(List<InventorySaveData> items)
+    {
+        if (items == null)
         {
-            current = current.previous;
-            ShowCurrentItem();
+            inventory = new InventoryLinkedList();
+            return;
         }
+
+        inventory = new InventoryLinkedList();
+        inventory.LoadFromSaveData(items);
     }
 }

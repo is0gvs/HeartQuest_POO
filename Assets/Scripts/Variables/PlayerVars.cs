@@ -1,26 +1,37 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 public class PlayerVars : MonoBehaviour
 {
     public float atkValue;
     public float defValue;
+
     public float health;
-   [SerializeField] Color soulFlashing;
-   public Color soulOriginal;
+    public float maxHealth = 20;
+
+    [SerializeField] Color soulFlashing;
+    public Color soulOriginal;
+
     float soulAlpha;
     float soulAlphaFlash;
     float time;
     public float maxTime;
+
     [SerializeField] private SpriteRenderer soulSprite;
+
     bool invincible;
+
     [HideInInspector]
     public static PlayerVars instance;
-    void Awake() => instance = this;
 
-
+    void Awake()
+    {
+        if (instance == null)
+            instance = this;
+        else
+            Destroy(gameObject);
+    }
 
     void Start()
     {
@@ -29,6 +40,7 @@ public class PlayerVars : MonoBehaviour
         soulOriginal = soulSprite.color;
         time = maxTime;
     }
+
     public void TakeDamage(float damageTaken)
     {
         if (!invincible)
@@ -39,9 +51,17 @@ public class PlayerVars : MonoBehaviour
         }
     }
 
+    
+    public void Heal(float amount)
+    {
+        health += amount;
+
+        if (health > maxHealth)
+            health = maxHealth;
+    }
+
     void FlashSoul()
     {
-        
         if (time > 0)
         {
             soulAlphaFlash = soulAlphaFlash * -1;
@@ -53,11 +73,12 @@ public class PlayerVars : MonoBehaviour
             time = maxTime;
             invincible = false;
         }
-        
     }
+
     void Update()
     {
         time -= Time.deltaTime;
+
         if (invincible)
         {
             FlashSoul();

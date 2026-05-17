@@ -20,46 +20,42 @@ namespace AntiBullyingGame.UI
         private const string VOLUME_KEY = "GameVolume";
         private const string FULLSCREEN_KEY = "Fullscreen";
 
+        public void ApplySettingsToUI()
+        {
+
+            float savedVolume = PlayerPrefs.GetFloat(VOLUME_KEY, 1f);
+            bool fullscreen = PlayerPrefs.GetInt(FULLSCREEN_KEY, 1) == 1;
+            AudioListener.volume = savedVolume;
+            Screen.fullScreen = fullscreen;
+
+            if (volumeSlider != null)
+
+                volumeSlider.SetValueWithoutNotify(savedVolume);
+
+            if (fullscreenToggle != null)
+
+                fullscreenToggle.SetIsOnWithoutNotify(fullscreen);
+
+        }
+
 
         private void Start()
         {
-            LoadSettings();
+            ApplySettingsToUI();
 
 
             // Sincronizar los controles UI con los valores actuales al iniciar
             if (volumeSlider != null)
             {
-                volumeSlider.value = AudioListener.volume;
                 volumeSlider.onValueChanged.AddListener(SetVolume);
             }
 
 
             if (fullscreenToggle != null)
             {
-                fullscreenToggle.isOn = Screen.fullScreen;
                 fullscreenToggle.onValueChanged.AddListener(SetFullscreen);
             }
         }
-
-
-        private void LoadSettings()
-        {
-            // Volumen
-            float savedVolume = PlayerPrefs.GetFloat(VOLUME_KEY, 1f);
-            AudioListener.volume = savedVolume;
-
-
-            // Fullscreen
-            int fullscreen = PlayerPrefs.GetInt(FULLSCREEN_KEY, 1);
-            bool isFullscreen = fullscreen == 1;
-
-
-            Screen.fullScreen = isFullscreen;
-
-
-            Debug.Log("[Settings] Configuración cargada.");
-        }
-
 
         public void SetVolume(float volume)
         {
