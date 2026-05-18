@@ -10,17 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48523a17e88479544aecb45b66eb2bb6, type: 3}
-  m_Name: BullyEncounter
+  m_Name: Enfermera_Repetible
   m_EditorClassIdentifier: Assembly-CSharp::HeartQuest.Core.DialogueData
   lines:
-  - speakerName: Banda de Bullys
-    text: "\xBFQu\xE9 est\xE1s mirando, perdedor?"
+  - speakerName: Enfermera
+    text: "\xBFTe sientes bien? \xBFNecesitas alguna medicina?"
     portrait: {fileID: 0}
-  - speakerName: Banda de Bullys
-    text: "Te equivocaste de salon. \xA1Prep\xE1rate!"
-    portrait: {fileID: 0}
-  choices: []
+  choices:
+  - choiceText: "Si, \xBFme puedes dar algo para el dolor?"
+    nextDialogue: {fileID: 0}
+    moraleChange: 60
+  - choiceText: No, me siento bien
+    nextDialogue: {fileID: 0}
+    moraleChange: 0
   requiresNameInput: 0
   nextDialogueAfterInput: {fileID: 0}
-  moraleChangeOnComplete: -10
-  triggersBattle: 1
+  moraleChangeOnComplete: 0
+  triggersBattle: 0

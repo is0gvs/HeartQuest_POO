@@ -48,8 +48,8 @@ namespace AntiBullyingGame.RPG
         private void HandleMovementInput()
         {
             // Bloquear movimiento si el diálogo está activo
-            var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>(FindObjectsInactive.Include);
-            if (ds != null && ds.gameObject.activeSelf)
+            var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>();
+            if (ds != null && ds.IsDialogueActive())
             {
                 currentMoveDir = Vector3.zero;
                 if (animator != null)
@@ -100,8 +100,8 @@ namespace AntiBullyingGame.RPG
         private void TryInteract()
         {
             // Evitar interactuar de nuevo si el diálogo ya está abierto
-            var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>(FindObjectsInactive.Include);
-            if (ds != null && ds.gameObject.activeSelf) return;
+            var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>();
+            if (ds != null && ds.IsDialogueActive()) return;
 
             // Usamos OverlapCircle para detectar NPCs cercanos (más fiable que Raycast)
             float interactRadius = 2.0f;

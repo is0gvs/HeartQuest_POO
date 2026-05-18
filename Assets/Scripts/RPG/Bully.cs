@@ -9,22 +9,11 @@ namespace AntiBullyingGame.RPG
     /// </summary>
     public class Bully : NPC
     {
-        [Header("Historia del Bully")]
-        public HeartQuest.Core.DialogueData story;
-
-        public override void Interact()
+        protected override void DefaultInteraction()
         {
-            var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>(FindObjectsInactive.Include);
-            if (ds != null && story != null)
-            {
-                ds.StartDialogueStory(story);
-            }
-            else
-            {
-                Speak("¿Qué me miras? ¡Largo de aquí!");
-                var gm = Object.FindAnyObjectByType<Core.GameManager>();
-                if (gm != null) gm.DeductMorale(5);
-            }
+            Speak("¿Qué me miras? ¡Largo de aquí!");
+            var gm = Object.FindAnyObjectByType<Core.GameManager>();
+            if (gm != null) gm.DeductMorale(5);
         }
     }
 }

@@ -11,5 +11,6 @@ namespace AntiBullyingGame.Core
         public float health;
         public int morale;
         public List<InventorySaveData> inventory = new List<InventorySaveData>();
+        public List<string> interactedNPCs = new List<string>();
     }
 }
