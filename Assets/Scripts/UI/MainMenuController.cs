@@ -43,6 +43,16 @@ namespace AntiBullyingGame.UI
         {
             ApplySettingsToUI();
 
+            // --- DIAGNÓSTICO DE MÚSICA EN MENÚ PRINCIPAL ---
+            AudioSource[] allAudio = FindObjectsOfType<AudioSource>();
+            Debug.Log($"[DIAGNÓSTICO MAIN MENU] Encontré {allAudio.Length} AudioSources.");
+            foreach(var audio in allAudio) 
+            {
+                Debug.Log($"   -> AudioSource en: {audio.gameObject.name} | Sonando: {audio.isPlaying} | Volumen: {audio.volume} | Clip: {(audio.clip != null ? audio.clip.name : "NULO")}");
+            }
+            Debug.Log($"[DIAGNÓSTICO MAIN MENU] Volumen Global (AudioListener): {AudioListener.volume}");
+            // ----------------------------------------------
+
 
             // Sincronizar los controles UI con los valores actuales al iniciar
             if (volumeSlider != null)
