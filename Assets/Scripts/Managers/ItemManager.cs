@@ -68,9 +68,8 @@ public class ItemManager : MonoBehaviour
                         Selected();
                     }
                 }
-
-
             }
+
 
         }
 
