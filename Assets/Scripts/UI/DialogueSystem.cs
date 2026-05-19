@@ -45,6 +45,11 @@ namespace HeartQuest.UI
             }
         }
 
+        public bool IsDialogueActive()
+        {
+            return dialogueBox != null && dialogueBox.activeSelf;
+        }
+
         private void Update()
         {
             // Ignoramos input de teclado si estamos mostrando botones de elección
@@ -77,7 +82,18 @@ namespace HeartQuest.UI
 
         public void StartDialogueStory(HeartQuest.Core.DialogueData story)
         {
-            if (story == null || story.lines == null || story.lines.Length == 0) return;
+            if (story == null) 
+            {
+                Debug.LogWarning("[DialogueSystem] El DialogueData recibido es NULL.");
+                return;
+            }
+            if (story.lines == null || story.lines.Length == 0) 
+            {
+                Debug.LogWarning($"[DialogueSystem] El DialogueData '{story.name}' no tiene líneas de texto configuradas.");
+                return;
+            }
+
+            Debug.Log($"[DialogueSystem] Iniciando diálogo: {story.name} con {story.lines.Length} líneas.");
 
             // Limpiar botones viejos si los hubiera
             ClearChoices();
@@ -110,10 +126,16 @@ namespace HeartQuest.UI
 
         public void ShowDialogue(string text, Sprite portrait = null)
         {
-            if (dialogueBox == null || dialogueText == null) return;
+            Debug.Log($"[DialogueSystem] ShowDialogue llamado con texto: {text}");
+            if (dialogueBox == null || dialogueText == null) 
+            {
+                Debug.LogWarning("[DialogueSystem] Error: dialogueBox o dialogueText es nulo.");
+                return;
+            }
 
             currentFullText = text;
             dialogueBox.SetActive(true);
+            Debug.Log($"[DialogueSystem] dialogueBox fue activado. activeInHierarchy: {dialogueBox.activeInHierarchy}");
 
             if (portraitImage != null)
             {
@@ -138,6 +160,7 @@ namespace HeartQuest.UI
 
         public void HideDialogue()
         {
+            Debug.Log("[DialogueSystem] HideDialogue ha sido llamado. Ocultando diálogo.");
             if (dialogueBox != null)
             {
                 dialogueBox.SetActive(false);
@@ -393,13 +416,24 @@ namespace HeartQuest.UI
 
         private IEnumerator TypewriterEffect(string text)
         {
+            Debug.Log("[DialogueSystem] Iniciando TypewriterEffect...");
             isTyping = true;
             
-            // TextMeshPro permite parsear el Rich Text (ej: <color=...>) primero,
-            // y luego revelar los caracteres 1 a 1 usando maxVisibleCharacters.
-            dialogueText.text = text;
-            dialogueText.maxVisibleCharacters = 0;
-            dialogueText.ForceMeshUpdate(); // Construye el texto con etiquetas
+            // TRUCO: Esperar 1 frame. Si el DialogueBox acaba de ser activado, TextMeshPro necesita 1 frame para inicializarse.
+            yield return null;
+            
+            try 
+            {
+                // TextMeshPro permite parsear el Rich Text (ej: <color=...>) primero,
+                // y luego revelar los caracteres 1 a 1 usando maxVisibleCharacters.
+                dialogueText.text = text;
+                dialogueText.maxVisibleCharacters = 0;
+                dialogueText.ForceMeshUpdate(); // Construye el texto con etiquetas
+            } 
+            catch (System.Exception e) 
+            {
+                Debug.LogError($"[DialogueSystem] Error en TypewriterEffect al preparar el texto: {e.Message}");
+            }
 
             int totalCharacters = dialogueText.textInfo.characterCount;
             float charDelay = 1f / charactersPerSecond;
@@ -426,6 +460,7 @@ namespace HeartQuest.UI
                 }
             }
 
+            Debug.Log("[DialogueSystem] TypewriterEffect completado.");
             isTyping = false;
         }
     }

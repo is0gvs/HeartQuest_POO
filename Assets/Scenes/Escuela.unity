@@ -937,6 +937,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AntiBullyingGame.UI.MainMenuController
   mainPanel: {fileID: 470494478}
   optionsPanel: {fileID: 336288669}
+  loadPanel: {fileID: 0}
+  loadContentTransform: {fileID: 0}
+  volumeSlider: {fileID: 0}
+  fullscreenToggle: {fileID: 0}
   sceneToLoad: ClassroomScene
 --- !u!114 &546427497
 MonoBehaviour:

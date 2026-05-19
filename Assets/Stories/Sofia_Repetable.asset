@@ -10,17 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48523a17e88479544aecb45b66eb2bb6, type: 3}
-  m_Name: BullyEncounter
+  m_Name: Sofia_Repetable
   m_EditorClassIdentifier: Assembly-CSharp::HeartQuest.Core.DialogueData
   lines:
-  - speakerName: Banda de Bullys
-    text: "\xBFQu\xE9 est\xE1s mirando, perdedor?"
-    portrait: {fileID: 0}
-  - speakerName: Banda de Bullys
-    text: "Te equivocaste de salon. \xA1Prep\xE1rate!"
+  - speakerName: Sofia
+    text: Aveces no se que hacer, ya no aguanto mas
     portrait: {fileID: 0}
   choices: []
   requiresNameInput: 0
   nextDialogueAfterInput: {fileID: 0}
-  moraleChangeOnComplete: -10
-  triggersBattle: 1
+  moraleChangeOnComplete: 0
+  triggersBattle: 0

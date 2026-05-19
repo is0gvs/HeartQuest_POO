@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using AntiBullyingGame.Core;
 using AntiBullyingGame.RPG;
+using System.Collections.Generic;
 
 namespace AntiBullyingGame.Managers
 {
@@ -14,6 +15,9 @@ namespace AntiBullyingGame.Managers
         private string CurrentSaveFilePath => Path.Combine(Application.persistentDataPath, currentSaveFileName);
         
         public bool loadOnSceneLoad = false;
+        
+        // Estado temporal en memoria
+        public List<string> interactedNPCs = new List<string>();
 
         private void Awake()
         {
@@ -52,6 +56,10 @@ namespace AntiBullyingGame.Managers
         public void CreateNewProfile()
         {
             currentSaveFileName = $"save_{System.DateTime.Now:yyyyMMdd_HHmmss}.json";
+            
+            // IMPORTANTE: Limpiar la memoria para no arrastrar NPCs de la partida anterior
+            interactedNPCs.Clear();
+            
             Debug.Log($"[SaveManager] Nuevo perfil asignado: {currentSaveFileName}");
 
             // Al crear una nueva partida, si el InventoryManager sobrevive entre escenas (DontDestroyOnLoad),
@@ -210,6 +218,9 @@ namespace AntiBullyingGame.Managers
                 data.inventory = inv.inventory.ToSaveData();
             }
 
+            // 5. NPCs INTERACTUADOS
+            data.interactedNPCs = new List<string>(this.interactedNPCs);
+
             // GUARDAR TODO
             SaveGame(data);
         }
@@ -254,6 +265,16 @@ namespace AntiBullyingGame.Managers
                 if (inv != null)
                 {
                     inv.LoadInventory(data.inventory);
+                }
+
+                // Cargar NPCs
+                if (data.interactedNPCs != null)
+                {
+                    this.interactedNPCs = new List<string>(data.interactedNPCs);
+                }
+                else
+                {
+                    this.interactedNPCs.Clear();
                 }
 
                 if (player != null || gm != null)
