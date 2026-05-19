@@ -10,19 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48523a17e88479544aecb45b66eb2bb6, type: 3}
-  m_Name: Enfermera_Repetible
+  m_Name: RectorRepetible
   m_EditorClassIdentifier: Assembly-CSharp::HeartQuest.Core.DialogueData
   lines:
-  - speakerName: Enfermera
-    text: "\xBFTe sientes bien? \xBFNecesitas alguna medicina?"
-    portrait: {fileID: -1831888712, guid: 9b2768b2e600e9543b9095d9be5bb44f, type: 3}
-  choices:
-  - choiceText: "Si, \xBFme puedes dar algo para el dolor?"
-    nextDialogue: {fileID: 0}
-    moraleChange: 60
-  - choiceText: No, me siento bien
-    nextDialogue: {fileID: 0}
-    moraleChange: 0
+  - speakerName: Rector
+    text: Estoy ocupado joven.
+    portrait: {fileID: -1764114633, guid: d7400bcf6b7f1504da8410379855ea4a, type: 3}
+  choices: []
   requiresNameInput: 0
   nextDialogueAfterInput: {fileID: 0}
   moraleChangeOnComplete: 0

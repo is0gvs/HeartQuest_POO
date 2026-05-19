@@ -13,16 +13,16 @@ MonoBehaviour:
   m_Name: EnfermeraPrimerEncuentro
   m_EditorClassIdentifier: Assembly-CSharp::HeartQuest.Core.DialogueData
   lines:
-  - speakerName: Enfermera
-    text: Buenos dias.
-    portrait: {fileID: 0}
+  - speakerName: ???
+    text: Buenos dias!
+    portrait: {fileID: -1831888712, guid: 9b2768b2e600e9543b9095d9be5bb44f, type: 3}
   - speakerName: Enfermera
     text: Yo soy la enfermera de esta escuela, mucho gusto.
-    portrait: {fileID: 0}
+    portrait: {fileID: -1831888712, guid: 9b2768b2e600e9543b9095d9be5bb44f, type: 3}
   - speakerName: Enfermera
     text: Si te pasa cualquier cosa no dudes en venir a visitarme, tal vez te pueda
       dar algo para que te sientas mejor.
-    portrait: {fileID: 0}
+    portrait: {fileID: -1831888712, guid: 9b2768b2e600e9543b9095d9be5bb44f, type: 3}
   choices: []
   requiresNameInput: 0
   nextDialogueAfterInput: {fileID: 0}
