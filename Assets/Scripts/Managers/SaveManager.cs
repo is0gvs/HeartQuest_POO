@@ -210,7 +210,7 @@ namespace AntiBullyingGame.Managers
                 data.morale = player.Morale;
             }
 
-            // 4. INVENTARIO (AQUÍ ESTABA EL ERROR)
+            // 4. INVENTARIO 
             InventoryManager inv = FindAnyObjectByType<InventoryManager>();
 
             if (inv != null)
