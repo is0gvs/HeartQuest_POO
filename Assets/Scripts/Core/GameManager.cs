@@ -35,10 +35,19 @@ namespace AntiBullyingGame.Core
         // Lista de objetos que "observan" a este GameManager (Patrón de Diseño Observer)
         private List<IObserver> observers = new List<IObserver>();
 
+        public static GameManager instance;
+
         private void Awake()
         {
-            // Asegurar que el GameManager sobreviva al cambio de escena
-            DontDestroyOnLoad(gameObject);
+            if (instance == null)
+            {
+                instance = this;
+                DontDestroyOnLoad(gameObject);
+            }
+            else if (instance != this)
+            {
+                Destroy(gameObject);
+            }
         }
 
         private void OnEnable()
