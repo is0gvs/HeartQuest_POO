@@ -61,6 +61,14 @@ namespace AntiBullyingGame.Managers
             interactedNPCs.Clear();
             
             Debug.Log($"[SaveManager] Nuevo perfil asignado: {currentSaveFileName}");
+
+            // Al crear una nueva partida, si el InventoryManager sobrevive entre escenas (DontDestroyOnLoad),
+            // debemos forzarlo a reiniciarse para que te dé los objetos iniciales de nuevo.
+            InventoryManager inv = FindAnyObjectByType<InventoryManager>();
+            if (inv != null)
+            {
+                inv.ResetInventory();
+            }
         }
 
         public string[] GetAllProfiles()
