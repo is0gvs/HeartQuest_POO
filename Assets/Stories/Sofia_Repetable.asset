@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HeartQuest.Core.DialogueData
   lines:
   - speakerName: Sofia
-    text: Aveces no se que hacer, ya no aguanto mas
+    text: Aveces no se que hacer, ya no aguanto mas.
     portrait: {fileID: 0}
   choices: []
   requiresNameInput: 0

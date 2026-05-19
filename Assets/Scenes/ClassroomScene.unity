@@ -16210,7 +16210,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5361264209942e249aace8e4032a2bbc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AntiBullyingGame.RPG.Adult
-  entityName: Profesora Elena
+  entityName: Profesor Jaime
   morale: 50
   npcId: jaime_prof
   firstEncounterStory: {fileID: 0}
