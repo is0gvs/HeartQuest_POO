@@ -78,7 +78,7 @@ public class InventoryManager : MonoBehaviour
                 AntiBullyingGame.Managers.SaveManager.Instance.SaveCurrentGameState();
             }
         }
-        // SpawnRandomItems(5); // <-- Activar cuando el mapa esté listo y los SpawnPoints estén asignados en el Inspector
+        SpawnRandomItems(5); // <-- Activar cuando el mapa esté listo y los SpawnPoints estén asignados en el Inspector
 
         inventory.PrintInventory();
     }
@@ -111,12 +111,24 @@ public class InventoryManager : MonoBehaviour
             pointIndices[swapIdx] = tmp;
         }
 
+        // Mezclamos los índices de los ítems posibles para no generar repetidos
+        List<int> itemIndices = new List<int>();
+        for (int i = 0; i < possibleItems.Length; i++) itemIndices.Add(i);
+        for (int i = itemIndices.Count - 1; i > 0; i--)
+        {
+            int swapIdx = UnityEngine.Random.Range(0, i + 1);
+            int tmp = itemIndices[i];
+            itemIndices[i] = itemIndices[swapIdx];
+            itemIndices[swapIdx] = tmp;
+        }
+
         // Generamos como máximo 'count' ítems, o menos si no hay suficientes puntos
         int spawnCount = Mathf.Min(count, spawnPoints.Length);
 
         for (int i = 0; i < spawnCount; i++)
         {
-            int rndIndex = UnityEngine.Random.Range(0, possibleItems.Length);
+            // Usamos el índice de ítem mezclado (usamos módulo por si count es mayor a possibleItems.Length)
+            int rndIndex = itemIndices[i % itemIndices.Count];
             string iName = possibleItems[rndIndex];
             int iHeal = possibleHeals[rndIndex];
 
