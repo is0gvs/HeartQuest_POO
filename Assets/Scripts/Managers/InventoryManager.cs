@@ -310,9 +310,16 @@ public class InventoryManager : MonoBehaviour
         {
             Debug.Log($"Usaste {item.itemName} y curaste {item.healAmount} HP");
 
-            if (PlayerVars.instance != null)
+            PlayerVars player = FindObjectOfType<PlayerVars>();
+
+            if (player != null)
             {
-                PlayerVars.instance.Heal(item.healAmount);
+                Debug.Log("PLAYER ENCONTRADO: " + player.gameObject.name);
+                player.Heal(item.healAmount);
+            }
+            else
+            {
+                Debug.LogError("NO SE ENCONTRÓ PLAYERVARS EN LA ESCENA");
             }
 
             inventory.RemoveItem(item.itemName);
