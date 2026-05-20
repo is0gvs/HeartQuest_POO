@@ -16,6 +16,14 @@ namespace AntiBullyingGame.UI
         public Toggle fullscreenToggle;
         public string sceneToLoad = "ClassroomScene";
 
+        [Header("Navegación con Mando / Teclado")]
+        [Tooltip("Botón por defecto seleccionado en el panel principal")]
+        public GameObject mainFirstButton;
+        [Tooltip("Botón por defecto seleccionado en el panel de opciones")]
+        public GameObject optionsFirstButton;
+        [Tooltip("Botón por defecto seleccionado en el panel de carga")]
+        public GameObject loadFirstButton;
+
 
         private const string VOLUME_KEY = "GameVolume";
         private const string FULLSCREEN_KEY = "Fullscreen";
@@ -65,6 +73,9 @@ namespace AntiBullyingGame.UI
             {
                 fullscreenToggle.onValueChanged.AddListener(SetFullscreen);
             }
+
+            // Seleccionar primer botón del menú principal para navegación con teclado/mando
+            SelectFirstSelectableInPanel(mainPanel, mainFirstButton);
         }
 
         public void SetVolume(float volume)
@@ -162,6 +173,9 @@ namespace AntiBullyingGame.UI
             {
                 loadPanel.SetActive(true);
                 PopulateLoadList();
+
+                // Seleccionar primer botón del panel de carga
+                SelectFirstSelectableInPanel(loadPanel, loadFirstButton);
             }
         }
 
@@ -327,6 +341,9 @@ namespace AntiBullyingGame.UI
         {
             if (mainPanel != null) mainPanel.SetActive(false);
             if (optionsPanel != null) optionsPanel.SetActive(true);
+
+            // Seleccionar primer control del panel de opciones (ej: volumen)
+            SelectFirstSelectableInPanel(optionsPanel, optionsFirstButton);
         }
 
 
@@ -335,6 +352,9 @@ namespace AntiBullyingGame.UI
             if (optionsPanel != null) optionsPanel.SetActive(false);
             if (loadPanel != null) loadPanel.SetActive(false);
             if (mainPanel != null) mainPanel.SetActive(true);
+
+            // Seleccionar primer botón del menú principal
+            SelectFirstSelectableInPanel(mainPanel, mainFirstButton);
         }
 
 
@@ -345,6 +365,59 @@ namespace AntiBullyingGame.UI
 #else
             Application.Quit();
 #endif
+        }
+
+        private void Update()
+        {
+            // Si el jugador intenta navegar con el teclado/mando pero no hay ningún objeto seleccionado en el EventSystem
+            // (por ejemplo, porque se hizo clic con el mouse en el fondo vacío), re-seleccionamos el elemento por defecto del panel activo.
+            if (UnityEngine.EventSystems.EventSystem.current != null && 
+                UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject == null)
+            {
+                if (Input.GetAxisRaw("Horizontal") != 0f || Input.GetAxisRaw("Vertical") != 0f ||
+                    Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.DownArrow) ||
+                    Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.RightArrow))
+                {
+                    ReselectActivePanelFirstSelectable();
+                }
+            }
+        }
+
+        private void ReselectActivePanelFirstSelectable()
+        {
+            if (mainPanel != null && mainPanel.activeSelf)
+            {
+                SelectFirstSelectableInPanel(mainPanel, mainFirstButton);
+            }
+            else if (optionsPanel != null && optionsPanel.activeSelf)
+            {
+                SelectFirstSelectableInPanel(optionsPanel, optionsFirstButton);
+            }
+            else if (loadPanel != null && loadPanel.activeSelf)
+            {
+                SelectFirstSelectableInPanel(loadPanel, loadFirstButton);
+            }
+        }
+
+        private void SelectFirstSelectableInPanel(GameObject panel, GameObject fallbackSelectable = null)
+        {
+            if (UnityEngine.EventSystems.EventSystem.current == null) return;
+
+            GameObject toSelect = fallbackSelectable;
+            if (toSelect == null && panel != null)
+            {
+                Selectable firstSel = panel.GetComponentInChildren<Selectable>(false);
+                if (firstSel != null)
+                {
+                    toSelect = firstSel.gameObject;
+                }
+            }
+
+            if (toSelect != null)
+            {
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(toSelect);
+            }
         }
     }
 }

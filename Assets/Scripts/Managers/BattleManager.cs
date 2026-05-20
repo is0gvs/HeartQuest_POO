@@ -134,7 +134,7 @@ public class BattleManager : MonoBehaviour
             }
             Selection();
 
-            if (Input.GetKeyDown(KeyCode.Return))
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.JoystickButton0))
             {
                 Selected();
             }

@@ -71,8 +71,8 @@ public class InventoryManager : MonoBehaviour
 
     private void Update()
     {
-        // Al presionar la letra 'Y', abrimos o cerramos el inventario
-        if (Input.GetKeyDown(KeyCode.Y))
+        // Al presionar la letra 'Y' o el botón Y del control (JoystickButton3), abrimos o cerramos el inventario
+        if (Input.GetKeyDown(KeyCode.Y) || Input.GetKeyDown(KeyCode.JoystickButton3))
         {
             isInventoryOpen = !isInventoryOpen;
         }

@@ -135,7 +135,7 @@ public class HeartMinigame : MonoBehaviour
 
         // ── Jump (press-only, when grounded) ─────────────────────────────
         bool grounded = soulTransform.position.y <= bounds.yMin + 0.05f;
-        if (grounded && (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.Z)))
+        if (grounded && (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.JoystickButton0)))
         {
             velocity.y = jumpForce;
         }

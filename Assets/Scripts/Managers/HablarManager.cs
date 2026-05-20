@@ -82,7 +82,7 @@ public class HablarManager : MonoBehaviour
 
         // Confirmar
         inputDelay += Time.deltaTime;
-        if (inputDelay > 0.25f && Input.GetKeyDown(KeyCode.Return))
+        if (inputDelay > 0.25f && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.JoystickButton0)))
         {
             int confirmedIdx = selectionInt;
             CloseSubmenu();
