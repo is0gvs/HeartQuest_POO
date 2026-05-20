@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
+using TMPro;
 using UnityEngine;
 
 /// <summary>
-/// Self-contained heart dodge minigame with GRAVITY.
-/// The soul falls downward and can jump (press-only) off the bottom wall.
-/// Left/Right movement is free. Auto-creates if no instance exists.
+/// Self-contained heart dodge minigame.
+/// The soul moves freely in four directions inside the battle box.
 /// </summary>
 public class HeartMinigame : MonoBehaviour
 {
@@ -25,16 +25,15 @@ public class HeartMinigame : MonoBehaviour
     private static HeartMinigame _instance;
 
     // ── Config (Inspector-tunable) ────────────────────────────────────────
-    [Header("Gravity")]
-    public float gravityForce    = 9f;
-    public float jumpForce       = 7f;
-    public float horizontalSpeed = 4f;
+    [Header("Movement")]
+    public float moveSpeed = 4.8f;
 
     [Header("Pellets")]
-    public float pelletSpeed      = 3.5f;
-    public float spawnInterval    = 1.2f;
-    public float minigameDuration = 6f;
+    public float pelletSpeed      = 3.4f;
+    public float spawnInterval    = 0.32f;
+    public float minigameDuration = 8f;
     public int   pelletDamage     = 1;
+    private readonly string[] attackWords = { "Burla", "Rumor", "Insulto", "Empujon", "Amenaza", "Risa" };
 
     // ── Runtime ───────────────────────────────────────────────────────────
     private bool      isActive;
@@ -43,7 +42,8 @@ public class HeartMinigame : MonoBehaviour
     private Coroutine timerCo;
     private Transform soulTransform;
     private Rect      bounds;
-    private Vector2   velocity;      // manual physics velocity
+    private Vector2   velocity;
+    private float     soulRadius = 0.22f;
 
     void Awake()
     {
@@ -65,7 +65,10 @@ public class HeartMinigame : MonoBehaviour
     /// </summary>
     public void StartMinigame(Action callback)
     {
-        if (isActive) return;
+        if (isActive)
+        {
+            End(false);
+        }
 
         // ── Find soul ────────────────────────────────────────────────────
         BattleManager bm = BattleManager.battleInstance;
@@ -91,7 +94,7 @@ public class HeartMinigame : MonoBehaviour
         {
             Vector2 center = bm.battleBox.transform.position;
             Vector2 size   = bm.battleBox.size;
-            bounds = new Rect(center.x - size.x / 2f, center.y - size.y / 2f, size.x, size.y);
+            bounds = new Rect(center.x - size.x / 2f + 0.35f, center.y - size.y / 2f + 0.25f, size.x - 0.7f, size.y - 0.5f);
         }
         else
         {
@@ -102,14 +105,32 @@ public class HeartMinigame : MonoBehaviour
         isActive   = true;
         velocity   = Vector2.zero;
 
-        // Enable and place the soul at the bottom-center (grounded)
+        Rigidbody2D rb = soulTransform.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.gravityScale = 0f;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        }
+
+        // Enable and place the soul at the center of the dodge box.
         SpriteRenderer sr = soulTransform.GetComponent<SpriteRenderer>();
         if (sr != null)
         {
             sr.enabled = true;
-            sr.sortingOrder = 5; // render above the battle box
+            sr.sortingOrder = 20; // render above the battle box
+            soulTransform.localScale = Vector3.one * 0.28f;
         }
-        soulTransform.position = new Vector3(bounds.center.x, bounds.yMin, 0f);
+
+        CircleCollider2D soulCollider = soulTransform.GetComponent<CircleCollider2D>();
+        if (soulCollider != null)
+        {
+            soulRadius = 0.22f;
+            soulCollider.radius = soulRadius;
+            soulCollider.isTrigger = true;
+        }
+
+        soulTransform.position = new Vector3(bounds.center.x, bounds.center.y, 0f);
 
         spawnCo = StartCoroutine(SpawnLoop());
         timerCo = StartCoroutine(Timer());
@@ -120,56 +141,24 @@ public class HeartMinigame : MonoBehaviour
     /// <summary>Immediately stops without calling onComplete.</summary>
     public void StopMinigame() => End(false);
 
-    // ── Internal — Gravity-based movement ─────────────────────────────────
+    // ── Internal movement ────────────────────────────────────────────────
 
     private void MoveSoul()
     {
         float dt = Time.deltaTime;
 
-        // ── Gravity (always pulling down) ────────────────────────────────
-        velocity.y -= gravityForce * dt;
-
-        // ── Horizontal input ─────────────────────────────────────────────
         float h = Input.GetAxisRaw("Horizontal");
-        velocity.x = h * horizontalSpeed;
+        float v = Input.GetAxisRaw("Vertical");
+        velocity = new Vector2(h, v);
+        if (velocity.sqrMagnitude > 1f) velocity.Normalize();
+        velocity *= moveSpeed;
 
-        // ── Jump (press-only, when grounded) ─────────────────────────────
-        bool grounded = soulTransform.position.y <= bounds.yMin + 0.05f;
-        if (grounded && (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.JoystickButton0)))
-        {
-            velocity.y = jumpForce;
-        }
-
-        // ── Apply velocity ───────────────────────────────────────────────
         Vector3 pos = soulTransform.position;
         pos.x += velocity.x * dt;
         pos.y += velocity.y * dt;
 
-        // ── Clamp inside battleBounds ────────────────────────────────────
-        // Bottom wall
-        if (pos.y <= bounds.yMin)
-        {
-            pos.y = bounds.yMin;
-            velocity.y = 0f;
-        }
-        // Top wall
-        if (pos.y >= bounds.yMax)
-        {
-            pos.y = bounds.yMax;
-            velocity.y = 0f;
-        }
-        // Left wall
-        if (pos.x <= bounds.xMin)
-        {
-            pos.x = bounds.xMin;
-            velocity.x = 0f;
-        }
-        // Right wall
-        if (pos.x >= bounds.xMax)
-        {
-            pos.x = bounds.xMax;
-            velocity.x = 0f;
-        }
+        pos.x = Mathf.Clamp(pos.x, bounds.xMin + soulRadius, bounds.xMax - soulRadius);
+        pos.y = Mathf.Clamp(pos.y, bounds.yMin + soulRadius, bounds.yMax - soulRadius);
 
         soulTransform.position = pos;
     }
@@ -179,13 +168,13 @@ public class HeartMinigame : MonoBehaviour
         while (isActive)
         {
             SpawnPellet();
-            yield return new WaitForSeconds(spawnInterval);
+            yield return new WaitForSecondsRealtime(spawnInterval);
         }
     }
 
     private IEnumerator Timer()
     {
-        yield return new WaitForSeconds(minigameDuration);
+        yield return new WaitForSecondsRealtime(minigameDuration);
         End(true);
     }
 
@@ -195,20 +184,28 @@ public class HeartMinigame : MonoBehaviour
 
         GameObject go = new GameObject("WordPellet");
 
-        SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = MakeSquareSprite();
-        sr.color  = new Color(1f, 0.3f, 0.3f);
-        sr.sortingOrder = 10;
+        TextMeshPro text = go.AddComponent<TextMeshPro>();
+        text.text = attackWords[UnityEngine.Random.Range(0, attackWords.Length)];
+        text.fontSize = 2.2f;
+        text.alignment = TextAlignmentOptions.Center;
+        text.color = new Color(1f, 0.9f, 0.25f);
+        text.fontStyle = FontStyles.Bold;
+        text.sortingOrder = 18;
+        text.enableAutoSizing = false;
+        text.rectTransform.sizeDelta = new Vector2(4.6f, 1.45f);
 
-        CircleCollider2D col = go.AddComponent<CircleCollider2D>();
+        BoxCollider2D col = go.AddComponent<BoxCollider2D>();
         col.isTrigger = true;
-        col.radius    = 0.15f;
-        go.transform.localScale = Vector3.one * 0.35f;
+        col.size = new Vector2(2.15f, 0.72f);
 
         Vector2 spawnPos = RandomEdge();
         go.transform.position = new Vector3(spawnPos.x, spawnPos.y, 0f);
 
-        Vector2 dir = ((Vector2)soulTransform.position - spawnPos).normalized;
+        Vector2 target = new Vector2(
+            UnityEngine.Random.Range(bounds.xMin + 0.4f, bounds.xMax - 0.4f),
+            UnityEngine.Random.Range(bounds.yMin + 0.3f, bounds.yMax - 0.3f)
+        );
+        Vector2 dir = (target - spawnPos).normalized;
 
         WordPellet wp = go.AddComponent<WordPellet>();
         wp.Init(dir, pelletSpeed, bounds, pelletDamage, soulTransform);
@@ -217,12 +214,13 @@ public class HeartMinigame : MonoBehaviour
     private Vector2 RandomEdge()
     {
         int edge = UnityEngine.Random.Range(0, 4);
+        float margin = 1.8f;
         return edge switch
         {
-            0 => new Vector2(UnityEngine.Random.Range(bounds.xMin, bounds.xMax), bounds.yMax),
-            1 => new Vector2(UnityEngine.Random.Range(bounds.xMin, bounds.xMax), bounds.yMin),
-            2 => new Vector2(bounds.xMin, UnityEngine.Random.Range(bounds.yMin, bounds.yMax)),
-            _ => new Vector2(bounds.xMax, UnityEngine.Random.Range(bounds.yMin, bounds.yMax)),
+            0 => new Vector2(UnityEngine.Random.Range(bounds.xMin, bounds.xMax), bounds.yMax + margin),
+            1 => new Vector2(UnityEngine.Random.Range(bounds.xMin, bounds.xMax), bounds.yMin - margin),
+            2 => new Vector2(bounds.xMin - margin, UnityEngine.Random.Range(bounds.yMin, bounds.yMax)),
+            _ => new Vector2(bounds.xMax + margin, UnityEngine.Random.Range(bounds.yMin, bounds.yMax)),
         };
     }
 

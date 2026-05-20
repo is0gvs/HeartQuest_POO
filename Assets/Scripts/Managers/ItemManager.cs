@@ -25,7 +25,13 @@ public class ItemManager : MonoBehaviour
         minSelectionInt = 0;
         // Fix: same off-screen pivot issue as ActingText
         if (useText != null)
+        {
             useText.rectTransform.pivot = new Vector2(0f, 0.5f);
+            useText.rectTransform.sizeDelta = new Vector2(8.1f, 1.7f);
+            useText.fontSize = 1.55f;
+            useText.enableAutoSizing = false;
+            useText.enableWordWrapping = true;
+        }
     }
 
     void Update()
@@ -79,12 +85,35 @@ public class ItemManager : MonoBehaviour
     {
         if (buttons[selectedInt].selected)
         {
-            soul.transform.position = buttons[selectedInt].soulPosition.position;
+            if (soul != null) soul.enabled = false;
+            SetButtonVisual(selectedInt, true);
         }
     }
     void Deselecting(int deselectionInt)
     {
         buttons[deselectionInt].selected = false;
+        SetButtonVisual(deselectionInt, false);
+    }
+
+    private void SetButtonVisual(int index, bool selected)
+    {
+        if (index < 0 || index >= buttons.Count || buttons[index] == null) return;
+
+        Transform option = buttons[index].transform;
+        option.localScale = selected ? Vector3.one * 1.12f : Vector3.one;
+
+        SpriteRenderer sr = option.GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            sr.color = selected ? new Color(1f, 1f, 0.35f, 1f) : Color.white;
+        }
+
+        TextMeshPro label = option.GetComponentInChildren<TextMeshPro>();
+        if (label != null)
+        {
+            label.color = selected ? Color.black : Color.white;
+            label.fontStyle = selected ? FontStyles.Bold : FontStyles.Normal;
+        }
     }
     void Selection()
     {
@@ -141,7 +170,7 @@ public class ItemManager : MonoBehaviour
                 PlayerVars.instance.health += buttons[0].itemHeal;
             }
             soul.enabled = false;   
-            DialogueManager.instance.dialogueTxt = "*You Ate The " + buttons[0].itemName + ", You Healed " + buttons[0].itemHeal + " HP.";
+            DialogueManager.instance.dialogueTxt = "* Usaste " + buttons[0].itemName + ". Recuperaste " + buttons[0].itemHeal + " HP.";
             DialogueManager.instance.text.gameObject.SetActive(true);
             DialogueManager.instance.enemyTxt = BattleManager.battleInstance.enemyDialogue[UnityEngine.Random.Range(0, BattleManager.battleInstance.enemyDialogue.Count)];
             DialogueManager.instance.shouldTalk = true;
@@ -159,7 +188,7 @@ public class ItemManager : MonoBehaviour
                 PlayerVars.instance.health = 20;
             }
             soul.enabled = false;
-            DialogueManager.instance.dialogueTxt = "*You Ate The " + buttons[1].itemName + ", You Healed " + buttons[1].itemHeal + " HP.";
+            DialogueManager.instance.dialogueTxt = "* Usaste " + buttons[1].itemName + ". Recuperaste " + buttons[1].itemHeal + " HP.";
             DialogueManager.instance.text.gameObject.SetActive(true);
             DialogueManager.instance.enemyTxt = BattleManager.battleInstance.enemyDialogue[UnityEngine.Random.Range(0, BattleManager.battleInstance.enemyDialogue.Count)];
             DialogueManager.instance.shouldTalk = true;
@@ -177,7 +206,7 @@ public class ItemManager : MonoBehaviour
                 PlayerVars.instance.health = 20;
             }
             soul.enabled = false;
-            DialogueManager.instance.dialogueTxt = "*You Ate The " + buttons[2].itemName + ", You Healed " + buttons[2].itemHeal + " HP.";
+            DialogueManager.instance.dialogueTxt = "* Usaste " + buttons[2].itemName + ". Recuperaste " + buttons[2].itemHeal + " HP.";
             DialogueManager.instance.text.gameObject.SetActive(true);
             DialogueManager.instance.enemyTxt = BattleManager.battleInstance.enemyDialogue[UnityEngine.Random.Range(0, BattleManager.battleInstance.enemyDialogue.Count)];
             DialogueManager.instance.shouldTalk = true;
@@ -195,7 +224,7 @@ public class ItemManager : MonoBehaviour
                 PlayerVars.instance.health = 20;
             }
             soul.enabled = false;
-            DialogueManager.instance.dialogueTxt = "*You Ate The " + buttons[3].itemName + ", You Healed " + buttons[3].itemHeal + " HP.";
+            DialogueManager.instance.dialogueTxt = "* Usaste " + buttons[3].itemName + ". Recuperaste " + buttons[3].itemHeal + " HP.";
             DialogueManager.instance.text.gameObject.SetActive(true);
             DialogueManager.instance.enemyTxt = BattleManager.battleInstance.enemyDialogue[UnityEngine.Random.Range(0, BattleManager.battleInstance.enemyDialogue.Count)];
             DialogueManager.instance.shouldTalk = true;

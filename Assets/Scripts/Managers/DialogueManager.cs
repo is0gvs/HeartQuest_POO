@@ -41,7 +41,22 @@ public class DialogueManager : MonoBehaviour
 
         // Fix: same off-screen pivot issue as ActingText
         if (text != null)
+        {
             text.rectTransform.pivot = new Vector2(0f, 0.5f);
+            text.rectTransform.sizeDelta = new Vector2(8f, 1.5f);
+            text.transform.position = new Vector3(-4f, -0.9f, 0f);
+            text.fontSize = 1.55f;
+            text.enableAutoSizing = false;
+            text.enableWordWrapping = true;
+            text.alignment = TextAlignmentOptions.TopLeft;
+        }
+
+        if (textEnemy != null)
+        {
+            textEnemy.fontSize = 1.55f;
+            textEnemy.enableAutoSizing = false;
+            textEnemy.enableWordWrapping = true;
+        }
 
         StartCoroutine(StartTalking(null));
     }
