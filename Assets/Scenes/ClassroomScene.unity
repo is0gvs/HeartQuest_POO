@@ -318,6 +318,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 136878bb58f892142a22427db8f4f62d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventoryManager
+  itemIcons:
+  - itemName: Lapiz
+    icon: {fileID: 2800000, guid: 1f8655ba4bb210847a7ff187f0063213, type: 3}
+  - itemName: Carta
+    icon: {fileID: 2800000, guid: c669cb8f0ec60884992c9ef716ea76e3, type: 3}
+  - itemName: Cuaderno
+    icon: {fileID: 2800000, guid: e1134b9117343af41a8b517ce06fa39e, type: 3}
+  - itemName: Jugo
+    icon: {fileID: 2800000, guid: 0b83e72df14521748b7c997f631fe7e9, type: 3}
+  - itemName: Sandwich
+    icon: {fileID: 2800000, guid: 91b5c73c1d869ba4786f94ee36d4f876, type: 3}
+  - itemName: Pulsera
+    icon: {fileID: 2800000, guid: f453d77ff73f5ee4388aaa995204a454, type: 3}
+  - itemName: Nota
+    icon: {fileID: 2800000, guid: 09d3c82443152564ba174b380e9bd089, type: 3}
+  - itemName: Dibujo
+    icon: {fileID: 2800000, guid: adbe33e0bb1bdac43b4344c8bffab484, type: 3}
+  - itemName: Calcomania
+    icon: {fileID: 2800000, guid: d4bffa0c0e5954942bdb5d92bdeed36e, type: 3}
 --- !u!82 &64262610
 AudioSource:
   m_ObjectHideFlags: 0

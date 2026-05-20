@@ -1,9 +1,19 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+[System.Serializable]
+public struct ItemIconMapping
+{
+    public string itemName;
+    public Texture2D icon;
+}
+
 public class InventoryManager : MonoBehaviour
 {
     public static InventoryManager instance;
+
+    [Header("Íconos de los Items")]
+    public List<ItemIconMapping> itemIcons = new List<ItemIconMapping>();
 
     public InventoryLinkedList inventory = new InventoryLinkedList();
 
@@ -31,7 +41,7 @@ public class InventoryManager : MonoBehaviour
         // --- DIAGNÓSTICO DE MÚSICA ---
         AudioSource[] allAudio = FindObjectsOfType<AudioSource>();
         Debug.Log($"[DIAGNÓSTICO DE AUDIO] Encontré {allAudio.Length} AudioSources en la escena.");
-        foreach(var audio in allAudio) 
+        foreach (var audio in allAudio)
         {
             Debug.Log($"   -> AudioSource en: {audio.gameObject.name} | Sonando: {audio.isPlaying} | Volumen: {audio.volume} | Clip: {(audio.clip != null ? audio.clip.name : "NULO")}");
             // Si hay un AudioSource que debería sonar y no está sonando, intentamos forzarlo:
@@ -56,7 +66,6 @@ public class InventoryManager : MonoBehaviour
         if (!wasLoaded && inventory.Count == 0)
         {
             inventory.AddItem(new InventoryItem("Lapiz", 5));
-            inventory.AddItem(new InventoryItem("Carta", 10));
             inventory.AddItem(new InventoryItem("Cuaderno", 15));
 
             // Guardamos inmediatamente para crear el archivo de esta nueva partida
@@ -65,8 +74,45 @@ public class InventoryManager : MonoBehaviour
                 AntiBullyingGame.Managers.SaveManager.Instance.SaveCurrentGameState();
             }
         }
+        // SpawnRandomItems(5); // <-- Desactivado por ahora hasta que el mapa esté terminado
 
         inventory.PrintInventory();
+    }
+
+    private void SpawnRandomItems(int count)
+    {
+        string[] possibleItems = new string[] { "Carta", "Jugo", "Sandwich", "Pulsera", "Nota", "Dibujo", "Calcomania" };
+        int[] possibleHeals = new int[] { 10, 3, 8, 12, 7, 10, 4 };
+
+        for (int i = 0; i < count; i++)
+        {
+            int rndIndex = UnityEngine.Random.Range(0, possibleItems.Length);
+            string iName = possibleItems[rndIndex];
+            int iHeal = possibleHeals[rndIndex];
+
+            GameObject itemObj = new GameObject("Pickup_" + iName);
+            float rx = UnityEngine.Random.Range(-8f, 8f);
+            float ry = UnityEngine.Random.Range(-4f, 4f);
+            itemObj.transform.position = new Vector3(rx, ry, 0);
+
+            SpriteRenderer sr = itemObj.AddComponent<SpriteRenderer>();
+            Texture2D iconTex = GetItemIcon(iName);
+            if (iconTex != null)
+            {
+                sr.sprite = Sprite.Create(iconTex, new Rect(0, 0, iconTex.width, iconTex.height), new Vector2(0.5f, 0.5f));
+            }
+            sr.sortingOrder = 5; // Asegurar que se vea por encima del piso
+
+            // Más pequeños en el mundo
+            itemObj.transform.localScale = new Vector3(0.3f, 0.3f, 1f);
+
+            BoxCollider2D col = itemObj.AddComponent<BoxCollider2D>();
+            col.isTrigger = true;
+
+            ItemPickup pickup = itemObj.AddComponent<ItemPickup>();
+            pickup.itemName = iName;
+            pickup.healAmount = iHeal;
+        }
     }
 
     private void Update()
@@ -99,11 +145,23 @@ public class InventoryManager : MonoBehaviour
         slotStyle.normal.textColor = new Color(0.98f, 0.92f, 0.85f, 1f); // Crema pálido
         slotStyle.hover.textColor = new Color(0.95f, 0.82f, 0.55f, 1f);  // Dorado al pasar el mouse
         slotStyle.wordWrap = true;
-        slotStyle.alignment = TextAnchor.MiddleCenter;
+        slotStyle.alignment = TextAnchor.LowerCenter;
+        slotStyle.imagePosition = ImagePosition.ImageOnly;
+        slotStyle.padding = new RectOffset(0, 0, 0, 0);
 
         emptySlotStyle = new GUIStyle(GUI.skin.box);
 
         stylesInitialized = true;
+    }
+
+    private Texture2D GetItemIcon(string itemName)
+    {
+        foreach (var mapping in itemIcons)
+        {
+            if (mapping.itemName == itemName)
+                return mapping.icon;
+        }
+        return null;
     }
 
     private void OnGUI()
@@ -115,67 +173,90 @@ public class InventoryManager : MonoBehaviour
 
             // Dimensiones de la ventana del inventario
             float width = 360;
-            float height = 300;
+            float height = 385;  // Más espacio entre filas para ver los números
             float x = (Screen.width - width) / 2;
             float y = (Screen.height - height) / 2;
 
-            // Cambiar color del fondo para que use el tono tierra oscuro del MainMenu
             Color oldBgColor = GUI.backgroundColor;
             GUI.backgroundColor = new Color(0.2f, 0.1f, 0.05f, 0.95f);
-
-            // Caja de fondo
             GUI.Box(new Rect(x, y, width, height), "\nINVENTARIO", titleStyle);
-
-            // Restaurar el color de fondo
             GUI.backgroundColor = oldBgColor;
 
-            // Configuración de la cuadrícula (Grid) estilo Minecraft
+            // Configuración de la cuadrícula
             int columnas = 4;
-            int filas = 3;
-            int totalSlots = columnas * filas; // 12 espacios en total
-            float slotSize = 65; // Tamaño de cada cuadrito
-            float padding = 12;  // Espacio entre cuadritos
+            int totalSlots = 12; // 4x3
+            float slotSize = 55;    // Íconos más pequeños para que quepa todo
+            float colPadding = 10;
+            float labelHeight = 28;
+            float rowGap = 10;       // Más espacio entre filas para ver el texto
+            float rowHeight = slotSize + labelHeight + rowGap;
 
-            // Calcular dónde empieza a dibujarse la cuadrícula para que quede centrada
-            float gridWidth = (columnas * slotSize) + ((columnas - 1) * padding);
+            float gridWidth = (columnas * slotSize) + ((columnas - 1) * colPadding);
             float startX = x + (width - gridWidth) / 2;
-            float startY = y + 70;
+            float startY = y + 58;
 
-            // Recorrer todos los espacios de la cuadrícula
+            // Estilo de etiqueta (creado una sola vez fuera del loop)
+            GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
+            labelStyle.fontSize = 11;
+            labelStyle.alignment = TextAnchor.UpperCenter;
+            labelStyle.normal.textColor = new Color(0.98f, 0.92f, 0.85f, 1f);
+            labelStyle.wordWrap = true;
+
             for (int i = 0; i < totalSlots; i++)
             {
                 int filaActual = i / columnas;
                 int colActual = i % columnas;
-                
-                float slotX = startX + colActual * (slotSize + padding);
-                float slotY = startY + filaActual * (slotSize + padding);
+
+                float slotX = startX + colActual * (slotSize + colPadding);
+                float slotY = startY + filaActual * rowHeight;
                 Rect slotRect = new Rect(slotX, slotY, slotSize, slotSize);
 
                 InventoryItem item = inventory.GetItem(i);
-                
+
                 if (item != null)
                 {
-                    // Si hay un objeto, dibujamos un botón interactivo
-                    if (GUI.Button(slotRect, $"{item.itemName}\n+{item.healAmount}", slotStyle))
+                    Texture2D icon = GetItemIcon(item.itemName);
+
+                    // Botón invisible para capturar el clic sin fondo
+                    Color oldColor = GUI.backgroundColor;
+                    GUI.backgroundColor = Color.clear;
+                    if (GUI.Button(slotRect, "", slotStyle))
                     {
-                        UseItem(i); // Al hacer clic se usa y desaparece de la lista
+                        UseItem(i);
                     }
+                    GUI.backgroundColor = oldColor;
+
+                    // Ícono centrado dentro del slot con padding uniforme
+                    if (icon != null)
+                    {
+                        float pad = 6f;
+                        Rect iconRect = new Rect(
+                            slotRect.x + pad,
+                            slotRect.y + pad,
+                            slotRect.width - pad * 2,
+                            slotRect.height - pad * 2
+                        );
+                        GUI.DrawTexture(iconRect, icon, ScaleMode.ScaleToFit, true);
+                    }
+
+                    // Nombre y HP debajo del slot
+                    Rect labelRect = new Rect(slotX - 5, slotY + slotSize + 1, slotSize + 10, labelHeight);
+                    GUI.Label(labelRect, $"{item.itemName}\n+{item.healAmount}", labelStyle);
                 }
                 else
                 {
-                    // Si está vacío, dibujamos una ranura (slot) oscurecida
                     GUI.backgroundColor = new Color(0.1f, 0.05f, 0.02f, 0.6f);
                     GUI.Box(slotRect, "", emptySlotStyle);
-                    GUI.backgroundColor = oldBgColor; // Restaurar color para el siguiente
+                    GUI.backgroundColor = oldBgColor;
                 }
             }
 
-            // Subtítulo pequeño al final
+            // Texto de ayuda al fondo
             GUIStyle subStyle = new GUIStyle(GUI.skin.label);
-            subStyle.fontSize = 12;
+            subStyle.fontSize = 11;
             subStyle.alignment = TextAnchor.UpperCenter;
             subStyle.normal.textColor = new Color(0.8f, 0.7f, 0.6f, 1f);
-            GUI.Label(new Rect(x, y + height - 25, width, 20), "[ El panel se cierra usando la letra 'Y' ]", subStyle);
+            GUI.Label(new Rect(x, y + height - 22, width, 20), "[ Presiona 'Y' para cerrar ]", subStyle);
         }
     }
 
@@ -230,7 +311,6 @@ public class InventoryManager : MonoBehaviour
         wasLoaded = false;
         inventory = new InventoryLinkedList();
         inventory.AddItem(new InventoryItem("Lapiz", 5));
-        inventory.AddItem(new InventoryItem("Carta", 10));
         inventory.AddItem(new InventoryItem("Cuaderno", 15));
     }
 }
