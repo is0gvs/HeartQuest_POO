@@ -682,7 +682,7 @@ MonoBehaviour:
   atkValue: 0
   defValue: 0
   health: 0
-  maxHealth: 20
+  maxHealth: 50
   soulFlashing: {r: 0, g: 0, b: 0, a: 0}
   soulOriginal: {r: 0, g: 0, b: 0, a: 0}
   maxTime: 1

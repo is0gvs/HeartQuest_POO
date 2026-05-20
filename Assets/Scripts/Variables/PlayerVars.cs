@@ -8,7 +8,7 @@ public class PlayerVars : MonoBehaviour
     public float defValue;
 
     public float health;
-    public float maxHealth = 20;
+    public float maxHealth = 50;
 
     [SerializeField] Color soulFlashing;
     public Color soulOriginal;
