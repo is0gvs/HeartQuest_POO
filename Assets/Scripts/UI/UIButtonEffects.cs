@@ -18,12 +18,12 @@ namespace HeartQuest.UI
         IPointerClickHandler
     {
         [Header("── Colores ──")]
-        [SerializeField] private Color normalColor = new Color(0.071f, 0.098f, 0.169f, 0.9f);       // #121A2B
-        [SerializeField] private Color hoverColor = new Color(0.616f, 0.302f, 1f, 1f);               // #9D4DFF
-        [SerializeField] private Color glowColor = new Color(0f, 0.898f, 1f, 1f);                    // #00E5FF
+        [SerializeField] private Color normalColor = new Color(119f / 255f, 76f / 255f, 49f / 255f, 1f);
+        [SerializeField] private Color hoverColor = new Color(93f / 255f, 93f / 255f, 93f / 255f, 1f);
+        [SerializeField] private Color glowColor = new Color(0f, 0f, 0f, 1f);// #00E5FF
 
         [Header("── Escala ──")]
-        [SerializeField] private float hoverScale = 1.05f;
+        [SerializeField] private float hoverScale = 1.9f;
         [SerializeField] private float clickScale = 0.95f;
         [SerializeField] private float scaleSpeed = 8f;
 
@@ -40,6 +40,14 @@ namespace HeartQuest.UI
         private Color targetColor;
         private bool isHovered = false;
         private Coroutine clickPulseCoroutine;
+
+        [Header("── Resaltar Texto al Seleccionar ──")]
+        [SerializeField] private Color selectedTextColor = new Color(0f, 0.9f, 1f, 1f); // Celeste neón (#00E5FF)
+        
+        private TMPro.TextMeshProUGUI tmpText;
+        private Text legacyText;
+        private Color originalTextColor;
+        private bool hasText = false;
 
         private void Awake()
         {
@@ -59,6 +67,23 @@ namespace HeartQuest.UI
                     Color c = glowBorder.color;
                     c.a = 0f;
                     glowBorder.color = c;
+                }
+            }
+
+            // Buscar texto en el botón o sus hijos para cambiarle el color al seleccionar
+            tmpText = GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            if (tmpText != null)
+            {
+                originalTextColor = tmpText.color;
+                hasText = true;
+            }
+            else
+            {
+                legacyText = GetComponentInChildren<Text>();
+                if (legacyText != null)
+                {
+                    originalTextColor = legacyText.color;
+                    hasText = true;
                 }
             }
         }
@@ -134,6 +159,13 @@ namespace HeartQuest.UI
             isHovered = true;
             targetScale = originalScale * hoverScale;
             targetColor = hoverColor;
+
+            // Resaltar texto si existe
+            if (hasText)
+            {
+                if (tmpText != null) tmpText.color = selectedTextColor;
+                else if (legacyText != null) legacyText.color = selectedTextColor;
+            }
         }
 
         private void DeactivateHover()
@@ -141,6 +173,13 @@ namespace HeartQuest.UI
             isHovered = false;
             targetScale = originalScale;
             targetColor = normalColor;
+
+            // Restaurar color de texto original
+            if (hasText)
+            {
+                if (tmpText != null) tmpText.color = originalTextColor;
+                else if (legacyText != null) legacyText.color = originalTextColor;
+            }
 
             // Apagar el brillo del borde
             if (glowBorder != null)

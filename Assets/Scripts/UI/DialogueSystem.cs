@@ -55,12 +55,13 @@ namespace HeartQuest.UI
             // Ignoramos input de teclado si estamos mostrando botones de elección
             if (choiceButtons.Count > 0) return;
 
-            // Presionar Z, Enter o Space para avanzar/completar el diálogo
+            // Presionar Z, Enter, Space o Botón A de control (JoystickButton0) para avanzar/completar el diálogo
             if (dialogueBox != null && dialogueBox.activeSelf)
             {
                 if (Input.GetKeyDown(KeyCode.Z) || 
                     Input.GetKeyDown(KeyCode.Return) || 
-                    Input.GetKeyDown(KeyCode.Space))
+                    Input.GetKeyDown(KeyCode.Space) ||
+                    Input.GetKeyDown(KeyCode.JoystickButton0))
                 {
                     if (isTyping)
                     {
