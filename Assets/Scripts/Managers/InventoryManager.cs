@@ -66,14 +66,7 @@ public class InventoryManager : MonoBehaviour
         if (!wasLoaded && inventory.Count == 0)
         {
             inventory.AddItem(new InventoryItem("Lapiz", 5));
-            inventory.AddItem(new InventoryItem("Carta", 10));
             inventory.AddItem(new InventoryItem("Cuaderno", 15));
-            inventory.AddItem(new InventoryItem("Jugo", 3));
-            inventory.AddItem(new InventoryItem("Sandwich", 8));
-            inventory.AddItem(new InventoryItem("Pulsera", 12));
-            inventory.AddItem(new InventoryItem("Nota", 7));
-            inventory.AddItem(new InventoryItem("Dibujo", 10));
-            inventory.AddItem(new InventoryItem("Calcomania", 4));
 
             // Guardamos inmediatamente para crear el archivo de esta nueva partida
             if (AntiBullyingGame.Managers.SaveManager.Instance != null)
@@ -81,8 +74,45 @@ public class InventoryManager : MonoBehaviour
                 AntiBullyingGame.Managers.SaveManager.Instance.SaveCurrentGameState();
             }
         }
+        // SpawnRandomItems(5); // <-- Desactivado por ahora hasta que el mapa esté terminado
 
         inventory.PrintInventory();
+    }
+
+    private void SpawnRandomItems(int count)
+    {
+        string[] possibleItems = new string[] { "Carta", "Jugo", "Sandwich", "Pulsera", "Nota", "Dibujo", "Calcomania" };
+        int[] possibleHeals = new int[] { 10, 3, 8, 12, 7, 10, 4 };
+
+        for (int i = 0; i < count; i++)
+        {
+            int rndIndex = UnityEngine.Random.Range(0, possibleItems.Length);
+            string iName = possibleItems[rndIndex];
+            int iHeal = possibleHeals[rndIndex];
+
+            GameObject itemObj = new GameObject("Pickup_" + iName);
+            float rx = UnityEngine.Random.Range(-8f, 8f);
+            float ry = UnityEngine.Random.Range(-4f, 4f);
+            itemObj.transform.position = new Vector3(rx, ry, 0);
+
+            SpriteRenderer sr = itemObj.AddComponent<SpriteRenderer>();
+            Texture2D iconTex = GetItemIcon(iName);
+            if (iconTex != null)
+            {
+                sr.sprite = Sprite.Create(iconTex, new Rect(0, 0, iconTex.width, iconTex.height), new Vector2(0.5f, 0.5f));
+            }
+            sr.sortingOrder = 5; // Asegurar que se vea por encima del piso
+
+            // Más pequeños en el mundo
+            itemObj.transform.localScale = new Vector3(0.3f, 0.3f, 1f);
+
+            BoxCollider2D col = itemObj.AddComponent<BoxCollider2D>();
+            col.isTrigger = true;
+
+            ItemPickup pickup = itemObj.AddComponent<ItemPickup>();
+            pickup.itemName = iName;
+            pickup.healAmount = iHeal;
+        }
     }
 
     private void Update()
@@ -175,7 +205,7 @@ public class InventoryManager : MonoBehaviour
             for (int i = 0; i < totalSlots; i++)
             {
                 int filaActual = i / columnas;
-                int colActual  = i % columnas;
+                int colActual = i % columnas;
 
                 float slotX = startX + colActual * (slotSize + colPadding);
                 float slotY = startY + filaActual * rowHeight;
@@ -187,11 +217,14 @@ public class InventoryManager : MonoBehaviour
                 {
                     Texture2D icon = GetItemIcon(item.itemName);
 
-                    // Botón invisible para capturar el clic
+                    // Botón invisible para capturar el clic sin fondo
+                    Color oldColor = GUI.backgroundColor;
+                    GUI.backgroundColor = Color.clear;
                     if (GUI.Button(slotRect, "", slotStyle))
                     {
                         UseItem(i);
                     }
+                    GUI.backgroundColor = oldColor;
 
                     // Ícono centrado dentro del slot con padding uniforme
                     if (icon != null)
@@ -200,7 +233,7 @@ public class InventoryManager : MonoBehaviour
                         Rect iconRect = new Rect(
                             slotRect.x + pad,
                             slotRect.y + pad,
-                            slotRect.width  - pad * 2,
+                            slotRect.width - pad * 2,
                             slotRect.height - pad * 2
                         );
                         GUI.DrawTexture(iconRect, icon, ScaleMode.ScaleToFit, true);
@@ -278,13 +311,6 @@ public class InventoryManager : MonoBehaviour
         wasLoaded = false;
         inventory = new InventoryLinkedList();
         inventory.AddItem(new InventoryItem("Lapiz", 5));
-        inventory.AddItem(new InventoryItem("Carta", 10));
         inventory.AddItem(new InventoryItem("Cuaderno", 15));
-        inventory.AddItem(new InventoryItem("Jugo", 3));
-        inventory.AddItem(new InventoryItem("Sandwich", 8));
-        inventory.AddItem(new InventoryItem("Pulsera", 12));
-        inventory.AddItem(new InventoryItem("Nota", 7));
-        inventory.AddItem(new InventoryItem("Dibujo", 10));
-        inventory.AddItem(new InventoryItem("Calcomania", 4));
     }
 }
