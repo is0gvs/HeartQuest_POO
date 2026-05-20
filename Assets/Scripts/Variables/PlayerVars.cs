@@ -46,7 +46,8 @@ public class PlayerVars : MonoBehaviour
         if (!invincible)
         {
             health -= damageTaken;
-            AudioManager.instance.takingDamage();
+            health = Mathf.Max(0f, health);
+            if (AudioManager.instance != null) AudioManager.instance.takingDamage();
             invincible = true;
         }
     }
@@ -65,11 +66,11 @@ public class PlayerVars : MonoBehaviour
         if (time > 0)
         {
             soulAlphaFlash = soulAlphaFlash * -1;
-            soulSprite.color = soulFlashing;
+            soulSprite.color = new Color(soulFlashing.r, soulFlashing.g, soulFlashing.b, 1f);
         }
         else
         {
-            soulSprite.color = soulOriginal;
+            soulSprite.color = new Color(soulOriginal.r, soulOriginal.g, soulOriginal.b, 1f);
             time = maxTime;
             invincible = false;
         }

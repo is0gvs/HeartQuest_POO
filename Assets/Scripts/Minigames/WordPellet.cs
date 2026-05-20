@@ -25,17 +25,17 @@ public class WordPellet : MonoBehaviour
         damage        = dmg;
         soulTransform = soul;
         ready         = true;
-        Destroy(gameObject, 5f);
+        Destroy(gameObject, 7f);
     }
 
     void Update()
     {
         if (!ready) return;
-        transform.position += (Vector3)(direction * speed * Time.deltaTime);
+        transform.position += (Vector3)(direction * speed * Time.unscaledDeltaTime);
 
         Vector3 p = transform.position;
-        if (p.x < bounds.xMin - 1f || p.x > bounds.xMax + 1f ||
-            p.y < bounds.yMin - 1f || p.y > bounds.yMax + 1f)
+        if (p.x < bounds.xMin - 2.5f || p.x > bounds.xMax + 2.5f ||
+            p.y < bounds.yMin - 2.5f || p.y > bounds.yMax + 2.5f)
         {
             Destroy(gameObject);
         }

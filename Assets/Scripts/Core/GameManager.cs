@@ -31,6 +31,7 @@ namespace AntiBullyingGame.Core
 
         [Header("Game State")]
         public bool IsInTowerDefenseMode { get; private set; }
+        private bool battleLoading = false;
 
         // Lista de objetos que "observan" a este GameManager (Patrón de Diseño Observer)
         private List<IObserver> observers = new List<IObserver>();
@@ -62,7 +63,9 @@ namespace AntiBullyingGame.Core
 
         private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
-            if (scene.name == "main scene")
+            battleLoading = false;
+
+            if (scene.name == "BattleScene")
             {
                 // Configurar cámara de batalla
                 Camera mainCam = Camera.main;
@@ -152,6 +155,9 @@ namespace AntiBullyingGame.Core
 
         public void StartBattle()
         {
+            if (battleLoading) return;
+            battleLoading = true;
+
             Debug.Log("Iniciando Batalla AntiBullying...");
             
             // Ocultar la UI de la escuela para que no tape la batalla
@@ -160,6 +166,14 @@ namespace AntiBullyingGame.Core
 
             // Asegurar que el tiempo esté corriendo antes del cambio
             Time.timeScale = 1f;
+
+            UnityEngine.SceneManagement.Scene currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            PlayerPrefs.SetString("PreviousScene", currentScene.name);
+            if (!PlayerPrefs.HasKey("CurrentEnemy"))
+            {
+                PlayerPrefs.SetString("CurrentEnemy", "Mateo el Bully");
+            }
+            PlayerPrefs.Save();
 
             // Carga la escena de batalla unificada
             UnityEngine.SceneManagement.SceneManager.LoadScene("BattleScene");

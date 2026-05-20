@@ -27,7 +27,11 @@ public class ActingManager : MonoBehaviour
         // Fix: default TMP pivot (0.5,0.5) with position x=-5.2 pushed the left edge
         // off-screen (~x=-10.2). Left-anchor pivot keeps text inside the battle box.
         if (actingText != null)
+        {
             actingText.rectTransform.pivot = new Vector2(0f, 0.5f);
+            actingText.fontSize = 1.55f;
+            actingText.enableAutoSizing = false;
+        }
     }
     void Update()
     {
@@ -81,7 +85,7 @@ public class ActingManager : MonoBehaviour
     {
         if (buttons[selectedInt].selected)
         {
-            soul.transform.position = buttons[selectedInt].soulPosition.position;
+            if (soul != null) soul.enabled = false;
         }
     }
     void Deselecting(int deselectionInt)
@@ -160,16 +164,30 @@ public class ActingManager : MonoBehaviour
         canAct = false;
         buttons[selectedInt].actVars.curMercy += buttons[selectedInt].actVars.mercyValue[0];
         actingText.gameObject.SetActive(true);
-        DialogueManager.instance.dialogueTxt = buttons[selectedInt].actVars.actTxt[0];
-        Action doneTalking = () =>
+
+        string playerLine = buttons[selectedInt].actVars.actTxt[0];
+        if (selectedInt == 1)
         {
-            Debug.Log("action initiated");
+            DialogueManager.instance.dialogueTxt = playerLine;
+            Action doneTalking = () =>
+            {
+                Debug.Log("action initiated");
+                DialogueManager.instance.shouldTalk = false;
+                StartCoroutine(BattleManager.battleInstance.ActingSequence());
+            };
+            DialogueManager.instance.enemyTxt = BattleManager.battleInstance.enemyDialogue[UnityEngine.Random.Range(0, BattleManager.battleInstance.enemyDialogue.Count)];
+            DialogueManager.instance.shouldTalk = true;
+            DialogueManager.instance.Talking(doneTalking);
+        }
+        else
+        {
             DialogueManager.instance.shouldTalk = false;
-            StartCoroutine(BattleManager.battleInstance.ActingSequence());
-        };
-        DialogueManager.instance.enemyTxt = BattleManager.battleInstance.enemyDialogue[UnityEngine.Random.Range(0, BattleManager.battleInstance.enemyDialogue.Count)];
-        DialogueManager.instance.shouldTalk = true;
-        DialogueManager.instance.Talking(doneTalking);
+            StartCoroutine(BattleManager.battleInstance.CalmSequence(
+                playerLine,
+                "* Mateo baja un poco el tono.",
+                0));
+        }
+
         actObjects.SetActive(false);
         if (buttons[selectedInt].actVars.actTxt.Count <= 2 || buttons[selectedInt].actVars.mercyValue.Count <= 2)
         {

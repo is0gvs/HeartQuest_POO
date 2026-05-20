@@ -28,7 +28,7 @@ namespace AntiBullyingGame.RPG
 
         public void Interact()
         {
-            if (!canStartBattle || battleStarted) return;
+            if (battleStarted) return;
 
             if (preBattleDialogue != null)
             {
@@ -37,24 +37,40 @@ namespace AntiBullyingGame.RPG
                 var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>(FindObjectsInactive.Include);
                 if (ds != null)
                 {
-                    // Nos suscribimos al evento de fin de diálogo para lanzar la batalla
+                    PrepareBattleContext();
                     ds.StartDialogueStory(preBattleDialogue);
-                    // Iniciamos la batalla con delay para esperar al diálogo
-                    StartCoroutine(WaitForDialogueThenBattle(ds));
+
+                    // Si el DialogueData ya dispara batalla, dejamos que DialogueSystem
+                    // sea el único responsable de cargar la escena.
+                    if (canStartBattle && !preBattleDialogue.triggersBattle)
+                    {
+                        StartCoroutine(WaitForDialogueThenBattle(ds));
+                    }
+
                     return;
                 }
             }
 
             // Sin diálogo previo: iniciamos batalla directamente
-            LaunchBattle();
+            if (canStartBattle)
+            {
+                LaunchBattle();
+            }
         }
 
         private System.Collections.IEnumerator WaitForDialogueThenBattle(HeartQuest.UI.DialogueSystem ds)
         {
             // Esperamos hasta que el cuadro de diálogo se cierre
-            yield return new WaitUntil(() => ds == null || !ds.gameObject.activeSelf);
+            yield return new WaitUntil(() => ds == null || !ds.IsDialogueActive());
             yield return new WaitForSeconds(0.3f); // Pequeño respiro
             LaunchBattle();
+        }
+
+        private void PrepareBattleContext()
+        {
+            PlayerPrefs.SetString("CurrentEnemy", enemyName);
+            PlayerPrefs.SetString("PreviousScene", SceneManager.GetActiveScene().name);
+            PlayerPrefs.Save();
         }
 
         private void LaunchBattle()
@@ -62,11 +78,7 @@ namespace AntiBullyingGame.RPG
             if (battleStarted) return;
             battleStarted = true;
 
-            // Guardamos el nombre del enemigo para que la escena de batalla lo use
-            PlayerPrefs.SetString("CurrentEnemy", enemyName);
-            // Guardamos la escena actual para poder regresar después
-            PlayerPrefs.SetString("PreviousScene", SceneManager.GetActiveScene().name);
-            PlayerPrefs.Save();
+            PrepareBattleContext();
 
             Debug.Log($"[BattleTrigger] ¡Iniciando batalla contra {enemyName}!");
 

@@ -19,6 +19,9 @@ MonoBehaviour:
   - speakerName: Banda de Bullys
     text: "Te equivocaste de salon. \xA1Prep\xE1rate!"
     portrait: {fileID: 0}
+  - speakerName: Mateo
+    text: "Si tanto quieres meterte, demuestralo."
+    portrait: {fileID: 0}
   choices: []
   requiresNameInput: 0
   nextDialogueAfterInput: {fileID: 0}

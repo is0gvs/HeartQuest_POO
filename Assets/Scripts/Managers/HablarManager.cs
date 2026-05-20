@@ -114,10 +114,15 @@ public class HablarManager : MonoBehaviour
 
         // Aplicar formato del submenú
         if (bm.battleBox != null)
-            displayText.fontSize = bm.battleBox.size.y * 0.18f;
+        {
+            displayText.transform.position = bm.battleBox.transform.position + new Vector3(-3.65f, 0.5f, 0f);
+            displayText.rectTransform.sizeDelta = new Vector2(7.2f, 2.2f);
+        }
 
         displayText.alignment          = TextAlignmentOptions.Left;
         displayText.enableWordWrapping = false;
+        displayText.fontSize           = 2.0f;
+        displayText.enableAutoSizing   = false;
         displayText.gameObject.SetActive(true);
 
         // Inicializar estado — selección en 0 ANTES de abrir
@@ -161,7 +166,7 @@ public class HablarManager : MonoBehaviour
         for (int i = 0; i < optionLabels.Length; i++)
         {
             if (i == selectionInt)
-                result += "<color=yellow>♥ </color>" + optionLabels[i] + "\n";
+                result += "<color=yellow>> </color>" + optionLabels[i] + "\n";
             else
                 result += "  " + optionLabels[i] + "\n";
         }
@@ -183,32 +188,25 @@ public class HablarManager : MonoBehaviour
         bm.actingMgr.totalMercy += mercyValues[idx];
         Debug.Log($"[HablarManager] Opción {idx} — Mercy +{mercyValues[idx]} → total {bm.actingMgr.totalMercy}");
 
-        // Respuesta del bully
-        string bullyResponse = (bm.enemyDialogue != null && bm.enemyDialogue.Count > 0)
-            ? bm.enemyDialogue[UnityEngine.Random.Range(0, bm.enemyDialogue.Count)]
-            : "...";
-
         // shouldTalk = false siempre — nunca activar EnemyTalking ni el panel flotante
         DialogueManager.instance.shouldTalk = false;
-
-        // Cadena: diálogo jugador → diálogo bully → minijuego → turno del jugador
-        DialogueManager.instance.dialogueTxt = playerLine;
-
-        Action afterBullyTalk = () =>
+        if (idx == 2)
         {
-            HeartMinigame.instance.StartMinigame(() =>
+            DialogueManager.instance.dialogueTxt = playerLine;
+            Action afterPlayerTalk = () =>
             {
-                bm.StartCoroutine(bm.ActingSequence());
-            });
-        };
-
-        Action afterPlayerTalk = () =>
+                DialogueManager.instance.shouldTalk = false;
+                DialogueManager.instance.dialogueTxt = "No me digas que hacer.";
+                DialogueManager.instance.Talking(() => bm.StartCoroutine(bm.ActingSequence()));
+            };
+            DialogueManager.instance.Talking(afterPlayerTalk);
+        }
+        else
         {
-            DialogueManager.instance.shouldTalk = false;
-            DialogueManager.instance.dialogueTxt = bullyResponse;
-            DialogueManager.instance.Talking(afterBullyTalk);
-        };
-
-        DialogueManager.instance.Talking(afterPlayerTalk);
+            bm.StartCoroutine(bm.CalmSequence(
+                playerLine,
+                idx == 0 ? "* Mateo duda un momento al escucharte." : "* Mateo no sabe bien que responder.",
+                0));
+        }
     }
 }
