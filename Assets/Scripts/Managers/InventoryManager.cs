@@ -15,6 +15,10 @@ public class InventoryManager : MonoBehaviour
     [Header("Íconos de los Items")]
     public List<ItemIconMapping> itemIcons = new List<ItemIconMapping>();
 
+    [Header("Puntos de Spawn de Objetos en el Mundo")]
+    [Tooltip("Arrastra aquí los GameObjects vacíos que marcan dónde pueden aparecer los ítems en el mapa.")]
+    public Transform[] spawnPoints;
+
     public InventoryLinkedList inventory = new InventoryLinkedList();
 
     private bool isInventoryOpen = false;
@@ -74,7 +78,7 @@ public class InventoryManager : MonoBehaviour
                 AntiBullyingGame.Managers.SaveManager.Instance.SaveCurrentGameState();
             }
         }
-        // SpawnRandomItems(5); // <-- Desactivado por ahora hasta que el mapa esté terminado
+        // SpawnRandomItems(5); // <-- Activar cuando el mapa esté listo y los SpawnPoints estén asignados en el Inspector
 
         inventory.PrintInventory();
     }
@@ -84,16 +88,43 @@ public class InventoryManager : MonoBehaviour
         string[] possibleItems = new string[] { "Carta", "Jugo", "Sandwich", "Pulsera", "Nota", "Dibujo", "Calcomania" };
         int[] possibleHeals = new int[] { 10, 3, 8, 12, 7, 10, 4 };
 
-        for (int i = 0; i < count; i++)
+        // Verificamos si hay puntos de spawn asignados en el Inspector
+        bool useSpawnPoints = spawnPoints != null && spawnPoints.Length > 0;
+
+        if (!useSpawnPoints)
+        {
+            Debug.LogWarning("[InventoryManager] No hay SpawnPoints asignados. " +
+                             "Los ítems NO se generarán para evitar que aparezcan fuera del mapa. " +
+                             "Asigna puntos de spawn en el Inspector.");
+            return;
+        }
+
+        // Mezclamos los puntos de spawn para que los ítems no aparezcan siempre en el mismo lugar
+        // (Fisher-Yates shuffle sobre los índices)
+        List<int> pointIndices = new List<int>();
+        for (int p = 0; p < spawnPoints.Length; p++) pointIndices.Add(p);
+        for (int p = pointIndices.Count - 1; p > 0; p--)
+        {
+            int swapIdx = UnityEngine.Random.Range(0, p + 1);
+            int tmp = pointIndices[p];
+            pointIndices[p] = pointIndices[swapIdx];
+            pointIndices[swapIdx] = tmp;
+        }
+
+        // Generamos como máximo 'count' ítems, o menos si no hay suficientes puntos
+        int spawnCount = Mathf.Min(count, spawnPoints.Length);
+
+        for (int i = 0; i < spawnCount; i++)
         {
             int rndIndex = UnityEngine.Random.Range(0, possibleItems.Length);
             string iName = possibleItems[rndIndex];
             int iHeal = possibleHeals[rndIndex];
 
+            // Usamos el punto de spawn mezclado
+            Vector3 spawnPos = spawnPoints[pointIndices[i]].position;
+
             GameObject itemObj = new GameObject("Pickup_" + iName);
-            float rx = UnityEngine.Random.Range(-8f, 8f);
-            float ry = UnityEngine.Random.Range(-4f, 4f);
-            itemObj.transform.position = new Vector3(rx, ry, 0);
+            itemObj.transform.position = spawnPos;
 
             SpriteRenderer sr = itemObj.AddComponent<SpriteRenderer>();
             Texture2D iconTex = GetItemIcon(iName);
@@ -101,9 +132,8 @@ public class InventoryManager : MonoBehaviour
             {
                 sr.sprite = Sprite.Create(iconTex, new Rect(0, 0, iconTex.width, iconTex.height), new Vector2(0.5f, 0.5f));
             }
-            sr.sortingOrder = 5; // Asegurar que se vea por encima del piso
+            sr.sortingOrder = 5;
 
-            // Más pequeños en el mundo
             itemObj.transform.localScale = new Vector3(0.3f, 0.3f, 1f);
 
             BoxCollider2D col = itemObj.AddComponent<BoxCollider2D>();
