@@ -26,12 +26,12 @@ public class HeartMinigame : MonoBehaviour
 
     // ── Config (Inspector-tunable) ────────────────────────────────────────
     [Header("Movement")]
-    public float moveSpeed = 4.8f;
+    public float moveSpeed = 4.25f;
 
     [Header("Pellets")]
-    public float pelletSpeed      = 3.4f;
-    public float spawnInterval    = 0.32f;
-    public float minigameDuration = 8f;
+    public float pelletSpeed      = 2.65f;
+    public float spawnInterval    = 0.72f;
+    public float minigameDuration = 6.5f;
     public int   pelletDamage     = 1;
     private readonly string[] attackWords = { "Burla", "Rumor", "Insulto", "Empujon", "Amenaza", "Risa" };
 
@@ -44,6 +44,7 @@ public class HeartMinigame : MonoBehaviour
     private Rect      bounds;
     private Vector2   velocity;
     private float     soulRadius = 0.22f;
+    private PlayerVars playerVars;
 
     void Awake()
     {
@@ -94,7 +95,7 @@ public class HeartMinigame : MonoBehaviour
         {
             Vector2 center = bm.battleBox.transform.position;
             Vector2 size   = bm.battleBox.size;
-            bounds = new Rect(center.x - size.x / 2f + 0.35f, center.y - size.y / 2f + 0.25f, size.x - 0.7f, size.y - 0.5f);
+            bounds = new Rect(center.x - size.x / 2f + 0.55f, center.y - size.y / 2f + 0.45f, size.x - 1.1f, size.y - 0.9f);
         }
         else
         {
@@ -104,6 +105,8 @@ public class HeartMinigame : MonoBehaviour
         onComplete = callback;
         isActive   = true;
         velocity   = Vector2.zero;
+        playerVars = soulTransform.GetComponent<PlayerVars>();
+        if (playerVars != null) playerVars.SetSoulColorLock(true);
 
         Rigidbody2D rb = soulTransform.GetComponent<Rigidbody2D>();
         if (rb != null)
@@ -119,13 +122,14 @@ public class HeartMinigame : MonoBehaviour
         {
             sr.enabled = true;
             sr.sortingOrder = 20; // render above the battle box
-            soulTransform.localScale = Vector3.one * 0.28f;
+            sr.color = playerVars != null ? new Color(playerVars.soulOriginal.r, playerVars.soulOriginal.g, playerVars.soulOriginal.b, 1f) : sr.color;
+            soulTransform.localScale = Vector3.one * 0.24f;
         }
 
         CircleCollider2D soulCollider = soulTransform.GetComponent<CircleCollider2D>();
         if (soulCollider != null)
         {
-            soulRadius = 0.22f;
+            soulRadius = 0.18f;
             soulCollider.radius = soulRadius;
             soulCollider.isTrigger = true;
         }
@@ -186,17 +190,17 @@ public class HeartMinigame : MonoBehaviour
 
         TextMeshPro text = go.AddComponent<TextMeshPro>();
         text.text = attackWords[UnityEngine.Random.Range(0, attackWords.Length)];
-        text.fontSize = 2.2f;
+        text.fontSize = 1.45f;
         text.alignment = TextAlignmentOptions.Center;
         text.color = new Color(1f, 0.9f, 0.25f);
         text.fontStyle = FontStyles.Bold;
         text.sortingOrder = 18;
         text.enableAutoSizing = false;
-        text.rectTransform.sizeDelta = new Vector2(4.6f, 1.45f);
+        text.rectTransform.sizeDelta = new Vector2(3.1f, 0.9f);
 
         BoxCollider2D col = go.AddComponent<BoxCollider2D>();
         col.isTrigger = true;
-        col.size = new Vector2(2.15f, 0.72f);
+        col.size = new Vector2(1.45f, 0.46f);
 
         Vector2 spawnPos = RandomEdge();
         go.transform.position = new Vector3(spawnPos.x, spawnPos.y, 0f);
@@ -214,7 +218,7 @@ public class HeartMinigame : MonoBehaviour
     private Vector2 RandomEdge()
     {
         int edge = UnityEngine.Random.Range(0, 4);
-        float margin = 1.8f;
+        float margin = 1.35f;
         return edge switch
         {
             0 => new Vector2(UnityEngine.Random.Range(bounds.xMin, bounds.xMax), bounds.yMax + margin),
@@ -235,6 +239,12 @@ public class HeartMinigame : MonoBehaviour
 
         foreach (WordPellet wp in FindObjectsByType<WordPellet>(FindObjectsSortMode.None))
             Destroy(wp.gameObject);
+
+        if (playerVars != null)
+        {
+            playerVars.SetSoulColorLock(false);
+            playerVars = null;
+        }
 
         Debug.Log("HeartMinigame: minijuego terminado.");
         if (callComplete) onComplete?.Invoke();

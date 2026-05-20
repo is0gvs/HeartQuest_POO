@@ -25,10 +25,25 @@ namespace AntiBullyingGame.RPG
         public HeartQuest.Core.DialogueData preBattleDialogue;
 
         private bool battleStarted = false;
+        private const string BullyResolvedNpcId = "bully_mateo_reformed";
 
         public void Interact()
         {
             if (battleStarted) return;
+
+            if (IsBullyResolved())
+            {
+                var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>(FindObjectsInactive.Include);
+                if (ds != null)
+                {
+                    ds.ShowDialogue("[Mateo]: Perdon. Ya no quiero quitarle cosas a nadie. Gracias por hacerme pensar.");
+                }
+                else
+                {
+                    Debug.Log("[Mateo]: Perdon. Ya no quiero quitarle cosas a nadie.");
+                }
+                return;
+            }
 
             if (preBattleDialogue != null)
             {
@@ -70,6 +85,17 @@ namespace AntiBullyingGame.RPG
         {
             PlayerPrefs.SetString("CurrentEnemy", enemyName);
             PlayerPrefs.SetString("PreviousScene", SceneManager.GetActiveScene().name);
+
+            Player player = Object.FindAnyObjectByType<Player>();
+            if (player != null)
+            {
+                Vector3 pos = player.transform.position;
+                PlayerPrefs.SetFloat("BattleReturnX", pos.x);
+                PlayerPrefs.SetFloat("BattleReturnY", pos.y);
+                PlayerPrefs.SetFloat("BattleReturnZ", pos.z);
+                PlayerPrefs.SetInt("ShouldRestoreBattleReturn", 1);
+            }
+
             PlayerPrefs.Save();
         }
 
@@ -93,6 +119,13 @@ namespace AntiBullyingGame.RPG
                                $"Ve a File > Build Settings y agrégala.");
                 battleStarted = false;
             }
+        }
+
+        private bool IsBullyResolved()
+        {
+            PlayerPrefs.DeleteKey("BullyMateoResolved");
+            return AntiBullyingGame.Managers.SaveManager.Instance != null &&
+                   AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Contains(BullyResolvedNpcId);
         }
     }
 }

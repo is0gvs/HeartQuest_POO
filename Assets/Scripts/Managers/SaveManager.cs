@@ -59,6 +59,8 @@ namespace AntiBullyingGame.Managers
             
             // IMPORTANTE: Limpiar la memoria para no arrastrar NPCs de la partida anterior
             interactedNPCs.Clear();
+            PlayerPrefs.DeleteKey("BullyMateoResolved");
+            PlayerPrefs.Save();
             
             Debug.Log($"[SaveManager] Nuevo perfil asignado: {currentSaveFileName}");
 
