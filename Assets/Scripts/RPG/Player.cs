@@ -15,6 +15,7 @@ namespace AntiBullyingGame.RPG
         private float lastMoveX = 0;
         private float lastMoveY = -1; // Default looking down
         private Vector3 currentMoveDir;
+        private bool wasDialogueActiveLastFrame = false;
 
         private void Awake()
         {
@@ -37,6 +38,10 @@ namespace AntiBullyingGame.RPG
         {
             HandleMovementInput();
             HandleInteractionInput();
+
+            // Registrar si el diálogo estaba activo en este frame
+            var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>();
+            wasDialogueActiveLastFrame = ds != null && ds.IsDialogueActive();
         }
 
         private void FixedUpdate()
@@ -61,26 +66,31 @@ namespace AntiBullyingGame.RPG
                 return;
             }
 
-            // Movimiento usando WASD
-            float moveX = 0f;
-            float moveY = 0f;
+            // Movimiento usando los ejes de Input (soporta teclado WASD/flechas y joystick/control analógico)
+            float moveX = Input.GetAxisRaw("Horizontal");
+            float moveY = Input.GetAxisRaw("Vertical");
 
-            if (Input.GetKey(KeyCode.W)) moveY = 1f;
-            if (Input.GetKey(KeyCode.S)) moveY = -1f;
-            if (Input.GetKey(KeyCode.A)) moveX = -1f;
-            if (Input.GetKey(KeyCode.D)) moveX = 1f;
-
-            currentMoveDir = new Vector3(moveX, moveY, 0).normalized;
+            // Limitar la magnitud del vector a 1 para evitar velocidad diagonal extra,
+            // pero conservar la sensibilidad analógica para empujes suaves del joystick
+            Vector3 inputDir = new Vector3(moveX, moveY, 0);
+            if (inputDir.sqrMagnitude > 1f)
+            {
+                inputDir.Normalize();
+            }
+            currentMoveDir = inputDir;
             
             // Actualizar Animator
             if (animator != null && animator.runtimeAnimatorController != null)
             {
-                bool isMoving = currentMoveDir != Vector3.zero;
+                // Umbral pequeño para considerar que hay movimiento (evita ruidos de palanca analógica)
+                bool isMoving = currentMoveDir.sqrMagnitude > 0.01f;
                 
                 if (isMoving)
                 {
-                    lastMoveX = moveX;
-                    lastMoveY = moveY;
+                    // Registramos la última dirección para el blend tree de Idle.
+                    // Usamos Sign para asegurar que el personaje mire completamente en la dirección del movimiento al detenerse.
+                    if (Mathf.Abs(moveX) > 0.1f) lastMoveX = Mathf.Sign(moveX);
+                    if (Mathf.Abs(moveY) > 0.1f) lastMoveY = Mathf.Sign(moveY);
                 }
 
                 animator.SetFloat("moveX", isMoving ? moveX : lastMoveX);
@@ -91,8 +101,9 @@ namespace AntiBullyingGame.RPG
 
         private void HandleInteractionInput()
         {
-            if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Z)) // Presionar 'E' o 'Z' para interactuar
+            if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.JoystickButton0)) // Presionar 'E', 'Z' o Botón A (Joystick) para interactuar
             {
+                if (wasDialogueActiveLastFrame) return; // Si el diálogo estaba activo al inicio del frame, no interactuamos en este frame
                 TryInteract();
             }
         }

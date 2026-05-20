@@ -62,7 +62,7 @@ public class ItemManager : MonoBehaviour
             {
                 if (canAct && DialogueManager.instance.done)
                 {
-                    if (Input.GetKeyDown(KeyCode.Return))
+                    if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.JoystickButton0))
                     {
                         canAct = false;
                         Selected();

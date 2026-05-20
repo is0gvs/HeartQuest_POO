@@ -56,7 +56,7 @@ public class Attacking : MonoBehaviour
             time += Time.deltaTime;
             if (time > 0.1f)
             {
-                if (Input.GetKeyDown(KeyCode.Return))
+                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.JoystickButton0))
                 {
                     AudioManager.instance.Slashing();
                     curTime = 0;

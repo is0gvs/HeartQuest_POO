@@ -132,7 +132,6 @@ GameObject:
   - component: {fileID: 100269616}
   - component: {fileID: 100269615}
   - component: {fileID: 100269614}
-  - component: {fileID: 100269618}
   m_Layer: 0
   m_Name: ContinueButton
   m_TagString: Untagged
@@ -269,27 +268,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 100269612}
   m_CullTransparentMesh: 1
---- !u!114 &100269618
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 100269612}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 76db7eb2440f35e418ba8ae3c04f2e17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HeartQuest.UI.UIButtonEffects
-  normalColor: {r: 0.46666667, g: 0.29803923, b: 0.19215687, a: 1}
-  hoverColor: {r: 0.74509805, g: 0.5176471, b: 0.36862746, a: 1}
-  glowColor: {r: 0, g: 0, b: 0, a: 1}
-  hoverScale: 1.15
-  clickScale: 0.95
-  scaleSpeed: 8
-  glowIntensity: 2
-  glowSpeed: 6
-  selectedTextColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &127963325
 GameObject:
   m_ObjectHideFlags: 0
@@ -884,7 +862,6 @@ GameObject:
   - component: {fileID: 726461697}
   - component: {fileID: 726461696}
   - component: {fileID: 726461695}
-  - component: {fileID: 726461699}
   m_Layer: 0
   m_Name: LoadButton
   m_TagString: Untagged
@@ -1021,27 +998,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 726461693}
   m_CullTransparentMesh: 1
---- !u!114 &726461699
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 726461693}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 76db7eb2440f35e418ba8ae3c04f2e17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HeartQuest.UI.UIButtonEffects
-  normalColor: {r: 0.46666667, g: 0.29803923, b: 0.19215687, a: 1}
-  hoverColor: {r: 0.74509805, g: 0.5176471, b: 0.36862746, a: 1}
-  glowColor: {r: 0, g: 0, b: 0, a: 1}
-  hoverScale: 1.15
-  clickScale: 0.95
-  scaleSpeed: 8
-  glowIntensity: 2
-  glowSpeed: 6
-  selectedTextColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &770391223
 GameObject:
   m_ObjectHideFlags: 0
@@ -1584,7 +1540,6 @@ GameObject:
   - component: {fileID: 1266861130}
   - component: {fileID: 1266861129}
   - component: {fileID: 1266861128}
-  - component: {fileID: 1266861132}
   m_Layer: 0
   m_Name: OptionsButton
   m_TagString: Untagged
@@ -1721,27 +1676,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1266861126}
   m_CullTransparentMesh: 1
---- !u!114 &1266861132
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1266861126}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 76db7eb2440f35e418ba8ae3c04f2e17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HeartQuest.UI.UIButtonEffects
-  normalColor: {r: 0.46666667, g: 0.29803923, b: 0.19215687, a: 1}
-  hoverColor: {r: 0.74509805, g: 0.5176471, b: 0.36862746, a: 1}
-  glowColor: {r: 0, g: 0, b: 0, a: 1}
-  hoverScale: 1.15
-  clickScale: 0.95
-  scaleSpeed: 8
-  glowIntensity: 2
-  glowSpeed: 6
-  selectedTextColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &1268500106
 GameObject:
   m_ObjectHideFlags: 0
@@ -1962,7 +1896,6 @@ GameObject:
   - component: {fileID: 1352597375}
   - component: {fileID: 1352597374}
   - component: {fileID: 1352597373}
-  - component: {fileID: 1352597377}
   m_Layer: 0
   m_Name: NewGameButton
   m_TagString: Untagged
@@ -2099,27 +2032,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1352597371}
   m_CullTransparentMesh: 1
---- !u!114 &1352597377
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1352597371}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 76db7eb2440f35e418ba8ae3c04f2e17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HeartQuest.UI.UIButtonEffects
-  normalColor: {r: 0.4666667, g: 0.29803923, b: 0.19215688, a: 0.9}
-  hoverColor: {r: 0.74509805, g: 0.5176471, b: 0.36862746, a: 1}
-  glowColor: {r: 0, g: 0, b: 0, a: 1}
-  hoverScale: 1.15
-  clickScale: 0.95
-  scaleSpeed: 8
-  glowIntensity: 2
-  glowSpeed: 6
-  selectedTextColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &1356816417
 GameObject:
   m_ObjectHideFlags: 0
@@ -2697,9 +2609,6 @@ MonoBehaviour:
   volumeSlider: {fileID: 1894144646}
   fullscreenToggle: {fileID: 902688437}
   sceneToLoad: ClassroomScene
-  mainFirstButton: {fileID: 0}
-  optionsFirstButton: {fileID: 0}
-  loadFirstButton: {fileID: 0}
 --- !u!114 &1728887829
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3449,7 +3358,6 @@ GameObject:
   - component: {fileID: 2098266630}
   - component: {fileID: 2098266629}
   - component: {fileID: 2098266628}
-  - component: {fileID: 2098266632}
   m_Layer: 0
   m_Name: QuitButton
   m_TagString: Untagged
@@ -3586,27 +3494,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2098266626}
   m_CullTransparentMesh: 1
---- !u!114 &2098266632
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2098266626}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 76db7eb2440f35e418ba8ae3c04f2e17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HeartQuest.UI.UIButtonEffects
-  normalColor: {r: 0.46666667, g: 0.29803923, b: 0.19215687, a: 1}
-  hoverColor: {r: 0.745283, g: 0.5163179, b: 0.36912602, a: 1}
-  glowColor: {r: 0, g: 0, b: 0, a: 1}
-  hoverScale: 1.15
-  clickScale: 0.95
-  scaleSpeed: 8
-  glowIntensity: 2
-  glowSpeed: 6
-  selectedTextColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &2099420833
 GameObject:
   m_ObjectHideFlags: 0
