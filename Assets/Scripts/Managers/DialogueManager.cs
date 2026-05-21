@@ -28,6 +28,7 @@ public class DialogueManager : MonoBehaviour
     {
         if (canNarrate)
         {
+            ApplyBattleBoxTextLayout();
             StartCoroutine(StartTalking(talkAction));
         }
         
@@ -39,13 +40,11 @@ public class DialogueManager : MonoBehaviour
         audioHolder.transform.parent = transform;
         canNarrate = true;
 
+        ApplyBattleBoxTextLayout();
+
         // Fix: same off-screen pivot issue as ActingText
         if (text != null)
         {
-            text.rectTransform.pivot = new Vector2(0f, 0.5f);
-            text.rectTransform.sizeDelta = new Vector2(8f, 1.5f);
-            text.transform.position = new Vector3(-4f, -0.9f, 0f);
-            text.fontSize = 1.55f;
             text.enableAutoSizing = false;
             text.enableWordWrapping = true;
             text.alignment = TextAlignmentOptions.TopLeft;
@@ -53,12 +52,37 @@ public class DialogueManager : MonoBehaviour
 
         if (textEnemy != null)
         {
-            textEnemy.fontSize = 1.55f;
+            textEnemy.fontSize = 1.85f;
             textEnemy.enableAutoSizing = false;
             textEnemy.enableWordWrapping = true;
         }
 
         StartCoroutine(StartTalking(null));
+    }
+
+    private void ApplyBattleBoxTextLayout()
+    {
+        if (text == null) return;
+
+        text.rectTransform.pivot = new Vector2(0f, 1f);
+        text.rectTransform.sizeDelta = new Vector2(7.65f, 1.75f);
+        text.fontSize = 1.75f;
+        text.lineSpacing = -2f;
+        text.enableAutoSizing = false;
+        text.enableWordWrapping = true;
+        text.alignment = TextAlignmentOptions.TopLeft;
+
+        BattleManager bm = BattleManager.battleInstance;
+        if (bm != null && bm.battleBox != null)
+        {
+            Vector3 center = bm.battleBox.transform.position;
+            Vector2 size = bm.battleBox.size;
+            text.transform.position = center + new Vector3(-size.x * 0.43f, size.y * 0.34f, 0f);
+        }
+        else
+        {
+            text.transform.position = new Vector3(-3.8f, -0.45f, 0f);
+        }
     }
     IEnumerator StartTalking(Action action)
     {

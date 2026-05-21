@@ -8,7 +8,7 @@ public class PlayerVars : MonoBehaviour
     public float defValue;
 
     public float health;
-    public float maxHealth = 20;
+    public float maxHealth = 50;
 
     [SerializeField] Color soulFlashing;
     public Color soulOriginal;
@@ -21,6 +21,7 @@ public class PlayerVars : MonoBehaviour
     [SerializeField] private SpriteRenderer soulSprite;
 
     bool invincible;
+    private bool lockSoulColor;
 
     [HideInInspector]
     public static PlayerVars instance;
@@ -48,7 +49,17 @@ public class PlayerVars : MonoBehaviour
             health -= damageTaken;
             health = Mathf.Max(0f, health);
             if (AudioManager.instance != null) AudioManager.instance.takingDamage();
+            time = maxTime;
             invincible = true;
+        }
+    }
+
+    public void SetSoulColorLock(bool locked)
+    {
+        lockSoulColor = locked;
+        if (locked && soulSprite != null)
+        {
+            soulSprite.color = new Color(soulOriginal.r, soulOriginal.g, soulOriginal.b, 1f);
         }
     }
 
@@ -63,6 +74,16 @@ public class PlayerVars : MonoBehaviour
 
     void FlashSoul()
     {
+        if (lockSoulColor)
+        {
+            if (time <= 0)
+            {
+                time = maxTime;
+                invincible = false;
+            }
+            return;
+        }
+
         if (time > 0)
         {
             soulAlphaFlash = soulAlphaFlash * -1;

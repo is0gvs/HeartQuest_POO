@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 
 namespace AntiBullyingGame.Core
 {
@@ -77,6 +78,32 @@ namespace AntiBullyingGame.Core
                 Time.timeScale = 1f;
                 Debug.Log("Configuración de Batalla Aplicada: Fondo Negro.");
             }
+            else if (PlayerPrefs.GetInt("ShouldRestoreBattleReturn", 0) == 1)
+            {
+                StartCoroutine(RestorePlayerAfterBattle());
+            }
+        }
+
+        private IEnumerator RestorePlayerAfterBattle()
+        {
+            yield return null;
+            yield return null;
+
+            var player = Object.FindAnyObjectByType<AntiBullyingGame.RPG.Player>();
+            if (player != null)
+            {
+                Vector3 pos = new Vector3(
+                    PlayerPrefs.GetFloat("BattleReturnX", player.transform.position.x),
+                    PlayerPrefs.GetFloat("BattleReturnY", player.transform.position.y),
+                    PlayerPrefs.GetFloat("BattleReturnZ", player.transform.position.z));
+
+                player.transform.position = pos;
+                Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+                if (rb != null) rb.linearVelocity = Vector2.zero;
+            }
+
+            PlayerPrefs.SetInt("ShouldRestoreBattleReturn", 0);
+            PlayerPrefs.Save();
         }
 
         // Métodos de la interfaz ISubject
@@ -169,6 +196,17 @@ namespace AntiBullyingGame.Core
 
             UnityEngine.SceneManagement.Scene currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
             PlayerPrefs.SetString("PreviousScene", currentScene.name);
+
+            var player = Object.FindAnyObjectByType<AntiBullyingGame.RPG.Player>();
+            if (player != null)
+            {
+                Vector3 pos = player.transform.position;
+                PlayerPrefs.SetFloat("BattleReturnX", pos.x);
+                PlayerPrefs.SetFloat("BattleReturnY", pos.y);
+                PlayerPrefs.SetFloat("BattleReturnZ", pos.z);
+                PlayerPrefs.SetInt("ShouldRestoreBattleReturn", 1);
+            }
+
             if (!PlayerPrefs.HasKey("CurrentEnemy"))
             {
                 PlayerPrefs.SetString("CurrentEnemy", "Mateo el Bully");

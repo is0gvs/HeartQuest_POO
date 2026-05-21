@@ -36,8 +36,10 @@ public class BattleManager : MonoBehaviour
     public TextMeshPro healthTxt;
     private SpriteRenderer healthFillRenderer;
     private SpriteRenderer healthBackRenderer;
+    private EnemyVars enemyVariables;
     private const float HealthBarWidth = 4.2f;
     private const float HealthBarHeight = 0.35f;
+    private const string BullyResolvedNpcId = "bully_mateo_reformed";
     public float damage;
     /// <summary>
     /// Opens the HABLAR submenu. HablarManager auto-creates if not in scene.
@@ -80,9 +82,7 @@ public class BattleManager : MonoBehaviour
     {
         if (actingMgr.totalMercy >= actingMgr.totalMercyMax)
         {
-            DialogueManager.instance.dialogueTxt = "* Mateo baja la mirada. La confrontacion termina.";
-            DialogueManager.instance.shouldTalk = false;
-            DialogueManager.instance.Talking(null);
+            CompleteBullyEncounter("* Mateo baja la mirada y te devuelve la mochila.");
             audioMgr.Selecting();
             return;
         }
@@ -102,6 +102,14 @@ public class BattleManager : MonoBehaviour
         maxSelectionInt = 3;
         minSelectionInt = 0;
         playerVariables = FindAnyObjectByType<PlayerVars>();
+        PlayerPrefs.DeleteKey("BullyMateoResolved");
+        enemyVariables = FindAnyObjectByType<EnemyVars>();
+        if (enemyVariables != null)
+        {
+            if (enemyVariables.maxHP <= 0f) enemyVariables.maxHP = 32f;
+            if (enemyVariables.curHP <= 0f) enemyVariables.curHP = enemyVariables.maxHP;
+            if (enemyVariables.defendValue < 0f) enemyVariables.defendValue = 0f;
+        }
         NormalizeBattleLayout();
 
         // Inspector-first: use the singleton set in Awake.
@@ -193,19 +201,20 @@ public class BattleManager : MonoBehaviour
 
         if (battleBox != null)
         {
-            battleBox.transform.position = new Vector3(0f, -1.35f, 0f);
-            battleBox.size = new Vector2(8.8f, 2.6f);
+            battleBox.transform.position = new Vector3(0f, -1.2f, 0f);
+            battleBox.size = new Vector2(8.45f, 2.35f);
         }
 
         if (actingMgr != null && actingMgr.actingText != null && battleBox != null)
         {
             TextMeshPro text = actingMgr.actingText;
-            text.transform.position = battleBox.transform.position + new Vector3(-4.1f, 0.65f, 0f);
-            text.rectTransform.sizeDelta = new Vector2(8.1f, 1.7f);
-            text.rectTransform.pivot = new Vector2(0f, 0.5f);
+            text.transform.position = battleBox.transform.position + new Vector3(-3.65f, 0.78f, 0f);
+            text.rectTransform.sizeDelta = new Vector2(7.45f, 1.7f);
+            text.rectTransform.pivot = new Vector2(0f, 1f);
             text.alignment = TextAlignmentOptions.TopLeft;
             text.enableWordWrapping = true;
-            text.fontSize = 1.65f;
+            text.fontSize = 1.75f;
+            text.lineSpacing = -2f;
             text.enableAutoSizing = false;
         }
 
@@ -244,6 +253,37 @@ public class BattleManager : MonoBehaviour
 
         PositionSubmenu(itemObjects: ItemManager.instance != null ? ItemManager.instance.itemObjects : null, y: -3.18f);
         PositionSubmenu(actingMgr != null ? actingMgr.actObjects : null, -3.18f);
+        PositionMainButtons();
+    }
+
+    private void PositionMainButtons()
+    {
+        if (buttons == null || buttons.Count == 0) return;
+
+        float[] xs = { -3.45f, -1.15f, 1.15f, 3.45f };
+        for (int i = 0; i < buttons.Count && i < xs.Length; i++)
+        {
+            if (buttons[i] == null) continue;
+
+            buttons[i].transform.position = new Vector3(xs[i], -3.62f, 0f);
+            buttons[i].transform.localScale = new Vector3(0.72f, 0.72f, 1f);
+
+            TextMeshPro label = buttons[i].GetComponentInChildren<TextMeshPro>();
+            if (label != null)
+            {
+                label.fontSize = 1.35f;
+                label.enableAutoSizing = true;
+                label.fontSizeMin = 0.82f;
+                label.fontSizeMax = 1.42f;
+                label.rectTransform.sizeDelta = new Vector2(2.25f, 0.8f);
+                label.alignment = TextAlignmentOptions.Center;
+            }
+
+            if (buttons[i].soulPosition != null)
+            {
+                buttons[i].soulPosition.position = buttons[i].transform.position + new Vector3(-0.65f, 0f, 0f);
+            }
+        }
     }
 
     private void PositionSubmenu(GameObject itemObjects, float y)
@@ -391,7 +431,7 @@ public class BattleManager : MonoBehaviour
 
         isFinished = () =>
         {
-            SafeResize(new Vector2(8.8f, 2.6f), onBoxFinish);
+            SafeResize(new Vector2(8.45f, 2.35f), onBoxFinish);
             attackMgr.attackFinished = !attackMgr.attackFinished;
             isFighting = false;
         };
@@ -407,6 +447,12 @@ public class BattleManager : MonoBehaviour
         {
             Debug.LogWarning("No hay objeto Attacking en la escena. Saltando minijuego de ataque del jugador para evitar errores.");
             yield return new WaitForSeconds(1f);
+        }
+
+        if (enemyVariables != null && enemyVariables.curHP <= 0f)
+        {
+            CompleteBullyEncounter("* Mateo deja de pelear y te devuelve la mochila.");
+            yield break;
         }
 
         playerVariables.transform.position = battleBox != null ? battleBox.transform.position : new Vector3(0, -1.7f, 0);
@@ -449,7 +495,7 @@ public class BattleManager : MonoBehaviour
         {
             soul.enabled = false;
             soul.transform.position = buttons[1].soulPosition.position;
-            SafeResize(new Vector2(8.8f, 2.6f), boxAction);
+            SafeResize(new Vector2(8.45f, 2.35f), boxAction);
             actingMgr.isActing = false;
             isFighting = false;
             actingMgr.actingText.gameObject.SetActive(true);
@@ -466,6 +512,11 @@ public class BattleManager : MonoBehaviour
         isFighting = true;
         actingMgr.time = 0;
         yield return RunHeartDefense();
+        if (actingMgr != null && actingMgr.totalMercy >= actingMgr.totalMercyMax)
+        {
+            CompleteBullyEncounter("* Mateo entiende que se equivoco y te devuelve la mochila.");
+            yield break;
+        }
         isFinished?.Invoke();
     }
 
@@ -488,7 +539,7 @@ public class BattleManager : MonoBehaviour
             ItemManager.instance.time = 0;
             soul.enabled = false;
             soul.transform.position = buttons[2].soulPosition.position;
-            SafeResize(new Vector2(8.8f, 2.6f), null);
+            SafeResize(new Vector2(8.45f, 2.35f), null);
             actingMgr.isActing = false;
             isFighting = false;
             actingMgr.actingText.gameObject.SetActive(true);
@@ -529,7 +580,7 @@ public class BattleManager : MonoBehaviour
             soul.enabled = false;
             soul.transform.position = buttons[3].soulPosition.position;
         }
-        SafeResize(new Vector2(8.8f, 2.6f), () =>
+        SafeResize(new Vector2(8.45f, 2.35f), () =>
         {
             if (actingMgr != null && actingMgr.actingText != null)
             {
@@ -572,6 +623,12 @@ public class BattleManager : MonoBehaviour
             }
         }
 
+        if (actingMgr != null && actingMgr.totalMercy >= actingMgr.totalMercyMax)
+        {
+            CompleteBullyEncounter("* Mateo entiende que se equivoco y te devuelve la mochila.");
+            yield break;
+        }
+
         if (ItemManager.instance != null)
         {
             ItemManager.instance.isMenu = false;
@@ -597,6 +654,38 @@ public class BattleManager : MonoBehaviour
             Debug.LogWarning("BattleManager: el minijuego no reportó fin a tiempo. Cerrando turno por timeout.");
             HeartMinigame.instance.StopMinigame();
         }
+    }
+
+    public void CompleteBullyEncounter(string message)
+    {
+        StopAllCoroutines();
+        isFighting = false;
+        isHablando = false;
+
+        if (AntiBullyingGame.Managers.SaveManager.Instance != null &&
+            !AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Contains(BullyResolvedNpcId))
+        {
+            AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Add(BullyResolvedNpcId);
+        }
+
+        if (soul != null) soul.enabled = false;
+        if (actingMgr != null && actingMgr.actObjects != null) actingMgr.actObjects.SetActive(false);
+        if (ItemManager.instance != null && ItemManager.instance.itemObjects != null) ItemManager.instance.itemObjects.SetActive(false);
+
+        DialogueManager.instance.shouldTalk = false;
+        DialogueManager.instance.dialogueTxt = message;
+        DialogueManager.instance.Talking(ReturnToPreviousScene);
+    }
+
+    private void ReturnToPreviousScene()
+    {
+        string previousScene = PlayerPrefs.GetString("PreviousScene", "ClassroomScene");
+        if (string.IsNullOrWhiteSpace(previousScene) || previousScene == "BattleScene")
+        {
+            previousScene = "ClassroomScene";
+        }
+
+        UnityEngine.SceneManagement.SceneManager.LoadScene(previousScene);
     }
     /// <summary>
     /// Stops any active resize and starts a new one.

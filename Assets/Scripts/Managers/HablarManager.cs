@@ -36,18 +36,31 @@ public class HablarManager : MonoBehaviour
     private static readonly string[] optionLabels = new[]
     {
         "Hablar con calma",
-        "Preguntar por qué",
-        "Pedir que pare"
+        "Preguntar que le pasa",
+        "Defender a la victima",
+        "Pedir la mochila",
+        "Avisar a un adulto"
     };
 
     private static readonly string[][] dialogueLines = new[]
     {
-        new[] { "Le dices que sus palabras duelen.", "Intentas entenderlo." },
-        new[] { "Le pides que se detenga.",          "Le hablas con calma." },
-        new[] { "Compartes cómo te sientes.",        "Mantienes la calma."  }
+        new[] { "* Le dices que sus palabras duelen y que puede parar ahora." },
+        new[] { "* Le preguntas si esta enojado por algo y le ofreces hablar." },
+        new[] { "* Te pones firme: nadie merece ser humillado." },
+        new[] { "* Le pides que devuelva la mochila y termine esto sin mas dano." },
+        new[] { "* Le dices que si sigue, buscaras ayuda de un adulto." }
     };
 
-    private readonly int[] mercyValues = { 10, 8, 12 };
+    private readonly int[] mercyValues = { 22, 28, 12, 35, 8 };
+    private readonly bool[] startsBattle = { false, false, true, false, true };
+    private readonly string[] mateoResponses =
+    {
+        "* Mateo baja la voz por primera vez.",
+        "* Mateo mira al suelo. Parece que eso le llego.",
+        "* Mateo se molesta y vuelve a atacarte.",
+        "* Mateo aprieta la mochila, pero empieza a dudar.",
+        "* Mateo se pone a la defensiva y lanza otra provocacion."
+    };
     private int[] rotationIdx;
 
     // ── Estado ────────────────────────────────────────────────────────────
@@ -58,6 +71,8 @@ public class HablarManager : MonoBehaviour
     private float       originalFontSize;
     private TextAlignmentOptions originalAlignment;
     private bool        originalWordWrap;
+    private bool        originalAutoSizing;
+    private float       originalLineSpacing;
 
     // ── Unity ─────────────────────────────────────────────────────────────
     void Awake()
@@ -72,11 +87,17 @@ public class HablarManager : MonoBehaviour
         if (!isOpen) return;
 
         // Navegación
-        if (Input.GetKeyDown(KeyCode.UpArrow)   || Input.GetKeyDown(KeyCode.LeftArrow))
+        if (Input.GetKeyDown(KeyCode.UpArrow))
             selectionInt = Mathf.Max(0, selectionInt - 1);
 
-        if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.RightArrow))
+        if (Input.GetKeyDown(KeyCode.DownArrow))
             selectionInt = Mathf.Min(optionLabels.Length - 1, selectionInt + 1);
+
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+            selectionInt = selectionInt switch { 0 => 3, 1 => 4, _ => selectionInt };
+
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+            selectionInt = selectionInt switch { 3 => 0, 4 => 1, _ => selectionInt };
 
         RefreshDisplay();
 
@@ -111,17 +132,20 @@ public class HablarManager : MonoBehaviour
         originalFontSize  = displayText.fontSize;
         originalAlignment = displayText.alignment;
         originalWordWrap  = displayText.enableWordWrapping;
+        originalAutoSizing = displayText.enableAutoSizing;
+        originalLineSpacing = displayText.lineSpacing;
 
         // Aplicar formato del submenú
         if (bm.battleBox != null)
         {
-            displayText.transform.position = bm.battleBox.transform.position + new Vector3(-3.65f, 0.5f, 0f);
-            displayText.rectTransform.sizeDelta = new Vector2(7.2f, 2.2f);
+            displayText.transform.position = bm.battleBox.transform.position + new Vector3(-3.55f, 0.78f, 0f);
+            displayText.rectTransform.sizeDelta = new Vector2(7.55f, 1.95f);
         }
 
         displayText.alignment          = TextAlignmentOptions.Left;
         displayText.enableWordWrapping = false;
-        displayText.fontSize           = 2.0f;
+        displayText.fontSize           = 1.48f;
+        displayText.lineSpacing        = -10f;
         displayText.enableAutoSizing   = false;
         displayText.gameObject.SetActive(true);
 
@@ -153,6 +177,8 @@ public class HablarManager : MonoBehaviour
             displayText.fontSize          = originalFontSize;
             displayText.alignment         = originalAlignment;
             displayText.enableWordWrapping = originalWordWrap;
+            displayText.enableAutoSizing  = originalAutoSizing;
+            displayText.lineSpacing       = originalLineSpacing;
             displayText.text              = "";
         }
     }
@@ -162,15 +188,27 @@ public class HablarManager : MonoBehaviour
     {
         if (displayText == null) return;
 
-        string result = "";
-        for (int i = 0; i < optionLabels.Length; i++)
-        {
-            if (i == selectionInt)
-                result += "<color=yellow>> </color>" + optionLabels[i] + "\n";
-            else
-                result += "  " + optionLabels[i] + "\n";
-        }
+        string result =
+            "<color=#8d8d8d>HABLAR</color>\n" +
+            OptionLine(0, 3) +
+            OptionLine(1, 4) +
+            OptionLine(2, -1) +
+            "\n<size=62%><pos=36%><color=#ffffff>* Intuitivamente, sientes la tension en el aire.</color></size>";
         displayText.text = result;
+    }
+
+    private string OptionLine(int leftIdx, int rightIdx)
+    {
+        string left = FormatOption(leftIdx);
+        if (rightIdx < 0) return left + "\n";
+        return left + "<pos=70%>" + FormatOption(rightIdx) + "\n";
+    }
+
+    private string FormatOption(int idx)
+    {
+        string prefix = idx == selectionInt ? "> " : "  ";
+        string color = idx == selectionInt ? "#f5e642" : "#d7d7d7";
+        return $"<color={color}>{prefix}{optionLabels[idx]}</color>";
     }
 
     /// <summary>Se ejecuta cuando el jugador confirma una opción.</summary>
@@ -179,24 +217,33 @@ public class HablarManager : MonoBehaviour
         BattleManager bm = BattleManager.battleInstance;
         if (bm == null) return;
 
+        if (idx < 0 || idx >= optionLabels.Length) return;
+
         // Línea del jugador (rotación)
         int rot = rotationIdx[idx];
         string playerLine = dialogueLines[idx][rot % dialogueLines[idx].Length];
         rotationIdx[idx] = (rot + 1) % dialogueLines[idx].Length;
 
         // Mercy
-        bm.actingMgr.totalMercy += mercyValues[idx];
+        bm.actingMgr.totalMercy = Mathf.Min(bm.actingMgr.totalMercy + mercyValues[idx], bm.actingMgr.totalMercyMax);
         Debug.Log($"[HablarManager] Opción {idx} — Mercy +{mercyValues[idx]} → total {bm.actingMgr.totalMercy}");
 
         // shouldTalk = false siempre — nunca activar EnemyTalking ni el panel flotante
         DialogueManager.instance.shouldTalk = false;
-        if (idx == 2)
+        if (bm.actingMgr.totalMercy >= bm.actingMgr.totalMercyMax)
+        {
+            bm.StartCoroutine(bm.CalmSequence(
+                playerLine,
+                "* Mateo entiende el dano que hizo y decide cambiar.",
+                0));
+        }
+        else if (startsBattle[idx])
         {
             DialogueManager.instance.dialogueTxt = playerLine;
             Action afterPlayerTalk = () =>
             {
                 DialogueManager.instance.shouldTalk = false;
-                DialogueManager.instance.dialogueTxt = "No me digas que hacer.";
+                DialogueManager.instance.dialogueTxt = mateoResponses[idx];
                 DialogueManager.instance.Talking(() => bm.StartCoroutine(bm.ActingSequence()));
             };
             DialogueManager.instance.Talking(afterPlayerTalk);
@@ -205,7 +252,7 @@ public class HablarManager : MonoBehaviour
         {
             bm.StartCoroutine(bm.CalmSequence(
                 playerLine,
-                idx == 0 ? "* Mateo duda un momento al escucharte." : "* Mateo no sabe bien que responder.",
+                mateoResponses[idx],
                 0));
         }
     }
