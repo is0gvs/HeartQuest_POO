@@ -20,8 +20,8 @@ namespace AntiBullyingGame.RPG
 
         public virtual void Interact()
         {
-            var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>();
-            
+            var ds = HeartQuest.UI.DialogueSystem.Instance;
+
             if (ds != null)
             {
                 bool hasInteracted = HasInteracted();

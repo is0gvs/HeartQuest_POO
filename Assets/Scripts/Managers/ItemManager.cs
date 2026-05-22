@@ -66,6 +66,11 @@ public class ItemManager : MonoBehaviour
             time += Time.deltaTime;
             if (time > 0.25f)
             {
+                if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.JoystickButton1))
+                {
+                    BattleManager.battleInstance.CloseItemMenu();
+                    return;
+                }
                 if (canAct && DialogueManager.instance.done)
                 {
                     if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.JoystickButton0))
@@ -100,18 +105,14 @@ public class ItemManager : MonoBehaviour
         if (index < 0 || index >= buttons.Count || buttons[index] == null) return;
 
         Transform option = buttons[index].transform;
-        option.localScale = selected ? Vector3.one * 1.12f : Vector3.one;
+        // Resaltado por contorno/halo: NO se altera el color base del botón.
+        option.localScale = selected ? Vector3.one * 1.1f : Vector3.one;
 
-        SpriteRenderer sr = option.GetComponent<SpriteRenderer>();
-        if (sr != null)
-        {
-            sr.color = selected ? new Color(1f, 1f, 0.35f, 1f) : Color.white;
-        }
+        BattleSelectionHalo.Apply(option, selected);
 
         TextMeshPro label = option.GetComponentInChildren<TextMeshPro>();
         if (label != null)
         {
-            label.color = selected ? Color.black : Color.white;
             label.fontStyle = selected ? FontStyles.Bold : FontStyles.Normal;
         }
     }

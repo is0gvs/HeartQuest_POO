@@ -30,9 +30,15 @@ public class HeartMinigame : MonoBehaviour
 
     [Header("Pellets")]
     public float pelletSpeed      = 2.65f;
-    public float spawnInterval    = 0.72f;
+    public float spawnInterval    = 0.4f;
     public float minigameDuration = 6.5f;
     public int   pelletDamage     = 1;
+
+    [Header("Márgenes del área de juego")]
+    [Tooltip("Margen interno horizontal (izq/der) — reduce el área jugable respecto a la BattleBox")]
+    public float boundsMarginX = 0.30f;
+    [Tooltip("Margen interno vertical (arr/abj) — reduce el área jugable respecto a la BattleBox")]
+    public float boundsMarginY = 0.25f;
     private readonly string[] attackWords = { "Burla", "Rumor", "Insulto", "Empujon", "Amenaza", "Risa" };
 
     // ── Runtime ───────────────────────────────────────────────────────────
@@ -55,7 +61,29 @@ public class HeartMinigame : MonoBehaviour
     void Update()
     {
         if (!isActive || soulTransform == null) return;
+        RecomputeBounds();
         MoveSoul();
+    }
+
+    /// <summary>
+    /// Recalcula el área jugable a partir del tamaño ACTUAL de la BattleBox.
+    /// Se llama cada frame para que el corazón siga a la caja mientras se anima
+    /// (encoge/crece), evitando que quede fuera de los límites visibles.
+    /// </summary>
+    private void RecomputeBounds()
+    {
+        BattleManager bm = BattleManager.battleInstance;
+        if (bm == null || bm.battleBox == null) return;
+
+        // Usamos los bounds REALES del SpriteRenderer (AABB mundial): contemplan
+        // pivote, escala y posición, así el área jugable coincide con la caja visible
+        // y el corazón no se sale de ella.
+        Bounds b = bm.battleBox.bounds;
+        bounds = new Rect(
+            b.min.x + boundsMarginX,
+            b.min.y + boundsMarginY,
+            Mathf.Max(0.5f, b.size.x - boundsMarginX * 2f),
+            Mathf.Max(0.5f, b.size.y - boundsMarginY * 2f));
     }
 
     // ── Public API ────────────────────────────────────────────────────────
@@ -91,16 +119,8 @@ public class HeartMinigame : MonoBehaviour
         }
 
         // ── Calculate bounds from the battle box ─────────────────────────
-        if (bm != null && bm.battleBox != null)
-        {
-            Vector2 center = bm.battleBox.transform.position;
-            Vector2 size   = bm.battleBox.size;
-            bounds = new Rect(center.x - size.x / 2f + 0.55f, center.y - size.y / 2f + 0.45f, size.x - 1.1f, size.y - 0.9f);
-        }
-        else
-        {
-            bounds = new Rect(-1.5f, -1.2f, 3f, 2.4f);
-        }
+        bounds = new Rect(-1.5f, -1.2f, 3f, 2.4f); // fallback inicial
+        RecomputeBounds();
 
         onComplete = callback;
         isActive   = true;

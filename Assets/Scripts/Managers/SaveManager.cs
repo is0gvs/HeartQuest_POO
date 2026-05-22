@@ -60,6 +60,11 @@ namespace AntiBullyingGame.Managers
             // IMPORTANTE: Limpiar la memoria para no arrastrar NPCs de la partida anterior
             interactedNPCs.Clear();
             PlayerPrefs.DeleteKey("BullyMateoResolved");
+            // Limpiar el regreso de batalla para no aparecer frente al bully al iniciar una partida nueva.
+            PlayerPrefs.DeleteKey("ShouldRestoreBattleReturn");
+            PlayerPrefs.DeleteKey("BattleReturnX");
+            PlayerPrefs.DeleteKey("BattleReturnY");
+            PlayerPrefs.DeleteKey("BattleReturnZ");
             PlayerPrefs.Save();
             
             Debug.Log($"[SaveManager] Nuevo perfil asignado: {currentSaveFileName}");

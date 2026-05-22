@@ -11,6 +11,11 @@ public class BattleManager : MonoBehaviour
     [HideInInspector]
     public bool isHablando;
     private Coroutine resizeCoroutine;
+    private bool isResizing;
+    private string actMenuPrevText = "";
+    private static readonly Vector2 BoxRectangleSize = new Vector2(10.8f, 3.4f);
+    [Tooltip("Desactiva para ajustar el layout manualmente en la escena")]
+    [SerializeField] private bool overrideLayout = true;
     [HideInInspector]
     public static BattleManager battleInstance;
     private AttackManager attackMgr;
@@ -60,7 +65,13 @@ public class BattleManager : MonoBehaviour
     {
         actingMgr.actObjects.SetActive(true);
         actingMgr.isActing = true;
-        actingMgr.actingText.gameObject.SetActive(false);
+        SetMainButtonsVisible(false);
+        if (actingMgr.actingText != null)
+        {
+            actMenuPrevText = actingMgr.actingText.text;
+            actingMgr.actingText.gameObject.SetActive(true);
+            actingMgr.actingText.text = "* Presiona X para volver.";
+        }
         audioMgr.Selecting();
     }
     /// <summary>
@@ -72,8 +83,66 @@ public class BattleManager : MonoBehaviour
         ItemManager.instance.canAct = true;
         isFighting = false;
         ItemManager.instance.itemObjects.SetActive(true);
-        ItemManager.instance.useText.gameObject.SetActive(false);
+        SetMainButtonsVisible(false);
+        if (ItemManager.instance.useText != null)
+        {
+            ItemManager.instance.useText.gameObject.SetActive(true);
+            ItemManager.instance.useText.text = "* Presiona X para volver.";
+        }
         audioMgr.Selecting();
+    }
+
+    /// <summary>
+    /// Muestra u oculta los botones principales (HABLAR, APOYAR, MOCHILA, IGNORAR).
+    /// </summary>
+    public void SetMainButtonsVisible(bool visible)
+    {
+        if (buttons == null) return;
+        foreach (var btn in buttons)
+            if (btn != null) btn.gameObject.SetActive(visible);
+    }
+
+    /// <summary>
+    /// Cierra el menú de la MOCHILA y regresa a los botones principales sin usar item.
+    /// </summary>
+    public void CloseItemMenu()
+    {
+        if (ItemManager.instance != null)
+        {
+            ItemManager.instance.isMenu = false;
+            ItemManager.instance.canAct = true;
+            if (ItemManager.instance.itemObjects != null)
+                ItemManager.instance.itemObjects.SetActive(false);
+            if (ItemManager.instance.useText != null)
+            {
+                ItemManager.instance.useText.text = "";
+                ItemManager.instance.useText.gameObject.SetActive(false);
+            }
+        }
+        SetMainButtonsVisible(true);
+        if (audioMgr != null) audioMgr.Selecting();
+    }
+
+    /// <summary>
+    /// Cierra el submenú de APOYAR y regresa a los botones principales sin realizar un acto.
+    /// Espejo de CloseItemMenu para mantener el mismo patrón de navegación.
+    /// </summary>
+    public void CloseActingMenu()
+    {
+        if (actingMgr != null)
+        {
+            actingMgr.isActing = false;
+            actingMgr.canAct = true;
+            if (actingMgr.actObjects != null)
+                actingMgr.actObjects.SetActive(false);
+            if (actingMgr.actingText != null)
+            {
+                actingMgr.actingText.text = actMenuPrevText;
+                actingMgr.actingText.gameObject.SetActive(true);
+            }
+        }
+        SetMainButtonsVisible(true);
+        if (audioMgr != null) audioMgr.Selecting();
     }
     /// <summary>
     /// The mercy method, as of right now it ends the battle but really it doesn't do anything special
@@ -102,7 +171,6 @@ public class BattleManager : MonoBehaviour
         maxSelectionInt = 3;
         minSelectionInt = 0;
         playerVariables = FindAnyObjectByType<PlayerVars>();
-        PlayerPrefs.DeleteKey("BullyMateoResolved");
         enemyVariables = FindAnyObjectByType<EnemyVars>();
         if (enemyVariables != null)
         {
@@ -110,7 +178,8 @@ public class BattleManager : MonoBehaviour
             if (enemyVariables.curHP <= 0f) enemyVariables.curHP = enemyVariables.maxHP;
             if (enemyVariables.defendValue < 0f) enemyVariables.defendValue = 0f;
         }
-        NormalizeBattleLayout();
+        if (overrideLayout) NormalizeBattleLayout();
+        NormalizeButtonFonts();
 
         // Inspector-first: use the singleton set in Awake.
         // Fallback only if Inspector ref was missed.
@@ -139,6 +208,12 @@ public class BattleManager : MonoBehaviour
         //when the player is not fighting nor acting nor in HABLAR submenu, these if statements get called
         if (!isFighting && !actingMgr.isActing && !ItemManager.instance.isMenu && !isHablando)
         {
+            // Red de seguridad: en el menú principal la caja SIEMPRE debe ser rectangular.
+            // Si quedó chica (resize interrumpido) y no hay animación en curso, la corregimos.
+            if (!isResizing && battleBox != null && battleBox.size != BoxRectangleSize)
+            {
+                battleBox.size = BoxRectangleSize;
+            }
             if (selectionInt > maxSelectionInt)
             {
                 selectionInt = 0;
@@ -190,6 +265,62 @@ public class BattleManager : MonoBehaviour
 
     }
 
+    private void NormalizeButtonFonts()
+    {
+        // Botones principales (HABLAR, APOYAR, MOCHILA, IGNORAR)
+        if (buttons != null)
+        {
+            foreach (var btn in buttons)
+            {
+                if (btn == null) continue;
+                TextMeshPro label = btn.GetComponentInChildren<TextMeshPro>();
+                if (label != null)
+                {
+                    label.fontSize = 1.35f;
+                    label.enableAutoSizing = true;
+                    label.fontSizeMin = 0.82f;
+                    label.fontSizeMax = 1.42f;
+                    label.rectTransform.sizeDelta = new Vector2(2.25f, 0.8f);
+                    label.alignment = TextAlignmentOptions.Center;
+                }
+            }
+        }
+
+        // Botones de items (MOCHILA submenu)
+        if (ItemManager.instance != null && ItemManager.instance.itemObjects != null)
+        {
+            foreach (Transform child in ItemManager.instance.itemObjects.transform)
+            {
+                TextMeshPro label = child.GetComponentInChildren<TextMeshPro>();
+                if (label != null)
+                {
+                    label.fontSize = 1.8f;
+                    label.enableAutoSizing = true;
+                    label.fontSizeMin = 1.0f;
+                    label.fontSizeMax = 1.9f;
+                    label.rectTransform.sizeDelta = new Vector2(2.35f, 1.35f);
+                }
+            }
+        }
+
+        // Botones de acts (APOYAR submenu)
+        if (actingMgr != null && actingMgr.actObjects != null)
+        {
+            foreach (Transform child in actingMgr.actObjects.transform)
+            {
+                TextMeshPro label = child.GetComponentInChildren<TextMeshPro>();
+                if (label != null)
+                {
+                    label.fontSize = 1.8f;
+                    label.enableAutoSizing = true;
+                    label.fontSizeMin = 1.0f;
+                    label.fontSizeMax = 1.9f;
+                    label.rectTransform.sizeDelta = new Vector2(2.35f, 1.35f);
+                }
+            }
+        }
+    }
+
     private void NormalizeBattleLayout()
     {
         if (soul != null)
@@ -202,7 +333,7 @@ public class BattleManager : MonoBehaviour
         if (battleBox != null)
         {
             battleBox.transform.position = new Vector3(0f, -1.2f, 0f);
-            battleBox.size = new Vector2(8.45f, 2.35f);
+            battleBox.size = BoxRectangleSize;
         }
 
         if (actingMgr != null && actingMgr.actingText != null && battleBox != null)
@@ -431,7 +562,7 @@ public class BattleManager : MonoBehaviour
 
         isFinished = () =>
         {
-            SafeResize(new Vector2(8.45f, 2.35f), onBoxFinish);
+            SafeResize(BoxRectangleSize, onBoxFinish);
             attackMgr.attackFinished = !attackMgr.attackFinished;
             isFighting = false;
         };
@@ -495,7 +626,7 @@ public class BattleManager : MonoBehaviour
         {
             soul.enabled = false;
             soul.transform.position = buttons[1].soulPosition.position;
-            SafeResize(new Vector2(8.45f, 2.35f), boxAction);
+            SafeResize(BoxRectangleSize, boxAction);
             actingMgr.isActing = false;
             isFighting = false;
             actingMgr.actingText.gameObject.SetActive(true);
@@ -539,7 +670,7 @@ public class BattleManager : MonoBehaviour
             ItemManager.instance.time = 0;
             soul.enabled = false;
             soul.transform.position = buttons[2].soulPosition.position;
-            SafeResize(new Vector2(8.45f, 2.35f), null);
+            SafeResize(BoxRectangleSize, null);
             actingMgr.isActing = false;
             isFighting = false;
             actingMgr.actingText.gameObject.SetActive(true);
@@ -550,9 +681,10 @@ public class BattleManager : MonoBehaviour
 
         };
         yield return new WaitForSeconds(1);
-        playerVariables.transform.position = battleBox != null ? battleBox.transform.position : new Vector3(0, -1.7f, 0);
-        SafeResize(new Vector2(3, 3), null);
+        // No hay minijuego al usar un item: la caja se mantiene rectangular.
+        SafeResize(BoxRectangleSize, null);
         ItemManager.instance.itemObjects.SetActive(false);
+        SetMainButtonsVisible(true);
         isFighting = true;
         ItemManager.instance.isMenu = false;
         ItemManager.instance.useText.text = "";
@@ -580,7 +712,7 @@ public class BattleManager : MonoBehaviour
             soul.enabled = false;
             soul.transform.position = buttons[3].soulPosition.position;
         }
-        SafeResize(new Vector2(8.45f, 2.35f), () =>
+        SafeResize(BoxRectangleSize, () =>
         {
             if (actingMgr != null && actingMgr.actingText != null)
             {
@@ -671,10 +803,34 @@ public class BattleManager : MonoBehaviour
         if (soul != null) soul.enabled = false;
         if (actingMgr != null && actingMgr.actObjects != null) actingMgr.actObjects.SetActive(false);
         if (ItemManager.instance != null && ItemManager.instance.itemObjects != null) ItemManager.instance.itemObjects.SetActive(false);
+        HeartMinigame.instance.StopMinigame();
 
+        // Arranca tras StopAllCoroutines para que sobreviva y garantice el regreso al mundo.
+        StartCoroutine(EndEncounterRoutine(message));
+    }
+
+    /// <summary>
+    /// Muestra el mensaje de cierre y regresa a la escena del mundo. Usa un timeout
+    /// para no quedarse atascado en la batalla si la narración falla.
+    /// </summary>
+    private IEnumerator EndEncounterRoutine(string message)
+    {
         DialogueManager.instance.shouldTalk = false;
         DialogueManager.instance.dialogueTxt = message;
-        DialogueManager.instance.Talking(ReturnToPreviousScene);
+
+        bool shown = false;
+        DialogueManager.instance.ForceTalk(() => shown = true);
+
+        float elapsed = 0f;
+        while (!shown && elapsed < 5f)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        // Pausa para que el jugador alcance a leer el mensaje antes de cambiar de escena.
+        yield return new WaitForSecondsRealtime(1.5f);
+        ReturnToPreviousScene();
     }
 
     private void ReturnToPreviousScene()
@@ -693,6 +849,7 @@ public class BattleManager : MonoBehaviour
     void SafeResize(Vector2 targetSize, Action onFinish)
     {
         if (resizeCoroutine != null) StopCoroutine(resizeCoroutine);
+        isResizing = true;
         resizeCoroutine = StartCoroutine(ResizeBattleBox(targetSize, onFinish));
     }
 
@@ -723,7 +880,8 @@ public class BattleManager : MonoBehaviour
             battleBox.size = size;
             yield return null;
         }
+        isResizing = false;
         onFinish?.Invoke();
-        
+
     }
 }

@@ -37,6 +37,54 @@ namespace HeartQuest.UI
         // Estado de Elecciones
         private List<GameObject> choiceButtons = new List<GameObject>();
 
+        // Estado abierto/cerrado independiente de activeSelf, para que la verificación
+        // sea fiable aunque el GameObject del componente nunca se desactive.
+        private bool isOpen;
+
+        // ── Singleton con auto-creación ───────────────────────────────────────
+        // Garantiza que SIEMPRE exista un DialogueSystem funcional en la escena del
+        // mundo. Si no hay uno (o el de la escena quedó inactivo), se crea uno en runtime.
+        private static DialogueSystem _instance;
+        public static DialogueSystem Instance
+        {
+            get
+            {
+                // Solo reutilizamos la instancia cacheada si sigue siendo válida
+                // (no destruida y con sus referencias de UI asignadas).
+                if (!IsUsable(_instance))
+                {
+                    _instance = null;
+
+                    // Buscar una en escena que SÍ tenga sus referencias asignadas.
+                    foreach (var ds in FindObjectsByType<DialogueSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                    {
+                        if (IsUsable(ds)) { _instance = ds; break; }
+                    }
+
+                    // Si no hay ninguna usable, crear una en runtime con refs válidas.
+                    if (_instance == null)
+                        _instance = CreateRuntime();
+                }
+                return _instance;
+            }
+        }
+
+        /// <summary>True si la instancia existe (no destruida) y tiene sus refs de UI.</summary>
+        private static bool IsUsable(DialogueSystem ds)
+        {
+            return ds != null && ds.dialogueBox != null && ds.dialogueText != null;
+        }
+
+        private void Awake()
+        {
+            if (_instance == null) _instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (_instance == this) _instance = null;
+        }
+
         private void Start()
         {
             if (dialogueBox != null)
@@ -47,7 +95,56 @@ namespace HeartQuest.UI
 
         public bool IsDialogueActive()
         {
-            return dialogueBox != null && dialogueBox.activeSelf;
+            return isOpen;
+        }
+
+        /// <summary>
+        /// Crea en runtime un Canvas + caja de diálogo + texto si la escena no tiene
+        /// un DialogueSystem. El componente vive en el Canvas (siempre activo) y solo
+        /// se activa/desactiva el panel hijo (la caja).
+        /// </summary>
+        private static DialogueSystem CreateRuntime()
+        {
+            GameObject canvasGO = new GameObject("DialogueSystem_Runtime",
+                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            Canvas canvas = canvasGO.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+            var scaler = canvasGO.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+
+            DialogueSystem ds = canvasGO.AddComponent<DialogueSystem>();
+
+            // Caja (panel hijo que se togglea)
+            GameObject box = new GameObject("DialogueBox", typeof(RectTransform), typeof(Image));
+            box.transform.SetParent(canvasGO.transform, false);
+            box.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.95f);
+            RectTransform brt = box.GetComponent<RectTransform>();
+            brt.anchorMin = new Vector2(0.1f, 0.05f);
+            brt.anchorMax = new Vector2(0.9f, 0.05f);
+            brt.pivot = new Vector2(0.5f, 0f);
+            brt.sizeDelta = new Vector2(0, 220);
+            brt.anchoredPosition = new Vector2(0, 20);
+            var outline = box.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0.898f, 1f, 1f);
+            outline.effectDistance = new Vector2(3, -3);
+
+            // Texto
+            GameObject txt = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+            txt.transform.SetParent(box.transform, false);
+            RectTransform trt = txt.GetComponent<RectTransform>();
+            trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+            trt.offsetMin = new Vector2(25, 20); trt.offsetMax = new Vector2(-25, -20);
+            TextMeshProUGUI tmp = txt.GetComponent<TextMeshProUGUI>();
+            tmp.text = ""; tmp.fontSize = 35; tmp.color = Color.white;
+            tmp.alignment = TextAlignmentOptions.TopLeft;
+
+            ds.dialogueText = tmp;
+            ds.dialogueBox = box;
+            box.SetActive(false);
+
+            return ds;
         }
 
         private void Update()
@@ -101,8 +198,9 @@ namespace HeartQuest.UI
 
             currentStory = story;
             currentLineIndex = 0;
+            isOpen = true;
             dialogueBox.SetActive(true);
-            
+
             ShowNextLine();
         }
 
@@ -135,6 +233,7 @@ namespace HeartQuest.UI
             }
 
             currentFullText = text;
+            isOpen = true;
             dialogueBox.SetActive(true);
             Debug.Log($"[DialogueSystem] dialogueBox fue activado. activeInHierarchy: {dialogueBox.activeInHierarchy}");
 
@@ -162,6 +261,7 @@ namespace HeartQuest.UI
         public void HideDialogue()
         {
             Debug.Log("[DialogueSystem] HideDialogue ha sido llamado. Ocultando diálogo.");
+            isOpen = false;
             if (dialogueBox != null)
             {
                 dialogueBox.SetActive(false);

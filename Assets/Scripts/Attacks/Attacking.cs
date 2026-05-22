@@ -42,7 +42,8 @@ public class Attacking : MonoBehaviour
 
     void Update()
     {
-        damageDealt = Mathf.Round(PointerProgressToAttackMultiplier(progress)) - enemy.defendValue;
+        float defense = enemy != null ? enemy.defendValue : 0f;
+        damageDealt = Mathf.Round(PointerProgressToAttackMultiplier(progress)) - defense;
         if (!finished)
         {
             curTime += Time.deltaTime;
