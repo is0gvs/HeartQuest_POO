@@ -248,6 +248,18 @@ public class ItemManager : MonoBehaviour
             return;
         }
 
+        // ── Bloquear si la vida está al máximo ──
+        if (PlayerVars.instance != null && PlayerVars.instance.health >= PlayerVars.instance.maxHealth)
+        {
+            if (useText != null)
+            {
+                useText.gameObject.SetActive(true);
+                useText.text = "* Tu HP ya está al máximo.";
+            }
+            canAct = true;
+            return;
+        }
+
         UseSlot(selectionInt);
     }
 
