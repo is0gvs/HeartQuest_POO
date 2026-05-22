@@ -33,7 +33,7 @@ namespace AntiBullyingGame.RPG
 
             if (IsBullyResolved())
             {
-                var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>(FindObjectsInactive.Include);
+                var ds = HeartQuest.UI.DialogueSystem.Instance;
                 if (ds != null)
                 {
                     ds.ShowDialogue("[Mateo]: Perdon. Ya no quiero quitarle cosas a nadie. Gracias por hacerme pensar.");
@@ -49,7 +49,7 @@ namespace AntiBullyingGame.RPG
             {
                 // Si hay diálogo previo, lo mostramos primero.
                 // La batalla se inicia cuando el diálogo termina.
-                var ds = Object.FindAnyObjectByType<HeartQuest.UI.DialogueSystem>(FindObjectsInactive.Include);
+                var ds = HeartQuest.UI.DialogueSystem.Instance;
                 if (ds != null)
                 {
                     PrepareBattleContext();

@@ -8,6 +8,13 @@ public class DialogueManager : MonoBehaviour
 {
     [HideInInspector]
     public bool shouldTalk;
+
+    [Header("Layout del texto de diálogo")]
+    [Tooltip("Posición mundial del texto del jugador")]
+    public Vector3 dialogueTextPosition = new Vector3(-3.82f, 1.08f, 0f);
+    [Tooltip("Tamaño de fuente del texto del jugador")]
+    public float   dialogueFontSize     = 3f;
+
     public TextMeshPro text;
     public GameObject enemyTextBackground;
     public TextMeshPro textEnemy;
@@ -31,7 +38,19 @@ public class DialogueManager : MonoBehaviour
             ApplyBattleBoxTextLayout();
             StartCoroutine(StartTalking(talkAction));
         }
-        
+
+    }
+
+    /// <summary>
+    /// Narra un mensaje SÍ o SÍ, incluso si una narración previa dejó el narrador
+    /// bloqueado (canNarrate=false). Se usa al finalizar la batalla para garantizar
+    /// que el mensaje de cierre se muestre y su callback se ejecute.
+    /// </summary>
+    public void ForceTalk(Action talkAction)
+    {
+        StopAllCoroutines();
+        canNarrate = true;
+        Talking(talkAction);
     }
     void Start()
     {
@@ -66,23 +85,12 @@ public class DialogueManager : MonoBehaviour
 
         text.rectTransform.pivot = new Vector2(0f, 1f);
         text.rectTransform.sizeDelta = new Vector2(7.65f, 1.75f);
-        text.fontSize = 1.75f;
+        text.fontSize = dialogueFontSize;
         text.lineSpacing = -2f;
         text.enableAutoSizing = false;
         text.enableWordWrapping = true;
         text.alignment = TextAlignmentOptions.TopLeft;
-
-        BattleManager bm = BattleManager.battleInstance;
-        if (bm != null && bm.battleBox != null)
-        {
-            Vector3 center = bm.battleBox.transform.position;
-            Vector2 size = bm.battleBox.size;
-            text.transform.position = center + new Vector3(-size.x * 0.43f, size.y * 0.34f, 0f);
-        }
-        else
-        {
-            text.transform.position = new Vector3(-3.8f, -0.45f, 0f);
-        }
+        text.transform.position = dialogueTextPosition;
     }
     IEnumerator StartTalking(Action action)
     {

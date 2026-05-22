@@ -10,11 +10,12 @@ public class Pellet : MonoBehaviour, IFightObject
     private float time;
     public void Spawn()
     {
+        var pm = FindAnyObjectByType<PlayerMovement>();
+        if (pm != null) playerTransform = pm.transform;
     }
 
     public void Tick()
     {
-        playerTransform = FindAnyObjectByType<PlayerMovement>().transform;
         time += Time.deltaTime;
 
         if (type == PelletType.FollowDirect)

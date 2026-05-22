@@ -37,6 +37,12 @@ public class ActingManager : MonoBehaviour
     {
         if (!BattleManager.battleInstance.isFighting && isActing)
         {
+            // Volver a los botones principales (igual que MOCHILA).
+            if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.JoystickButton1))
+            {
+                BattleManager.battleInstance.CloseActingMenu();
+                return;
+            }
             if (selectionInt > maxSelectionInt)
             {
                 selectionInt = 0;
@@ -86,11 +92,34 @@ public class ActingManager : MonoBehaviour
         if (buttons[selectedInt].selected)
         {
             if (soul != null) soul.enabled = false;
+            SetButtonVisual(selectedInt, true);
         }
     }
     void Deselecting(int deselectionInt)
     {
         buttons[deselectionInt].selected = false;
+        SetButtonVisual(deselectionInt, false);
+    }
+
+    /// <summary>
+    /// Resalta la opción seleccionada (color/escala/negrita), espejo del de ItemManager,
+    /// para que APOYAR tenga el mismo seleccionador visual que el menú principal.
+    /// </summary>
+    private void SetButtonVisual(int index, bool selected)
+    {
+        if (index < 0 || index >= buttons.Count || buttons[index] == null) return;
+
+        Transform option = buttons[index].transform;
+        // Resaltado por contorno/halo: NO se altera el color base del botón.
+        option.localScale = selected ? Vector3.one * 1.1f : Vector3.one;
+
+        BattleSelectionHalo.Apply(option, selected);
+
+        TextMeshPro label = option.GetComponentInChildren<TextMeshPro>();
+        if (label != null)
+        {
+            label.fontStyle = selected ? FontStyles.Bold : FontStyles.Normal;
+        }
     }
     void Selection()
     {
@@ -189,6 +218,7 @@ public class ActingManager : MonoBehaviour
         }
 
         actObjects.SetActive(false);
+        BattleManager.battleInstance.SetMainButtonsVisible(true);
         if (buttons[selectedInt].actVars.actTxt.Count <= 2 || buttons[selectedInt].actVars.mercyValue.Count <= 2)
         {
             Debug.Log("We added");

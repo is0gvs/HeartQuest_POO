@@ -63,6 +63,17 @@ public class HablarManager : MonoBehaviour
     };
     private int[] rotationIdx;
 
+    // ── Layout (ajustable desde el Inspector) ────────────────────────────
+    [Header("Layout del submenú")]
+    [Tooltip("Posición mundial absoluta del texto de opciones")]
+    public Vector3 menuPosition      = new Vector3(-5.15f, -1.74f, 0f);
+    [Tooltip("Ancho y alto del área de texto")]
+    public Vector2 menuSize          = new Vector2(11f, 3.8f);
+    [Tooltip("Tamaño de fuente de las opciones")]
+    public float   menuFontSize      = 3f;
+    [Tooltip("Espaciado entre líneas")]
+    public float   menuLineSpacing   = -10f;
+
     // ── Estado ────────────────────────────────────────────────────────────
     private bool        isOpen;
     private int         selectionInt;
@@ -136,16 +147,13 @@ public class HablarManager : MonoBehaviour
         originalLineSpacing = displayText.lineSpacing;
 
         // Aplicar formato del submenú
-        if (bm.battleBox != null)
-        {
-            displayText.transform.position = bm.battleBox.transform.position + new Vector3(-3.55f, 0.78f, 0f);
-            displayText.rectTransform.sizeDelta = new Vector2(7.55f, 1.95f);
-        }
+        displayText.transform.position = menuPosition;
+        displayText.rectTransform.sizeDelta = menuSize;
 
         displayText.alignment          = TextAlignmentOptions.Left;
         displayText.enableWordWrapping = false;
-        displayText.fontSize           = 1.48f;
-        displayText.lineSpacing        = -10f;
+        displayText.fontSize           = menuFontSize;
+        displayText.lineSpacing        = menuLineSpacing;
         displayText.enableAutoSizing   = false;
         displayText.gameObject.SetActive(true);
 
