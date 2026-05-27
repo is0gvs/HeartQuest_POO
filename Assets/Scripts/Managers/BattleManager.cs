@@ -156,6 +156,7 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
+        isHablando = true;
         DialogueManager.instance.dialogueTxt = "* Intentas ignorar las palabras de Mateo.";
         DialogueManager.instance.shouldTalk = false;
         DialogueManager.instance.Talking(() => StartCoroutine(CalmSequence(
@@ -724,6 +725,8 @@ public class BattleManager : MonoBehaviour
 
     public IEnumerator CalmSequence(string playerLine, string mateoLine, int mercyGain)
     {
+        isHablando = true;
+
         if (mercyGain > 0 && actingMgr != null)
         {
             actingMgr.totalMercy = Mathf.Min(actingMgr.totalMercy + mercyGain, actingMgr.totalMercyMax);
@@ -757,6 +760,7 @@ public class BattleManager : MonoBehaviour
 
         if (actingMgr != null && actingMgr.totalMercy >= actingMgr.totalMercyMax)
         {
+            isHablando = false;
             CompleteBullyEncounter("* Mateo entiende que se equivoco y te devuelve la mochila.");
             yield break;
         }
@@ -767,6 +771,8 @@ public class BattleManager : MonoBehaviour
             ItemManager.instance.canAct = true;
             if (ItemManager.instance.itemObjects != null) ItemManager.instance.itemObjects.SetActive(false);
         }
+
+        isHablando = false;
     }
 
     private IEnumerator RunHeartDefense()
@@ -793,6 +799,9 @@ public class BattleManager : MonoBehaviour
         StopAllCoroutines();
         isFighting = false;
         isHablando = false;
+
+        PlayerPrefs.SetInt("BullyMateoResolved", 1);
+        PlayerPrefs.Save();
 
         if (AntiBullyingGame.Managers.SaveManager.Instance != null &&
             !AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Contains(BullyResolvedNpcId))

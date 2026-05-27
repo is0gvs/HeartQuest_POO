@@ -87,7 +87,7 @@ namespace HeartQuest.UI
 
         private void Start()
         {
-            if (dialogueBox != null)
+            if (dialogueBox != null && !isOpen)
             {
                 dialogueBox.SetActive(false);
             }
@@ -254,6 +254,9 @@ namespace HeartQuest.UI
             {
                 StopCoroutine(typingCoroutine);
             }
+
+            dialogueText.text = text;
+            dialogueText.maxVisibleCharacters = 0;
 
             typingCoroutine = StartCoroutine(TypewriterEffect(text));
         }
@@ -527,8 +530,6 @@ namespace HeartQuest.UI
             {
                 // TextMeshPro permite parsear el Rich Text (ej: <color=...>) primero,
                 // y luego revelar los caracteres 1 a 1 usando maxVisibleCharacters.
-                dialogueText.text = text;
-                dialogueText.maxVisibleCharacters = 0;
                 dialogueText.ForceMeshUpdate(); // Construye el texto con etiquetas
             } 
             catch (System.Exception e) 
