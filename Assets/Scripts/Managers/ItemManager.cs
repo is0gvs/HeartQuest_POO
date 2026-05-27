@@ -19,6 +19,7 @@ public class ItemManager : MonoBehaviour
     public float time;
     public bool isMenu;
     public bool canAct = true;
+
     void Start()
     {
         maxSelectionInt = 3;
@@ -31,6 +32,72 @@ public class ItemManager : MonoBehaviour
             useText.fontSize = 1.55f;
             useText.enableAutoSizing = false;
             useText.enableWordWrapping = true;
+        }
+
+        // ── Sincronizar ítems desde el inventario persistente ──
+        SyncFromInventory();
+    }
+
+    /// <summary>
+    /// Lee los ítems del InventoryManager (LinkedList persistente) y los
+    /// escribe en los ItemButtons de la escena de batalla.
+    /// Máximo 4 slots (la cantidad de botones en la UI).
+    /// </summary>
+    public void SyncFromInventory()
+    {
+        if (InventoryManager.instance == null)
+        {
+            Debug.LogWarning("[ItemManager] InventoryManager no encontrado. " +
+                             "Los ítems de batalla quedarán con valores del Inspector.");
+            return;
+        }
+
+        InventoryLinkedList inv = InventoryManager.instance.inventory;
+
+        for (int i = 0; i < buttons.Count; i++)
+        {
+            InventoryItem item = inv.GetItem(i);
+
+            if (item != null)
+            {
+                buttons[i].itemName = item.itemName;
+                buttons[i].itemHeal = item.healAmount;
+                buttons[i].isEmpty = false;
+            }
+            else
+            {
+                // Slot vacío — marcarlo como deshabilitado
+                buttons[i].itemName = "";
+                buttons[i].itemHeal = 0;
+                buttons[i].isEmpty = true;
+            }
+        }
+
+        RefreshButtonLabels();
+        Debug.Log($"[ItemManager] Inventario sincronizado: {Mathf.Min(inv.Count, buttons.Count)} ítems cargados de {inv.Count} disponibles.");
+    }
+
+    /// <summary>
+    /// Actualiza los TextMeshPro de cada botón para reflejar el nombre del ítem
+    /// o "---" si el slot está vacío.
+    /// </summary>
+    private void RefreshButtonLabels()
+    {
+        for (int i = 0; i < buttons.Count; i++)
+        {
+            TextMeshPro label = buttons[i].GetComponentInChildren<TextMeshPro>();
+            if (label == null) continue;
+
+            if (buttons[i].isEmpty)
+            {
+                label.text = "---";
+                label.color = new Color(0.4f, 0.4f, 0.4f, 1f); // Gris apagado
+            }
+            else
+            {
+                label.text = buttons[i].itemName;
+                label.color = Color.white;
+            }
         }
     }
 
@@ -108,8 +175,11 @@ public class ItemManager : MonoBehaviour
             {
                 if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.JoystickButton1))
                 {
-                    BattleManager.battleInstance.CloseItemMenu();
-                    return;
+                    if (canAct)
+                    {
+                        BattleManager.battleInstance.CloseItemMenu();
+                        return;
+                    }
                 }
                 if (canAct && DialogueManager.instance.done)
                 {
@@ -150,7 +220,16 @@ public class ItemManager : MonoBehaviour
         TextMeshPro label = option.GetComponentInChildren<TextMeshPro>();
         if (label != null)
         {
-            label.fontStyle = selected ? FontStyles.Bold : FontStyles.Normal;
+            if (buttons[index].isEmpty)
+            {
+                label.color = new Color(0.4f, 0.4f, 0.4f, 1f);
+                label.fontStyle = FontStyles.Normal;
+            }
+            else
+            {
+                label.color = Color.white;
+                label.fontStyle = selected ? FontStyles.Bold : FontStyles.Normal;
+            }
         }
     }
     void Selection()
@@ -196,81 +275,93 @@ public class ItemManager : MonoBehaviour
 
     void Selected()
     {
+        // ── Bloquear si el slot está vacío ──
+        if (selectionInt >= 0 && selectionInt < buttons.Count && buttons[selectionInt].isEmpty)
+        {
+            // Mostrar mensaje de slot vacío y volver a permitir selección
+            if (useText != null)
+            {
+                useText.gameObject.SetActive(true);
+                useText.text = "* No tienes nada en ese espacio.";
+            }
+            canAct = true;
+            return;
+        }
+
+        // ── Bloquear si la vida está al máximo ──
+        if (PlayerVars.instance != null && PlayerVars.instance.health >= PlayerVars.instance.maxHealth)
+        {
+            if (useText != null)
+            {
+                useText.gameObject.SetActive(true);
+                useText.text = "* Tu HP ya está al máximo.";
+            }
+            canAct = true;
+            return;
+        }
+
+        UseSlot(selectionInt);
+    }
+
+    /// <summary>
+    /// Usa el ítem del slot indicado: cura, muestra diálogo, remueve del inventario,
+    /// y lanza la secuencia de turno enemigo.
+    /// </summary>
+    private void UseSlot(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= buttons.Count) return;
+
+        ItemButtons btn = buttons[slotIndex];
+
+        // Curar al jugador
+        if (PlayerVars.instance != null && PlayerVars.instance.health < PlayerVars.instance.maxHealth)
+        {
+            PlayerVars.instance.Heal(btn.itemHeal);
+        }
+
+        soul.enabled = false;
+
+        // Diálogo
+        DialogueManager.instance.dialogueTxt = $"* Usaste {btn.itemName}. Recuperaste {btn.itemHeal} HP.";
+        DialogueManager.instance.text.gameObject.SetActive(true);
+        DialogueManager.instance.enemyTxt = BattleManager.battleInstance.enemyDialogue[
+            UnityEngine.Random.Range(0, BattleManager.battleInstance.enemyDialogue.Count)];
+        DialogueManager.instance.shouldTalk = true;
+
         Action dialogue = () =>
         {
             DialogueManager.instance.shouldTalk = false;
             StartCoroutine(BattleManager.battleInstance.ItemSequence());
         };
-        if (selectionInt == 0)
-        {
-            if (PlayerVars.instance.health < 20)
-            {
-                PlayerVars.instance.health += buttons[0].itemHeal;
-            }
-            soul.enabled = false;   
-            DialogueManager.instance.dialogueTxt = "* Usaste " + buttons[0].itemName + ". Recuperaste " + buttons[0].itemHeal + " HP.";
-            DialogueManager.instance.text.gameObject.SetActive(true);
-            DialogueManager.instance.enemyTxt = BattleManager.battleInstance.enemyDialogue[UnityEngine.Random.Range(0, BattleManager.battleInstance.enemyDialogue.Count)];
-            DialogueManager.instance.shouldTalk = true;
-            DialogueManager.instance.Talking(dialogue);
-            itemObjects.SetActive(false);
-        }
-        if (selectionInt == 1)
-        {
-            if (PlayerVars.instance.health < 20)
-            {
-                PlayerVars.instance.health += buttons[1].itemHeal;
-            }
-            if (PlayerVars.instance.health > 20)
-            {
-                PlayerVars.instance.health = 20;
-            }
-            soul.enabled = false;
-            DialogueManager.instance.dialogueTxt = "* Usaste " + buttons[1].itemName + ". Recuperaste " + buttons[1].itemHeal + " HP.";
-            DialogueManager.instance.text.gameObject.SetActive(true);
-            DialogueManager.instance.enemyTxt = BattleManager.battleInstance.enemyDialogue[UnityEngine.Random.Range(0, BattleManager.battleInstance.enemyDialogue.Count)];
-            DialogueManager.instance.shouldTalk = true;
-            DialogueManager.instance.Talking(dialogue);
-            itemObjects.SetActive(false);
-        }
-        if (selectionInt == 2)
-        {
-            if (PlayerVars.instance.health < 20)
-            {
-                PlayerVars.instance.health += buttons[2].itemHeal;
-            }
-            if (PlayerVars.instance.health > 20)
-            {
-                PlayerVars.instance.health = 20;
-            }
-            soul.enabled = false;
-            DialogueManager.instance.dialogueTxt = "* Usaste " + buttons[2].itemName + ". Recuperaste " + buttons[2].itemHeal + " HP.";
-            DialogueManager.instance.text.gameObject.SetActive(true);
-            DialogueManager.instance.enemyTxt = BattleManager.battleInstance.enemyDialogue[UnityEngine.Random.Range(0, BattleManager.battleInstance.enemyDialogue.Count)];
-            DialogueManager.instance.shouldTalk = true;
-            DialogueManager.instance.Talking(dialogue);
-            itemObjects.SetActive(false);
-        }
-        if (selectionInt == 3)
-        {
-            if (PlayerVars.instance.health < 20)
-            {
-                PlayerVars.instance.health += buttons[3].itemHeal;
-            }
-            if (PlayerVars.instance.health > 20)
-            {
-                PlayerVars.instance.health = 20;
-            }
-            soul.enabled = false;
-            DialogueManager.instance.dialogueTxt = "* Usaste " + buttons[3].itemName + ". Recuperaste " + buttons[3].itemHeal + " HP.";
-            DialogueManager.instance.text.gameObject.SetActive(true);
-            DialogueManager.instance.enemyTxt = BattleManager.battleInstance.enemyDialogue[UnityEngine.Random.Range(0, BattleManager.battleInstance.enemyDialogue.Count)];
-            DialogueManager.instance.shouldTalk = true;
-            DialogueManager.instance.Talking(dialogue);
-            itemObjects.SetActive(false);
+        DialogueManager.instance.Talking(dialogue);
+        itemObjects.SetActive(false);
 
+        // ── Remover del inventario persistente ──
+        RemoveFromInventory(btn.itemName);
 
+        // Marcar este slot como vacío
+        btn.isEmpty = true;
+        btn.itemName = "";
+        btn.itemHeal = 0;
+
+        // Actualizar etiquetas visuales
+        RefreshButtonLabels();
+    }
+
+    /// <summary>
+    /// Remueve un ítem del InventoryManager persistente y guarda automáticamente.
+    /// </summary>
+    private void RemoveFromInventory(string itemName)
+    {
+        if (InventoryManager.instance == null) return;
+
+        InventoryManager.instance.inventory.RemoveItem(itemName);
+        Debug.Log($"[ItemManager] '{itemName}' removido del inventario persistente. Quedan {InventoryManager.instance.inventory.Count} ítems.");
+
+        // Auto-guardar la partida
+        if (AntiBullyingGame.Managers.SaveManager.Instance != null)
+        {
+            AntiBullyingGame.Managers.SaveManager.Instance.SaveCurrentGameState();
         }
-
     }
 }

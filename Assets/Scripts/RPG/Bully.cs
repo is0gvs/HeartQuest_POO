@@ -26,7 +26,8 @@ namespace AntiBullyingGame.RPG
 
         private bool IsReformed()
         {
-            PlayerPrefs.DeleteKey("BullyMateoResolved");
+            if (PlayerPrefs.GetInt("BullyMateoResolved", 0) == 1) return true;
+
             return AntiBullyingGame.Managers.SaveManager.Instance != null &&
                    AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Contains(BullyResolvedNpcId);
         }

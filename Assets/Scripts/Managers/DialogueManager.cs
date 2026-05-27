@@ -49,6 +49,14 @@ public class DialogueManager : MonoBehaviour
     public void ForceTalk(Action talkAction)
     {
         StopAllCoroutines();
+        if (sources != null)
+        {
+            foreach (var s in sources)
+            {
+                if (s != null) Destroy(s);
+            }
+            sources.Clear();
+        }
         canNarrate = true;
         Talking(talkAction);
     }
@@ -155,7 +163,7 @@ public class DialogueManager : MonoBehaviour
         {
             AudioSource s = audioHolder.AddComponent<AudioSource>();
             textEnemy.text += chars[i];
-            s.clip = clip;
+            s.clip = enemyClip;
             s.pitch = UnityEngine.Random.Range(0.99f, 1);
             s.Play();
             sources.Add(s);

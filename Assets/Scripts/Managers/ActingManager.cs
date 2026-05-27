@@ -42,8 +42,11 @@ public class ActingManager : MonoBehaviour
             // Volver a los botones principales (igual que MOCHILA).
             if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.JoystickButton1))
             {
-                BattleManager.battleInstance.CloseActingMenu();
-                return;
+                if (canAct)
+                {
+                    BattleManager.battleInstance.CloseActingMenu();
+                    return;
+                }
             }
             if (selectionInt > maxSelectionInt)
             {

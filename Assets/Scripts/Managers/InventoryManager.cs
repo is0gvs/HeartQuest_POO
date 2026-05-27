@@ -28,6 +28,13 @@ public class InventoryManager : MonoBehaviour
         if (instance == null)
         {
             instance = this;
+            // Persistir entre escenas para que el inventario esté disponible en BattleScene.
+            // Solo hacemos DontDestroyOnLoad si este componente es raíz o tiene su propio GameObject.
+            // Si comparte GameObject con otro manager, ya será persistente por ese otro script.
+            if (transform.parent == null)
+            {
+                DontDestroyOnLoad(gameObject);
+            }
         }
         else if (instance != this)
         {
@@ -157,8 +164,25 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Devuelve true si la escena actual es la de batalla.
+    /// En ese caso, el inventario visual (OnGUI) se oculta porque
+    /// el ItemManager de batalla maneja la mochila.
+    /// </summary>
+    private bool IsInBattleScene()
+    {
+        return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "BattleScene";
+    }
+
     private void Update()
     {
+        // En BattleScene, cerrar el inventario visual y bloquear el toggle
+        if (IsInBattleScene())
+        {
+            isInventoryOpen = false;
+            return;
+        }
+
         // Al presionar la letra 'Y' o el botón Y del control (JoystickButton3), abrimos o cerramos el inventario
         if (Input.GetKeyDown(KeyCode.Y) || Input.GetKeyDown(KeyCode.JoystickButton3))
         {

@@ -11,4 +11,11 @@ public class ItemButtons : MonoBehaviour
     public Transform soulPosition;
     public string itemName;
     public float itemHeal;
+
+    /// <summary>
+    /// Indica si este slot está vacío (sin ítem asignado).
+    /// Se controla desde ItemManager.SyncFromInventory().
+    /// </summary>
+    [HideInInspector]
+    public bool isEmpty;
 }
