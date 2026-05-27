@@ -135,8 +135,11 @@ public class ItemManager : MonoBehaviour
             {
                 if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.JoystickButton1))
                 {
-                    BattleManager.battleInstance.CloseItemMenu();
-                    return;
+                    if (canAct)
+                    {
+                        BattleManager.battleInstance.CloseItemMenu();
+                        return;
+                    }
                 }
                 if (canAct && DialogueManager.instance.done)
                 {
