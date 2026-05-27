@@ -794,6 +794,9 @@ public class BattleManager : MonoBehaviour
         isFighting = false;
         isHablando = false;
 
+        PlayerPrefs.SetInt("BullyMateoResolved", 1);
+        PlayerPrefs.Save();
+
         if (AntiBullyingGame.Managers.SaveManager.Instance != null &&
             !AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Contains(BullyResolvedNpcId))
         {
