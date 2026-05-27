@@ -942,9 +942,6 @@ MonoBehaviour:
   volumeSlider: {fileID: 0}
   fullscreenToggle: {fileID: 0}
   sceneToLoad: ClassroomScene
-  mainFirstButton: {fileID: 0}
-  optionsFirstButton: {fileID: 0}
-  loadFirstButton: {fileID: 0}
 --- !u!114 &546427497
 MonoBehaviour:
   m_ObjectHideFlags: 0

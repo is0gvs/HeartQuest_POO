@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34ea2ea66c2eb2c41a30a9cff4764e06, type: 3}
+  m_Name: MateoBullyTutorial
+  m_EditorClassIdentifier: Assembly-CSharp::AntiBullyingGame.Core.EnemyCombatData
+  enemyName: MateoBullyTutorial
+  resolvedSaveId: bully_ladron
+  enemySprite: {fileID: -688839582, guid: f3605f34a067a934381f046d971eb1c1, type: 3}
+  nextSceneName: ClassroomScene
+  maxHP: 32
+  attackValue: 10
+  defendValue: 0
+  spareMessage: '* Mateo baja los brazos y decide cambiar.'
+  flavorTexts:
+  - "* Intuitivamente, sientes la tensi\xF3n en el aire."
+  - '* Mateo parece dudar por un segundo.'
+  - '* Tratas de mantener la calma.'
+  hablarOpciones:
+  - label: Asi solo conseguiras odio
+    playerLine: '*Le dices a mateo que ser violento solo conseguira hacer que la
+      gente lo odie'
+    mercyValue: 26
+    startsBattle: 0
+    enemyResponse: '*Parece que esto le llega a mateo, el tambien quiere amigos reales'
+  - label: La violencia no es la solucion
+    playerLine: '*Le dices a mateo que ser violento nunca le va a llevar a nada'
+    mercyValue: 25
+    startsBattle: 1
+    enemyResponse: '*A mateo le ha servido mucho ser violento'
+  - label: No razon para pelear
+    playerLine: '*Tratas de convencer a mateo de que no hay necesidad de pelear'
+    mercyValue: 25
+    startsBattle: 1
+    enemyResponse: '*Mateo no esta interesado en usar sus palabras'
+  - label: Le ofreces tu amistad
+    playerLine: '*Tratas de convencer a mateo de que es mejor ser amigos'
+    mercyValue: 25
+    startsBattle: 0
+    enemyResponse: '*Agarras a Mateo desprevenido, no parece odiar la idea'
+  attackWords:
+  - Burla
+  - Rumor
+  - Insulto
+  - Empujon
+  - Amenaza
+  - Risa
+  minigameDuration: 6.5
+  pelletSpeed: 2.65
+  spawnInterval: 0.4

@@ -33,6 +33,8 @@ public class ActingManager : MonoBehaviour
             actingText.enableAutoSizing = false;
         }
     }
+    private bool axisInUse = false;
+
     void Update()
     {
         if (!BattleManager.battleInstance.isFighting && isActing)
@@ -51,19 +53,57 @@ public class ActingManager : MonoBehaviour
             {
                 selectionInt = 3;
             }
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
+
+            // Joystick/Dpad Axis Navigation
+            float horizontalInput = Input.GetAxisRaw("Horizontal");
+            float verticalInput = Input.GetAxisRaw("Vertical");
+
+            bool leftPressed = Input.GetKeyDown(KeyCode.LeftArrow);
+            bool rightPressed = Input.GetKeyDown(KeyCode.RightArrow);
+            bool upPressed = Input.GetKeyDown(KeyCode.UpArrow);
+            bool downPressed = Input.GetKeyDown(KeyCode.DownArrow);
+
+            if (horizontalInput == 0f && verticalInput == 0f)
+            {
+                axisInUse = false;
+            }
+            else if (!axisInUse)
+            {
+                if (horizontalInput < -0.5f)
+                {
+                    leftPressed = true;
+                    axisInUse = true;
+                }
+                else if (horizontalInput > 0.5f)
+                {
+                    rightPressed = true;
+                    axisInUse = true;
+                }
+                else if (verticalInput < -0.5f)
+                {
+                    downPressed = true;
+                    axisInUse = true;
+                }
+                else if (verticalInput > 0.5f)
+                {
+                    upPressed = true;
+                    axisInUse = true;
+                }
+            }
+
+            if (leftPressed)
             {
                 selectionInt--;
             }
-            if (Input.GetKeyDown(KeyCode.RightArrow))
+            if (rightPressed)
             {
                 selectionInt++;
             }
-            if (Input.GetKeyDown(KeyCode.UpArrow))
+            if (upPressed)
             {
                 selectionInt -= 2;
             }
-            if (Input.GetKeyDown(KeyCode.DownArrow))
+            if (downPressed)
             {
                 selectionInt += 2;
             }
@@ -79,12 +119,8 @@ public class ActingManager : MonoBehaviour
                         Selected();
                     }
                 }
-            
-                
             }
-           
         }
-        
     }
 
     void Selecting(int selectedInt)

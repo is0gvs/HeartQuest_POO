@@ -12,5 +12,7 @@ namespace AntiBullyingGame.Core
         public int morale;
         public List<InventorySaveData> inventory = new List<InventorySaveData>();
         public List<string> interactedNPCs = new List<string>();
+        public string sceneName;
+        public List<string> escenasConIntroVista = new List<string>();
     }
 }

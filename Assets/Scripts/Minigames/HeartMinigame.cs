@@ -99,8 +99,16 @@ public class HeartMinigame : MonoBehaviour
             End(false);
         }
 
-        // ── Find soul ────────────────────────────────────────────────────
+        // Leer configuraciones dinámicas del enemigo si existe
         BattleManager bm = BattleManager.battleInstance;
+        if (bm != null && bm.activeEnemyData != null)
+        {
+            pelletSpeed = bm.activeEnemyData.pelletSpeed;
+            spawnInterval = bm.activeEnemyData.spawnInterval;
+            minigameDuration = bm.activeEnemyData.minigameDuration;
+        }
+
+        // ── Find soul ────────────────────────────────────────────────────
         if (bm != null && bm.soul != null)
         {
             soulTransform = bm.soul.transform;
@@ -209,7 +217,16 @@ public class HeartMinigame : MonoBehaviour
         GameObject go = new GameObject("WordPellet");
 
         TextMeshPro text = go.AddComponent<TextMeshPro>();
-        text.text = attackWords[UnityEngine.Random.Range(0, attackWords.Length)];
+
+        // Cargar palabras dinámicas de ataque
+        string[] words = attackWords;
+        BattleManager bm = BattleManager.battleInstance;
+        if (bm != null && bm.activeEnemyData != null && bm.activeEnemyData.attackWords != null && bm.activeEnemyData.attackWords.Length > 0)
+        {
+            words = bm.activeEnemyData.attackWords;
+        }
+
+        text.text = words[UnityEngine.Random.Range(0, words.Length)];
         text.fontSize = 1.45f;
         text.alignment = TextAlignmentOptions.Center;
         text.color = new Color(1f, 0.9f, 0.25f);

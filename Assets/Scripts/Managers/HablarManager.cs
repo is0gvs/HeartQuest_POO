@@ -84,33 +84,103 @@ public class HablarManager : MonoBehaviour
     private bool        originalWordWrap;
     private bool        originalAutoSizing;
     private float       originalLineSpacing;
+    private string      cachedFlavorText;
 
     // ── Unity ─────────────────────────────────────────────────────────────
+    private int GetOptionsCount()
+    {
+        BattleManager bm = BattleManager.battleInstance;
+        if (bm != null && bm.activeEnemyData != null && bm.activeEnemyData.hablarOpciones != null && bm.activeEnemyData.hablarOpciones.Length > 0)
+        {
+            return bm.activeEnemyData.hablarOpciones.Length;
+        }
+        return optionLabels.Length;
+    }
+
+    private string GetOptionLabel(int idx)
+    {
+        BattleManager bm = BattleManager.battleInstance;
+        if (bm != null && bm.activeEnemyData != null && bm.activeEnemyData.hablarOpciones != null && bm.activeEnemyData.hablarOpciones.Length > 0)
+        {
+            if (idx >= 0 && idx < bm.activeEnemyData.hablarOpciones.Length)
+                return bm.activeEnemyData.hablarOpciones[idx].label;
+        }
+        return (idx >= 0 && idx < optionLabels.Length) ? optionLabels[idx] : "";
+    }
+
     void Awake()
     {
         if (_instance == null) _instance = this;
         else if (_instance != this) { Destroy(gameObject); return; }
-        rotationIdx = new int[dialogueLines.Length];
+        rotationIdx = new int[20];
     }
+
+    private bool axisInUse = false;
 
     void Update()
     {
         if (!isOpen) return;
 
+        // Joystick/Dpad Axis Navigation
+        float horizontalInput = Input.GetAxisRaw("Horizontal");
+        float verticalInput = Input.GetAxisRaw("Vertical");
+
+        bool leftPressed = Input.GetKeyDown(KeyCode.LeftArrow);
+        bool rightPressed = Input.GetKeyDown(KeyCode.RightArrow);
+        bool upPressed = Input.GetKeyDown(KeyCode.UpArrow);
+        bool downPressed = Input.GetKeyDown(KeyCode.DownArrow);
+
+        if (horizontalInput == 0f && verticalInput == 0f)
+        {
+            axisInUse = false;
+        }
+        else if (!axisInUse)
+        {
+            if (horizontalInput < -0.5f)
+            {
+                leftPressed = true;
+                axisInUse = true;
+            }
+            else if (horizontalInput > 0.5f)
+            {
+                rightPressed = true;
+                axisInUse = true;
+            }
+            else if (verticalInput < -0.5f)
+            {
+                downPressed = true;
+                axisInUse = true;
+            }
+            else if (verticalInput > 0.5f)
+            {
+                upPressed = true;
+                axisInUse = true;
+            }
+        }
+
+        int count = GetOptionsCount();
+
         // Navegación
-        if (Input.GetKeyDown(KeyCode.UpArrow))
+        if (upPressed)
             selectionInt = Mathf.Max(0, selectionInt - 1);
 
-        if (Input.GetKeyDown(KeyCode.DownArrow))
-            selectionInt = Mathf.Min(optionLabels.Length - 1, selectionInt + 1);
+        if (downPressed)
+            selectionInt = Mathf.Min(count - 1, selectionInt + 1);
 
-        if (Input.GetKeyDown(KeyCode.RightArrow))
-            selectionInt = selectionInt switch { 0 => 3, 1 => 4, _ => selectionInt };
+        if (rightPressed)
+            selectionInt = selectionInt switch { 0 => (count > 3 ? 3 : selectionInt), 1 => (count > 4 ? 4 : selectionInt), _ => selectionInt };
 
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        if (leftPressed)
             selectionInt = selectionInt switch { 3 => 0, 4 => 1, _ => selectionInt };
 
         RefreshDisplay();
+
+        // Retroceder / Cancelar
+        if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.JoystickButton1))
+        {
+            CloseSubmenu();
+            return;
+        }
 
         // Confirmar
         inputDelay += Time.deltaTime;
@@ -125,12 +195,14 @@ public class HablarManager : MonoBehaviour
     // ── API pública ───────────────────────────────────────────────────────
 
     /// <summary>
-    /// Abre el submenú HABLAR mostrando las 3 opciones dentro del recuadro.
+    /// Abre el submenú HABLAR mostrando las opciones dentro del recuadro.
     /// </summary>
     public void AbrirMenuHablar()
     {
         BattleManager bm = BattleManager.battleInstance;
         if (bm == null) return;
+
+        bm.SetMainButtonsVisible(false); // Ocultar botones principales
 
         displayText = bm.actingMgr.actingText;
         if (displayText == null)
@@ -162,6 +234,15 @@ public class HablarManager : MonoBehaviour
         inputDelay    = 0f;
         bm.isHablando = true;
 
+        // Cachear el texto de sabor UNA sola vez al abrir el menú
+        cachedFlavorText = "* Intuitivamente, sientes la tension en el aire.";
+        if (bm.activeEnemyData != null)
+        {
+            var flavorTexts = bm.activeEnemyData.flavorTexts;
+            if (flavorTexts != null && flavorTexts.Length > 0)
+                cachedFlavorText = flavorTexts[UnityEngine.Random.Range(0, flavorTexts.Length)];
+        }
+
         // Dibujar con cursor en posición correcta ANTES de activar input
         isOpen = false;
         RefreshDisplay();
@@ -178,7 +259,11 @@ public class HablarManager : MonoBehaviour
         isOpen = false;
 
         BattleManager bm = BattleManager.battleInstance;
-        if (bm != null) bm.isHablando = false;
+        if (bm != null)
+        {
+            bm.isHablando = false;
+            bm.SetMainButtonsVisible(true); // Volver a mostrar botones principales
+        }
 
         if (displayText != null)
         {
@@ -191,17 +276,23 @@ public class HablarManager : MonoBehaviour
         }
     }
 
-    /// <summary>Dibuja las 3 opciones con el cursor ♥ en la opción seleccionada.</summary>
+    /// <summary>Dibuja las opciones con el cursor ♥ en la opción seleccionada.</summary>
     private void RefreshDisplay()
     {
         if (displayText == null) return;
 
-        string result =
-            "<color=#8d8d8d>HABLAR</color>\n" +
-            OptionLine(0, 3) +
-            OptionLine(1, 4) +
-            OptionLine(2, -1) +
-            "\n<size=62%><pos=36%><color=#ffffff>* Intuitivamente, sientes la tension en el aire.</color></size>";
+        int count = GetOptionsCount();
+        string result = "<color=#8d8d8d>HABLAR</color>\n";
+
+        // Dibujar en 2 columnas
+        result += OptionLine(0, count > 3 ? 3 : -1);
+        result += OptionLine(1, count > 4 ? 4 : -1);
+        if (count > 2)
+        {
+            result += OptionLine(2, -1);
+        }
+
+        result += $"\n<size=62%><pos=36%><color=#ffffff>{cachedFlavorText}</color></size>";
         displayText.text = result;
     }
 
@@ -214,9 +305,10 @@ public class HablarManager : MonoBehaviour
 
     private string FormatOption(int idx)
     {
+        string labelText = GetOptionLabel(idx);
         string prefix = idx == selectionInt ? "> " : "  ";
         string color = idx == selectionInt ? "#f5e642" : "#d7d7d7";
-        return $"<color={color}>{prefix}{optionLabels[idx]}</color>";
+        return $"<color={color}>{prefix}{labelText}</color>";
     }
 
     /// <summary>Se ejecuta cuando el jugador confirma una opción.</summary>
@@ -225,33 +317,54 @@ public class HablarManager : MonoBehaviour
         BattleManager bm = BattleManager.battleInstance;
         if (bm == null) return;
 
-        if (idx < 0 || idx >= optionLabels.Length) return;
+        int count = GetOptionsCount();
+        if (idx < 0 || idx >= count) return;
 
-        // Línea del jugador (rotación)
-        int rot = rotationIdx[idx];
-        string playerLine = dialogueLines[idx][rot % dialogueLines[idx].Length];
-        rotationIdx[idx] = (rot + 1) % dialogueLines[idx].Length;
+        string playerLine = "";
+        int mercyVal = 0;
+        bool triggersCombat = false;
+        string response = "";
+
+        if (bm.activeEnemyData != null && bm.activeEnemyData.hablarOpciones != null && bm.activeEnemyData.hablarOpciones.Length > 0)
+        {
+            var opt = bm.activeEnemyData.hablarOpciones[idx];
+            playerLine = opt.playerLine;
+            mercyVal = opt.mercyValue;
+            triggersCombat = opt.startsBattle;
+            response = opt.enemyResponse;
+        }
+        else
+        {
+            // Fallbacks de Mateo
+            int rot = rotationIdx[idx];
+            playerLine = dialogueLines[idx][rot % dialogueLines[idx].Length];
+            rotationIdx[idx] = (rot + 1) % dialogueLines[idx].Length;
+            mercyVal = mercyValues[idx];
+            triggersCombat = startsBattle[idx];
+            response = mateoResponses[idx];
+        }
 
         // Mercy
-        bm.actingMgr.totalMercy = Mathf.Min(bm.actingMgr.totalMercy + mercyValues[idx], bm.actingMgr.totalMercyMax);
-        Debug.Log($"[HablarManager] Opción {idx} — Mercy +{mercyValues[idx]} → total {bm.actingMgr.totalMercy}");
+        bm.actingMgr.totalMercy = Mathf.Min(bm.actingMgr.totalMercy + mercyVal, bm.actingMgr.totalMercyMax);
+        Debug.Log($"[HablarManager] Opción {idx} — Mercy +{mercyVal} → total {bm.actingMgr.totalMercy}");
 
         // shouldTalk = false siempre — nunca activar EnemyTalking ni el panel flotante
         DialogueManager.instance.shouldTalk = false;
         if (bm.actingMgr.totalMercy >= bm.actingMgr.totalMercyMax)
         {
+            string endMessage = bm.activeEnemyData != null ? bm.activeEnemyData.spareMessage : "* Mateo entiende el dano que hizo y decide cambiar.";
             bm.StartCoroutine(bm.CalmSequence(
                 playerLine,
-                "* Mateo entiende el dano que hizo y decide cambiar.",
+                endMessage,
                 0));
         }
-        else if (startsBattle[idx])
+        else if (triggersCombat)
         {
             DialogueManager.instance.dialogueTxt = playerLine;
             Action afterPlayerTalk = () =>
             {
                 DialogueManager.instance.shouldTalk = false;
-                DialogueManager.instance.dialogueTxt = mateoResponses[idx];
+                DialogueManager.instance.dialogueTxt = response;
                 DialogueManager.instance.Talking(() => bm.StartCoroutine(bm.ActingSequence()));
             };
             DialogueManager.instance.Talking(afterPlayerTalk);
@@ -260,8 +373,9 @@ public class HablarManager : MonoBehaviour
         {
             bm.StartCoroutine(bm.CalmSequence(
                 playerLine,
-                mateoResponses[idx],
+                response,
                 0));
         }
     }
 }
+

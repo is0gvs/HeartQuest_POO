@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48523a17e88479544aecb45b66eb2bb6, type: 3}
+  m_Name: TutorialAutoDialogue
+  m_EditorClassIdentifier: Assembly-CSharp::HeartQuest.Core.DialogueData
+  lines:
+  - speakerName: 
+    text: "Otra vez este sue\xF1o. (Dale a la barra espaciadora o al boton A del
+      control para seguir el dialogo)"
+    portrait: {fileID: 0}
+  - speakerName: 
+    text: "Ma\xF1ana es mi primer dia de clases, no he podido dejar de pensar en
+      eso."
+    portrait: {fileID: 0}
+  - speakerName: 
+    text: Hay otra persona, voy a hablar con el, espero que sea amable.
+    portrait: {fileID: 0}
+  choices: []
+  requiresNameInput: 0
+  nextDialogueAfterInput: {fileID: 0}
+  moraleChangeOnComplete: 0
+  triggersBattle: 0

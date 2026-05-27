@@ -18,6 +18,7 @@ namespace AntiBullyingGame.Managers
         
         // Estado temporal en memoria
         public List<string> interactedNPCs = new List<string>();
+        public List<string> escenasConIntroVista = new List<string>();
 
         private void Awake()
         {
@@ -41,7 +42,6 @@ namespace AntiBullyingGame.Managers
             string[] files = Directory.GetFiles(Application.persistentDataPath, "save_*.json");
             if (files.Length > 0)
             {
-                // Ordenar por fecha de modificación descendente (el más reciente primero)
                 System.Array.Sort(files, (a, b) => File.GetLastWriteTime(b).CompareTo(File.GetLastWriteTime(a)));
                 currentSaveFileName = Path.GetFileName(files[0]);
                 Debug.Log($"[SaveManager] Perfil más reciente encontrado: {currentSaveFileName}");
@@ -57,10 +57,9 @@ namespace AntiBullyingGame.Managers
         {
             currentSaveFileName = $"save_{System.DateTime.Now:yyyyMMdd_HHmmss}.json";
             
-            // IMPORTANTE: Limpiar la memoria para no arrastrar NPCs de la partida anterior
             interactedNPCs.Clear();
+            escenasConIntroVista.Clear();
             PlayerPrefs.DeleteKey("BullyMateoResolved");
-            // Limpiar el regreso de batalla para no aparecer frente al bully al iniciar una partida nueva.
             PlayerPrefs.DeleteKey("ShouldRestoreBattleReturn");
             PlayerPrefs.DeleteKey("BattleReturnX");
             PlayerPrefs.DeleteKey("BattleReturnY");
@@ -69,8 +68,6 @@ namespace AntiBullyingGame.Managers
             
             Debug.Log($"[SaveManager] Nuevo perfil asignado: {currentSaveFileName}");
 
-            // Al crear una nueva partida, si el InventoryManager sobrevive entre escenas (DontDestroyOnLoad),
-            // debemos forzarlo a reiniciarse para que te dé los objetos iniciales de nuevo.
             InventoryManager inv = FindAnyObjectByType<InventoryManager>();
             if (inv != null)
             {
@@ -113,18 +110,17 @@ namespace AntiBullyingGame.Managers
             if (loadOnSceneLoad)
             {
                 LoadCurrentGameState();
-                loadOnSceneLoad = false; // Reset the flag after loading
+                loadOnSceneLoad = false; 
             }
         }
 
         #region CRUD Operations
 
-        // CREATE / UPDATE
         public void SaveGame(SaveData data)
         {
             try
             {
-                string json = JsonUtility.ToJson(data, true); // true para formato bonito/legible
+                string json = JsonUtility.ToJson(data, true); 
                 File.WriteAllText(CurrentSaveFilePath, json);
                 Debug.Log($"[SaveManager] Partida guardada exitosamente en: {CurrentSaveFilePath}");
             }
@@ -134,7 +130,6 @@ namespace AntiBullyingGame.Managers
             }
         }
 
-        // READ
         public SaveData LoadGame()
         {
             if (HasSaveFile())
@@ -157,7 +152,6 @@ namespace AntiBullyingGame.Managers
             return null;
         }
 
-        // DELETE
         public void DeleteSave()
         {
             if (HasSaveFile())
@@ -174,27 +168,39 @@ namespace AntiBullyingGame.Managers
             }
         }
 
-        // VERIFY
         public bool HasSaveFile()
         {
             return File.Exists(CurrentSaveFilePath);
+        }
+
+        // --- NUEVO MÉTODO PARA LEER LA ESCENA ANTES DE CARGAR ---
+        public string GetSavedSceneName()
+        {
+            SaveData data = LoadGame();
+            if (data != null && !string.IsNullOrEmpty(data.sceneName))
+            {
+                return data.sceneName;
+            }
+            return "ClassroomScene"; // Escena por defecto si algo falla
         }
 
         #endregion
 
         #region Game Integration
 
-        // Método para ser llamado desde un menú o botón (Guarda el estado actual)
         public void SaveCurrentGameState()
         {
             SaveData data = new SaveData();
+
+            // 0. GUARDAR ESCENA ACTUAL
+            data.sceneName = SceneManager.GetActiveScene().name;
 
             data.position = new float[3];
 
             // 1. VIDA
             if (PlayerVars.instance != null)
             {
-                data.health = (int)PlayerVars.instance.health; // evita error float -> int
+                data.health = (int)PlayerVars.instance.health;
             }
 
             // 2. POSICIÓN
@@ -219,7 +225,6 @@ namespace AntiBullyingGame.Managers
 
             // 4. INVENTARIO 
             InventoryManager inv = FindAnyObjectByType<InventoryManager>();
-
             if (inv != null)
             {
                 data.inventory = inv.inventory.ToSaveData();
@@ -228,25 +233,24 @@ namespace AntiBullyingGame.Managers
             // 5. NPCs INTERACTUADOS
             data.interactedNPCs = new List<string>(this.interactedNPCs);
 
+            // 6. ESCENAS Interactuadas
+            data.escenasConIntroVista = new List<string>(this.escenasConIntroVista);
+
             // GUARDAR TODO
             SaveGame(data);
         }
 
-        // Método para ser llamado desde el botón "Cargar Partida" (Carga el estado actual)
         public void LoadCurrentGameState()
         {
             SaveData data = LoadGame();
 
             if (data != null)
             {
-                // 1. Aplicar Vida
                 if (PlayerVars.instance != null)
                 {
-                    // Asignamos directamente la vida. Se sugiere crear un método SetHealth si es necesario encapsular.
                     PlayerVars.instance.health = data.health;
                 }
 
-                // 2. Aplicar Posición y Moral
                 Player player = FindAnyObjectByType<Player>();
                 if (player != null)
                 {
@@ -261,7 +265,6 @@ namespace AntiBullyingGame.Managers
                     player.SetMorale(data.morale);
                 }
 
-                // Sincronizar con el GameManager para que la UI se actualice
                 GameManager gm = FindAnyObjectByType<GameManager>();
                 if (gm != null)
                 {
@@ -274,7 +277,6 @@ namespace AntiBullyingGame.Managers
                     inv.LoadInventory(data.inventory);
                 }
 
-                // Cargar NPCs
                 if (data.interactedNPCs != null)
                 {
                     this.interactedNPCs = new List<string>(data.interactedNPCs);
@@ -282,6 +284,15 @@ namespace AntiBullyingGame.Managers
                 else
                 {
                     this.interactedNPCs.Clear();
+                }
+
+                if (data.escenasConIntroVista != null)
+                {
+                    this.escenasConIntroVista = new List<string>(data.escenasConIntroVista);
+                }
+                else
+                {
+                    this.escenasConIntroVista.Clear();
                 }
 
                 if (player != null || gm != null)

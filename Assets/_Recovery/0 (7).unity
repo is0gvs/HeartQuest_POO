@@ -2696,11 +2696,10 @@ MonoBehaviour:
   loadContentTransform: {fileID: 2135508340}
   volumeSlider: {fileID: 1894144646}
   fullscreenToggle: {fileID: 902688437}
-  newGameScene: TutorialScene
-  fallbackScene: ClassroomScene
-  mainFirstButton: {fileID: 1352597371}
-  optionsFirstButton: {fileID: 1932608961}
-  loadFirstButton: {fileID: 1051857382}
+  sceneToLoad: ClassroomScene
+  mainFirstButton: {fileID: 0}
+  optionsFirstButton: {fileID: 0}
+  loadFirstButton: {fileID: 0}
 --- !u!114 &1728887829
 MonoBehaviour:
   m_ObjectHideFlags: 0

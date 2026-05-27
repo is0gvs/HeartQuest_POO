@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-
 public class BattleManager : MonoBehaviour
 {
     [HideInInspector]
@@ -32,7 +31,6 @@ public class BattleManager : MonoBehaviour
     public GameObject damageSprite;
     const float SIZE_INCREASE = 18f;
     public List<string> enemyDialogue;
-
     [HideInInspector]
     public Action isFinished;
     public Attacking attackingSys;
@@ -46,6 +44,8 @@ public class BattleManager : MonoBehaviour
     private const float HealthBarHeight = 0.35f;
     private const string BullyResolvedNpcId = "bully_mateo_reformed";
     public float damage;
+    [Header("Configuración de Combate Dinámico")]
+    public AntiBullyingGame.Core.EnemyCombatData activeEnemyData;
     /// <summary>
     /// Opens the HABLAR submenu. HablarManager auto-creates if not in scene.
     /// </summary>
@@ -65,6 +65,7 @@ public class BattleManager : MonoBehaviour
     {
         actingMgr.actObjects.SetActive(true);
         actingMgr.isActing = true;
+        actingMgr.time = 0f; // Reiniciar tiempo al abrir
         SetMainButtonsVisible(false);
         if (actingMgr.actingText != null)
         {
@@ -81,6 +82,7 @@ public class BattleManager : MonoBehaviour
     {
         ItemManager.instance.isMenu = true;
         ItemManager.instance.canAct = true;
+        ItemManager.instance.time = 0f; // Reiniciar tiempo al abrir
         isFighting = false;
         ItemManager.instance.itemObjects.SetActive(true);
         SetMainButtonsVisible(false);
@@ -91,7 +93,6 @@ public class BattleManager : MonoBehaviour
         }
         audioMgr.Selecting();
     }
-
     /// <summary>
     /// Muestra u oculta los botones principales (HABLAR, APOYAR, MOCHILA, IGNORAR).
     /// </summary>
@@ -101,7 +102,6 @@ public class BattleManager : MonoBehaviour
         foreach (var btn in buttons)
             if (btn != null) btn.gameObject.SetActive(visible);
     }
-
     /// <summary>
     /// Cierra el menú de la MOCHILA y regresa a los botones principales sin usar item.
     /// </summary>
@@ -122,7 +122,6 @@ public class BattleManager : MonoBehaviour
         SetMainButtonsVisible(true);
         if (audioMgr != null) audioMgr.Selecting();
     }
-
     /// <summary>
     /// Cierra el submenú de APOYAR y regresa a los botones principales sin realizar un acto.
     /// Espejo de CloseItemMenu para mantener el mismo patrón de navegación.
@@ -155,7 +154,6 @@ public class BattleManager : MonoBehaviour
             audioMgr.Selecting();
             return;
         }
-
         DialogueManager.instance.dialogueTxt = "* Intentas ignorar las palabras de Mateo.";
         DialogueManager.instance.shouldTalk = false;
         DialogueManager.instance.Talking(() => StartCoroutine(CalmSequence(
@@ -164,23 +162,95 @@ public class BattleManager : MonoBehaviour
             4)));
         audioMgr.Selecting();
     }
-
     void Start()
     {
         selectionInt = 0;
         maxSelectionInt = 3;
         minSelectionInt = 0;
         playerVariables = FindAnyObjectByType<PlayerVars>();
+        // Cargar datos de combate dinámicamente
+        string enemyName = PlayerPrefs.GetString("CurrentEnemy", "Mateo el Bully");
+        if (activeEnemyData == null)
+        {
+            activeEnemyData = Resources.Load<AntiBullyingGame.Core.EnemyCombatData>("CombatData/" + enemyName);
+        }
+        // De respaldo, si no se encuentra el asset, creamos una configuración para Mateo
+        if (activeEnemyData == null)
+        {
+            activeEnemyData = ScriptableObject.CreateInstance<AntiBullyingGame.Core.EnemyCombatData>();
+            activeEnemyData.enemyName = enemyName;
+            activeEnemyData.maxHP = 32f;
+            activeEnemyData.attackValue = 5f;
+            activeEnemyData.defendValue = 0f;
+            activeEnemyData.resolvedSaveId = "bully_mateo_reformed";
+            activeEnemyData.spareMessage = "* Mateo baja la mirada y te devuelve la mochila.";
+            activeEnemyData.flavorTexts = new string[] {
+                "* Intuitivamente, sientes la tension en el aire.",
+                "* Mateo parece dudar por un segundo.",
+                "* Tratas de mantener la calma."
+            };
+        }
+        // Asegurar que exista el componente EnemyVars en la escena
         enemyVariables = FindAnyObjectByType<EnemyVars>();
+        if (enemyVariables == null)
+        {
+            GameObject enemySpriteGO = GameObject.Find("EnemySprite");
+            if (enemySpriteGO != null)
+            {
+                enemyVariables = enemySpriteGO.AddComponent<EnemyVars>();
+            }
+            else
+            {
+                GameObject varsGO = new GameObject("EnemyVars_Runtime");
+                enemyVariables = varsGO.AddComponent<EnemyVars>();
+            }
+        }
+        // Inicializar stats del enemigo
         if (enemyVariables != null)
         {
-            if (enemyVariables.maxHP <= 0f) enemyVariables.maxHP = 32f;
-            if (enemyVariables.curHP <= 0f) enemyVariables.curHP = enemyVariables.maxHP;
-            if (enemyVariables.defendValue < 0f) enemyVariables.defendValue = 0f;
+            enemyVariables.maxHP = activeEnemyData.maxHP;
+            enemyVariables.curHP = activeEnemyData.maxHP;
+            enemyVariables.attackValue = activeEnemyData.attackValue;
+            enemyVariables.defendValue = activeEnemyData.defendValue;
+        }
+        // Actualizar sprite si está configurado
+        if (activeEnemyData.enemySprite != null)
+        {
+            GameObject enemySpriteGO = GameObject.Find("EnemySprite");
+            if (enemySpriteGO != null)
+            {
+                SpriteRenderer sr = enemySpriteGO.GetComponent<SpriteRenderer>();
+                if (sr != null) sr.sprite = activeEnemyData.enemySprite;
+            }
+        }
+        // Configurar ActingManager
+        if (actingMgr != null)
+        {
+            actingMgr.spareMessage = activeEnemyData.spareMessage;
+            actingMgr.flavorText = new List<string>(activeEnemyData.flavorTexts);
+        }
+        // Configurar diálogos del enemigo
+        if (activeEnemyData.hablarOpciones != null && activeEnemyData.hablarOpciones.Length > 0)
+        {
+            enemyDialogue = new List<string>();
+            foreach (var opt in activeEnemyData.hablarOpciones)
+            {
+                if (opt.startsBattle && !string.IsNullOrEmpty(opt.enemyResponse))
+                {
+                    enemyDialogue.Add(opt.enemyResponse);
+                }
+            }
+        }
+        if (enemyDialogue == null || enemyDialogue.Count == 0)
+        {
+            enemyDialogue = new List<string> {
+                "¡No te metas donde no te llaman!",
+                "¿Acaso quieres ser el siguiente?",
+                "¡Déjanos en paz!"
+            };
         }
         if (overrideLayout) NormalizeBattleLayout();
         NormalizeButtonFonts();
-
         // Inspector-first: use the singleton set in Awake.
         // Fallback only if Inspector ref was missed.
         attackMgr = AttackManager.instance;
@@ -192,7 +262,6 @@ public class BattleManager : MonoBehaviour
             else
                 Debug.LogWarning("BattleManager: No existe AttackManager en la escena. El turno del enemigo se saltará.");
         }
-
         if (attackingSys == null)
         {
             attackingSys = FindAnyObjectByType<Attacking>();
@@ -202,7 +271,7 @@ public class BattleManager : MonoBehaviour
                 Debug.LogWarning("BattleManager: No existe Attacking en la escena. El minijuego de ataque se saltará.");
         }
     }
-
+    private bool axisInUse = false;
     void Update()
     {
         //when the player is not fighting nor acting nor in HABLAR submenu, these if statements get called
@@ -222,16 +291,36 @@ public class BattleManager : MonoBehaviour
             {
                 selectionInt = 3;
             }
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
+            // Joystick/Dpad Axis Navigation
+            float horizontalInput = Input.GetAxisRaw("Horizontal");
+            bool leftPressed = Input.GetKeyDown(KeyCode.LeftArrow);
+            bool rightPressed = Input.GetKeyDown(KeyCode.RightArrow);
+            if (horizontalInput == 0f)
+            {
+                axisInUse = false;
+            }
+            else if (!axisInUse)
+            {
+                if (horizontalInput < -0.5f)
+                {
+                    leftPressed = true;
+                    axisInUse = true;
+                }
+                else if (horizontalInput > 0.5f)
+                {
+                    rightPressed = true;
+                    axisInUse = true;
+                }
+            }
+            if (leftPressed)
             {
                 selectionInt--;
             }
-            if (Input.GetKeyDown(KeyCode.RightArrow))
+            if (rightPressed)
             {
                 selectionInt++;
             }
             Selection();
-
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.JoystickButton0))
             {
                 Selected();
@@ -244,7 +333,6 @@ public class BattleManager : MonoBehaviour
             var pm = playerVariables.GetComponent<PlayerMovement>();
             if (pm != null) pm.enabled = false;
         }
-
         // Bug fix: Null-guard to prevent NullReferenceException every frame when
         // any Inspector reference is missing.
         if (playerVariables != null && healthTxt != null && healthMeter != null)
@@ -253,7 +341,6 @@ public class BattleManager : MonoBehaviour
             float currentHealth = Mathf.Clamp(playerVariables.health, 0f, maxHealth);
             float ratio = Mathf.Clamp01(currentHealth / maxHealth);
             healthTxt.text = $"VIDA {Mathf.CeilToInt(currentHealth)} / {Mathf.CeilToInt(maxHealth)}";
-
             if (healthFillRenderer != null)
             {
                 healthFillRenderer.size = new Vector2(HealthBarWidth * ratio, HealthBarHeight);
@@ -262,9 +349,7 @@ public class BattleManager : MonoBehaviour
                     ratio > 0.2f ? new Color(1f, 0.75f, 0.15f, 1f) : new Color(1f, 0.15f, 0.25f, 1f);
             }
         }
-
     }
-
     private void NormalizeButtonFonts()
     {
         // Botones principales (HABLAR, APOYAR, MOCHILA, IGNORAR)
@@ -285,7 +370,6 @@ public class BattleManager : MonoBehaviour
                 }
             }
         }
-
         // Botones de items (MOCHILA submenu)
         if (ItemManager.instance != null && ItemManager.instance.itemObjects != null)
         {
@@ -302,7 +386,6 @@ public class BattleManager : MonoBehaviour
                 }
             }
         }
-
         // Botones de acts (APOYAR submenu)
         if (actingMgr != null && actingMgr.actObjects != null)
         {
@@ -320,7 +403,6 @@ public class BattleManager : MonoBehaviour
             }
         }
     }
-
     private void NormalizeBattleLayout()
     {
         if (soul != null)
@@ -329,13 +411,11 @@ public class BattleManager : MonoBehaviour
             soul.transform.localScale = Vector3.one * 0.28f;
             soul.sortingOrder = 12;
         }
-
         if (battleBox != null)
         {
             battleBox.transform.position = new Vector3(0f, -1.2f, 0f);
             battleBox.size = BoxRectangleSize;
         }
-
         if (actingMgr != null && actingMgr.actingText != null && battleBox != null)
         {
             TextMeshPro text = actingMgr.actingText;
@@ -348,7 +428,6 @@ public class BattleManager : MonoBehaviour
             text.lineSpacing = -2f;
             text.enableAutoSizing = false;
         }
-
         if (healthMeter != null)
         {
             healthMeter.transform.position = new Vector3(0f, -4.45f, 0f);
@@ -360,7 +439,6 @@ public class BattleManager : MonoBehaviour
                 healthFillRenderer.size = new Vector2(HealthBarWidth, HealthBarHeight);
                 healthFillRenderer.color = new Color(0.2f, 0.9f, 0.35f, 1f);
                 healthFillRenderer.sortingOrder = 7;
-
                 GameObject bg = new GameObject("HPBar_RuntimeBG");
                 bg.transform.position = healthMeter.transform.position + new Vector3(0f, 0f, 0.05f);
                 healthBackRenderer = bg.AddComponent<SpriteRenderer>();
@@ -371,7 +449,6 @@ public class BattleManager : MonoBehaviour
                 healthBackRenderer.sortingOrder = 6;
             }
         }
-
         if (healthTxt != null)
         {
             healthTxt.transform.position = new Vector3(-3.3f, -4.43f, 0f);
@@ -381,24 +458,19 @@ public class BattleManager : MonoBehaviour
             healthTxt.alignment = TextAlignmentOptions.Left;
             healthTxt.sortingOrder = 9;
         }
-
         PositionSubmenu(itemObjects: ItemManager.instance != null ? ItemManager.instance.itemObjects : null, y: -3.18f);
         PositionSubmenu(actingMgr != null ? actingMgr.actObjects : null, -3.18f);
         PositionMainButtons();
     }
-
     private void PositionMainButtons()
     {
         if (buttons == null || buttons.Count == 0) return;
-
         float[] xs = { -3.45f, -1.15f, 1.15f, 3.45f };
         for (int i = 0; i < buttons.Count && i < xs.Length; i++)
         {
             if (buttons[i] == null) continue;
-
             buttons[i].transform.position = new Vector3(xs[i], -3.62f, 0f);
             buttons[i].transform.localScale = new Vector3(0.72f, 0.72f, 1f);
-
             TextMeshPro label = buttons[i].GetComponentInChildren<TextMeshPro>();
             if (label != null)
             {
@@ -409,24 +481,20 @@ public class BattleManager : MonoBehaviour
                 label.rectTransform.sizeDelta = new Vector2(2.25f, 0.8f);
                 label.alignment = TextAlignmentOptions.Center;
             }
-
             if (buttons[i].soulPosition != null)
             {
                 buttons[i].soulPosition.position = buttons[i].transform.position + new Vector3(-0.65f, 0f, 0f);
             }
         }
     }
-
     private void PositionSubmenu(GameObject itemObjects, float y)
     {
         if (itemObjects == null) return;
-
         float[] xs = { -3.45f, -1.15f, 1.15f, 3.45f };
         for (int i = 0; i < itemObjects.transform.childCount && i < xs.Length; i++)
         {
             Transform child = itemObjects.transform.GetChild(i);
             child.position = new Vector3(xs[i], y, 0f);
-
             TextMeshPro label = child.GetComponentInChildren<TextMeshPro>();
             if (label != null)
             {
@@ -438,7 +506,6 @@ public class BattleManager : MonoBehaviour
             }
         }
     }
-
     /// <summary>
     /// The method responsible for selecting, when a method is selected the soul will be positioned on the selected button.
     /// </summary>
@@ -469,7 +536,6 @@ public class BattleManager : MonoBehaviour
     /// </summary>
     void Selection()
     {
-
         if (selectionInt == 0)
         {
             if (!buttons[selectionInt].selected)
@@ -554,21 +620,17 @@ public class BattleManager : MonoBehaviour
     IEnumerator AttackSequence()
     {
         isFighting = true;
-
         Action onBoxFinish = () =>
         {
             actingMgr.actingText.gameObject.SetActive(true);
         };
-
         isFinished = () =>
         {
             SafeResize(BoxRectangleSize, onBoxFinish);
             attackMgr.attackFinished = !attackMgr.attackFinished;
             isFighting = false;
         };
-
         playerVariables.GetComponent<SpriteRenderer>().enabled = false;
-
         if (attackingSys != null)
         {
             attackingSys.StartAttacking(playerVariables.atkValue);
@@ -579,13 +641,11 @@ public class BattleManager : MonoBehaviour
             Debug.LogWarning("No hay objeto Attacking en la escena. Saltando minijuego de ataque del jugador para evitar errores.");
             yield return new WaitForSeconds(1f);
         }
-
         if (enemyVariables != null && enemyVariables.curHP <= 0f)
         {
             CompleteBullyEncounter("* Mateo deja de pelear y te devuelve la mochila.");
             yield break;
         }
-
         playerVariables.transform.position = battleBox != null ? battleBox.transform.position : new Vector3(0, -1.7f, 0);
         SafeResize(new Vector2(3, 3), null);
         actingMgr.actingText.gameObject.SetActive(false);
@@ -633,7 +693,6 @@ public class BattleManager : MonoBehaviour
             DialogueManager.instance.Talking(null);
             actingMgr.actObjects.SetActive(false);
             actingMgr.canAct = true;
-
         };
         yield return new WaitForSeconds(1);
         playerVariables.transform.position = battleBox != null ? battleBox.transform.position : new Vector3(0, -1.7f, 0);
@@ -650,7 +709,6 @@ public class BattleManager : MonoBehaviour
         }
         isFinished?.Invoke();
     }
-
     public IEnumerator ItemSequence()
     {
         //The selection soul, gets disabled in preperation for the attack this round.
@@ -678,7 +736,6 @@ public class BattleManager : MonoBehaviour
             actingMgr.actObjects.SetActive(false);
             ItemManager.instance.itemObjects.SetActive(false);
             actingMgr.canAct = true;
-
         };
         yield return new WaitForSeconds(1);
         // No hay minijuego al usar un item: la caja se mantiene rectangular.
@@ -694,18 +751,15 @@ public class BattleManager : MonoBehaviour
             "* Mateo intenta molestarte, pero no logra sacarte de foco.",
             0);
     }
-
     private IEnumerator IgnoreSequence()
     {
         if (actingMgr != null && actingMgr.actingText != null)
         {
             actingMgr.actingText.gameObject.SetActive(false);
         }
-
         isFighting = true;
         SafeResize(new Vector2(3f, 3f), null);
         yield return RunHeartDefense();
-
         isFighting = false;
         if (soul != null)
         {
@@ -721,28 +775,23 @@ public class BattleManager : MonoBehaviour
             }
         });
     }
-
     public IEnumerator CalmSequence(string playerLine, string mateoLine, int mercyGain)
     {
         if (mercyGain > 0 && actingMgr != null)
         {
             actingMgr.totalMercy = Mathf.Min(actingMgr.totalMercy + mercyGain, actingMgr.totalMercyMax);
         }
-
         isFighting = false;
         if (soul != null) soul.enabled = false;
-
         DialogueManager.instance.shouldTalk = false;
         DialogueManager.instance.dialogueTxt = playerLine;
         bool firstDone = false;
         DialogueManager.instance.Talking(() => firstDone = true);
         yield return new WaitUntil(() => firstDone);
-
         DialogueManager.instance.dialogueTxt = mateoLine;
         bool secondDone = false;
         DialogueManager.instance.Talking(() => secondDone = true);
         yield return new WaitUntil(() => secondDone);
-
         if (actingMgr != null)
         {
             actingMgr.isActing = false;
@@ -754,13 +803,11 @@ public class BattleManager : MonoBehaviour
                 actingMgr.actingText.gameObject.SetActive(true);
             }
         }
-
         if (actingMgr != null && actingMgr.totalMercy >= actingMgr.totalMercyMax)
         {
             CompleteBullyEncounter("* Mateo entiende que se equivoco y te devuelve la mochila.");
             yield break;
         }
-
         if (ItemManager.instance != null)
         {
             ItemManager.instance.isMenu = false;
@@ -768,7 +815,6 @@ public class BattleManager : MonoBehaviour
             if (ItemManager.instance.itemObjects != null) ItemManager.instance.itemObjects.SetActive(false);
         }
     }
-
     private IEnumerator RunHeartDefense()
     {
         bool done = false;
@@ -780,35 +826,31 @@ public class BattleManager : MonoBehaviour
             elapsed += Time.unscaledDeltaTime;
             yield return null;
         }
-
         if (!done)
         {
             Debug.LogWarning("BattleManager: el minijuego no reportó fin a tiempo. Cerrando turno por timeout.");
             HeartMinigame.instance.StopMinigame();
         }
     }
-
     public void CompleteBullyEncounter(string message)
     {
         StopAllCoroutines();
         isFighting = false;
         isHablando = false;
-
+        string resolvedId = activeEnemyData != null ? activeEnemyData.resolvedSaveId : BullyResolvedNpcId;
         if (AntiBullyingGame.Managers.SaveManager.Instance != null &&
-            !AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Contains(BullyResolvedNpcId))
+            !string.IsNullOrEmpty(resolvedId) &&
+            !AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Contains(resolvedId))
         {
-            AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Add(BullyResolvedNpcId);
+            AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Add(resolvedId);
         }
-
         if (soul != null) soul.enabled = false;
         if (actingMgr != null && actingMgr.actObjects != null) actingMgr.actObjects.SetActive(false);
         if (ItemManager.instance != null && ItemManager.instance.itemObjects != null) ItemManager.instance.itemObjects.SetActive(false);
         HeartMinigame.instance.StopMinigame();
-
         // Arranca tras StopAllCoroutines para que sobreviva y garantice el regreso al mundo.
         StartCoroutine(EndEncounterRoutine(message));
     }
-
     /// <summary>
     /// Muestra el mensaje de cierre y regresa a la escena del mundo. Usa un timeout
     /// para no quedarse atascado en la batalla si la narración falla.
@@ -817,30 +859,32 @@ public class BattleManager : MonoBehaviour
     {
         DialogueManager.instance.shouldTalk = false;
         DialogueManager.instance.dialogueTxt = message;
-
         bool shown = false;
         DialogueManager.instance.ForceTalk(() => shown = true);
-
         float elapsed = 0f;
         while (!shown && elapsed < 5f)
         {
             elapsed += Time.unscaledDeltaTime;
             yield return null;
         }
-
         // Pausa para que el jugador alcance a leer el mensaje antes de cambiar de escena.
         yield return new WaitForSecondsRealtime(1.5f);
         ReturnToPreviousScene();
     }
-
     private void ReturnToPreviousScene()
     {
+        // Prioridad 1: la escena configurada en el EnemyCombatData del enemigo
+        if (activeEnemyData != null && !string.IsNullOrWhiteSpace(activeEnemyData.nextSceneName))
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(activeEnemyData.nextSceneName);
+            return;
+        }
+        // Prioridad 2: la escena de donde vino el jugador (fallback)
         string previousScene = PlayerPrefs.GetString("PreviousScene", "ClassroomScene");
         if (string.IsNullOrWhiteSpace(previousScene) || previousScene == "BattleScene")
         {
             previousScene = "ClassroomScene";
         }
-
         UnityEngine.SceneManagement.SceneManager.LoadScene(previousScene);
     }
     /// <summary>
@@ -852,7 +896,6 @@ public class BattleManager : MonoBehaviour
         isResizing = true;
         resizeCoroutine = StartCoroutine(ResizeBattleBox(targetSize, onFinish));
     }
-
     /// <summary>
     /// The coroutine behind the resizing system.
     /// </summary>
@@ -861,13 +904,11 @@ public class BattleManager : MonoBehaviour
         Vector2 startSize = battleBox.size;
         float xSign = Mathf.Sign(targetSize.x - startSize.x);
         float ySign = Mathf.Sign(targetSize.y - startSize.y);
-
         Vector2 size = startSize;
         while (size.x != targetSize.x || size.y != targetSize.y)
         {
             size.x += xSign * SIZE_INCREASE * Time.deltaTime;
             size.y += ySign * SIZE_INCREASE * Time.deltaTime;
-
             if ((xSign == 1 && size.x > targetSize.x) || (xSign == -1 && size.x < targetSize.x))
             {
                 size.x = targetSize.x;
@@ -882,6 +923,5 @@ public class BattleManager : MonoBehaviour
         }
         isResizing = false;
         onFinish?.Invoke();
-
     }
 }
