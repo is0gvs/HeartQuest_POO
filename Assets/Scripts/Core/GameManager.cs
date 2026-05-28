@@ -209,7 +209,7 @@ namespace AntiBullyingGame.Core
 
             if (!PlayerPrefs.HasKey("CurrentEnemy"))
             {
-                PlayerPrefs.SetString("CurrentEnemy", "Mateo el Bully");
+                PlayerPrefs.SetString("CurrentEnemy", "Carlos");
             }
             PlayerPrefs.Save();
 

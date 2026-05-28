@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34ea2ea66c2eb2c41a30a9cff4764e06, type: 3}
+  m_Name: Sebastian
+  m_EditorClassIdentifier: Assembly-CSharp::AntiBullyingGame.Core.EnemyCombatData
+  enemyName: "Sebasti\xE1n"
+  resolvedSaveId: bully_sebastian_reformed
+  enemySprite: {fileID: 0}
+  nextSceneName: 
+  maxHP: 38
+  attackValue: 6
+  defendValue: 0
+  spareMessage: "* Sebasti\xE1n suspira, baja los brazos y se aleja sin decir nada."
+  flavorTexts:
+  - "* Sebasti\xE1n te mira con desconfianza."
+  - '* Sientes que hay algo detras de tanta agresividad.'
+  - '* El silencio entre ustedes se siente pesado.'
+  hablarOpciones:
+  - label: Preguntarle por que molesta
+    playerLine: '* Le preguntas a Sebastian por que necesita hacer sentir mal a los demas.'
+    mercyValue: 25
+    startsBattle: 0
+    enemyResponse: "* Sebasti\xE1n desvía la mirada. No esperaba esa pregunta."
+  - label: Hablarle sobre el respeto
+    playerLine: '* Le explicas que el respeto se gana, no se impone a la fuerza.'
+    mercyValue: 20
+    startsBattle: 0
+    enemyResponse: "* Sebasti\xE1n se queda callado por un momento."
+  - label: Decirle que no estas solo
+    playerLine: '* Le dices que no vas a dejar que siga lastimando a otros porque no esta solo en esto.'
+    mercyValue: 15
+    startsBattle: 1
+    enemyResponse: "* Sebasti\xE1n se enfurece y lanza un golpe al aire."
+  - label: Ofrecerle ayuda
+    playerLine: '* Le dices que si algo le pasa en casa o en el colegio, puede buscar ayuda.'
+    mercyValue: 30
+    startsBattle: 0
+    enemyResponse: "* Los ojos de Sebasti\xE1n se humedecen por un segundo antes de voltear la cara."
+  - label: Amenazar con avisar
+    playerLine: '* Le adviertes que si no para, vas a hablar con un profesor.'
+    mercyValue: 10
+    startsBattle: 1
+    enemyResponse: "* Sebasti\xE1n se rie nerviosamente pero se nota que le preocupa."
+  attackWords:
+  - Cobarde
+  - Sapo
+  - Chismoso
+  - Golpe
+  - Burla
+  - Empujon
+  minigameDuration: 7
+  pelletSpeed: 2.8
+  spawnInterval: 0.38
