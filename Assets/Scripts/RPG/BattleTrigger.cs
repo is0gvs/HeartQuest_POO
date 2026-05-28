@@ -15,7 +15,7 @@ namespace AntiBullyingGame.RPG
         public string battleSceneName = "BattleScene";
 
         [Tooltip("Nombre del enemigo que aparecerá en la batalla")]
-        public string enemyName = "Mateo el Bully";
+        public string enemyName = "Carlos";
 
         [Tooltip("Si está activo, este NPC puede iniciar una batalla")]
         public bool canStartBattle = true;
@@ -25,7 +25,6 @@ namespace AntiBullyingGame.RPG
         public HeartQuest.Core.DialogueData preBattleDialogue;
 
         private bool battleStarted = false;
-        private const string BullyResolvedNpcId = "bully_mateo_reformed";
 
         public void Interact()
         {
@@ -36,11 +35,11 @@ namespace AntiBullyingGame.RPG
                 var ds = HeartQuest.UI.DialogueSystem.Instance;
                 if (ds != null)
                 {
-                    ds.ShowDialogue("[Mateo]: Perdon. Ya no quiero quitarle cosas a nadie. Gracias por hacerme pensar.");
+                    ds.ShowDialogue($"[{enemyName}]: Perdon. Ya no quiero molestar a nadie. Gracias por hacerme pensar.");
                 }
                 else
                 {
-                    Debug.Log("[Mateo]: Perdon. Ya no quiero quitarle cosas a nadie.");
+                    Debug.Log($"[{enemyName}]: Perdon. Ya no quiero molestar a nadie.");
                 }
                 return;
             }
@@ -123,10 +122,14 @@ namespace AntiBullyingGame.RPG
 
         private bool IsBullyResolved()
         {
-            if (PlayerPrefs.GetInt("BullyMateoResolved", 0) == 1) return true;
+            // Check con el resolvedSaveId que corresponda a este enemigo
+            string resolvedId = "bully_" + enemyName.ToLower().Replace(" ", "_") + "_reformed";
 
-            return AntiBullyingGame.Managers.SaveManager.Instance != null &&
-                   AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Contains(BullyResolvedNpcId);
+            if (AntiBullyingGame.Managers.SaveManager.Instance != null &&
+                   AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Contains(resolvedId))
+                return true;
+
+            return false;
         }
     }
 }

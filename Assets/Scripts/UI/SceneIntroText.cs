@@ -19,8 +19,8 @@ namespace AntiBullyingGame.UI
         public Color panelColor = new Color(0f, 0f, 0f, 1f);
 
         [Header("Tiempos")]
-        public float fadeDuration = 1.5f;
-        public float displayDuration = 3f;
+        public float fadeDuration = 0.5f;
+        public float displayDuration = 1.5f;
 
         // Referencias internas
         private Canvas _canvas;

@@ -42,7 +42,7 @@ public class BattleManager : MonoBehaviour
     private EnemyVars enemyVariables;
     private const float HealthBarWidth = 4.2f;
     private const float HealthBarHeight = 0.35f;
-    private const string BullyResolvedNpcId = "bully_mateo_reformed";
+    private const string BullyResolvedNpcId = "bully_carlos_reformed";
     public float damage;
     [Header("Configuración de Combate Dinámico")]
     public AntiBullyingGame.Core.EnemyCombatData activeEnemyData;
@@ -150,17 +150,18 @@ public class BattleManager : MonoBehaviour
     {
         if (actingMgr.totalMercy >= actingMgr.totalMercyMax)
         {
-            CompleteBullyEncounter("* Mateo baja la mirada y te devuelve la mochila.");
+            CompleteBullyEncounter(activeEnemyData != null ? activeEnemyData.spareMessage : "* El enemigo se detiene.");
             audioMgr.Selecting();
             return;
         }
 
         isHablando = true;
-        DialogueManager.instance.dialogueTxt = "* Intentas ignorar las palabras de Mateo.";
+        string eName = activeEnemyData != null ? activeEnemyData.enemyName : "el enemigo";
+        DialogueManager.instance.dialogueTxt = $"* Intentas ignorar las palabras de {eName}.";
         DialogueManager.instance.shouldTalk = false;
         DialogueManager.instance.Talking(() => StartCoroutine(CalmSequence(
             "* Respiras hondo y no respondes a la provocacion.",
-            "* Mateo se queda esperando una reaccion que no llega.",
+            $"* {eName} se queda esperando una reaccion que no llega.",
             4)));
         audioMgr.Selecting();
     }
@@ -171,12 +172,12 @@ public class BattleManager : MonoBehaviour
         minSelectionInt = 0;
         playerVariables = FindAnyObjectByType<PlayerVars>();
         // Cargar datos de combate dinámicamente
-        string enemyName = PlayerPrefs.GetString("CurrentEnemy", "Mateo el Bully");
+        string enemyName = PlayerPrefs.GetString("CurrentEnemy", "Carlos");
         if (activeEnemyData == null)
         {
             activeEnemyData = Resources.Load<AntiBullyingGame.Core.EnemyCombatData>("CombatData/" + enemyName);
         }
-        // De respaldo, si no se encuentra el asset, creamos una configuración para Mateo
+        // De respaldo, si no se encuentra el asset, creamos una configuración genérica
         if (activeEnemyData == null)
         {
             activeEnemyData = ScriptableObject.CreateInstance<AntiBullyingGame.Core.EnemyCombatData>();
@@ -184,11 +185,11 @@ public class BattleManager : MonoBehaviour
             activeEnemyData.maxHP = 32f;
             activeEnemyData.attackValue = 5f;
             activeEnemyData.defendValue = 0f;
-            activeEnemyData.resolvedSaveId = "bully_mateo_reformed";
-            activeEnemyData.spareMessage = "* Mateo baja la mirada y te devuelve la mochila.";
+            activeEnemyData.resolvedSaveId = "bully_" + enemyName.ToLower().Replace(" ", "_") + "_reformed";
+            activeEnemyData.spareMessage = $"* {enemyName} baja la mirada y decide cambiar.";
             activeEnemyData.flavorTexts = new string[] {
                 "* Intuitivamente, sientes la tension en el aire.",
-                "* Mateo parece dudar por un segundo.",
+                $"* {enemyName} parece dudar por un segundo.",
                 "* Tratas de mantener la calma."
             };
         }
@@ -230,6 +231,11 @@ public class BattleManager : MonoBehaviour
         {
             actingMgr.spareMessage = activeEnemyData.spareMessage;
             actingMgr.flavorText = new List<string>(activeEnemyData.flavorTexts);
+            // Actualizar el texto inicial con el nombre del enemigo
+            if (actingMgr.actingText != null)
+            {
+                actingMgr.actingText.text = $"* Te interpones entre {activeEnemyData.enemyName} y su víctima.";
+            }
         }
         // Configurar diálogos del enemigo
         if (activeEnemyData.hablarOpciones != null && activeEnemyData.hablarOpciones.Length > 0)
@@ -645,7 +651,7 @@ public class BattleManager : MonoBehaviour
         }
         if (enemyVariables != null && enemyVariables.curHP <= 0f)
         {
-            CompleteBullyEncounter("* Mateo deja de pelear y te devuelve la mochila.");
+            CompleteBullyEncounter(activeEnemyData != null ? activeEnemyData.spareMessage : "* El enemigo deja de pelear.");
             yield break;
         }
         playerVariables.transform.position = battleBox != null ? battleBox.transform.position : new Vector3(0, -1.7f, 0);
@@ -706,7 +712,7 @@ public class BattleManager : MonoBehaviour
         yield return RunHeartDefense();
         if (actingMgr != null && actingMgr.totalMercy >= actingMgr.totalMercyMax)
         {
-            CompleteBullyEncounter("* Mateo entiende que se equivoco y te devuelve la mochila.");
+            CompleteBullyEncounter(activeEnemyData != null ? activeEnemyData.spareMessage : "* El enemigo se detiene.");
             yield break;
         }
         isFinished?.Invoke();
@@ -748,9 +754,10 @@ public class BattleManager : MonoBehaviour
         ItemManager.instance.isMenu = false;
         ItemManager.instance.useText.text = "";
         actingMgr.time = 0;
+        string eName = activeEnemyData != null ? activeEnemyData.enemyName : "el enemigo";
         yield return CalmSequence(
             "* Te tomas un segundo para recuperar el aliento.",
-            "* Mateo intenta molestarte, pero no logra sacarte de foco.",
+            $"* {eName} intenta molestarte, pero no logra sacarte de foco.",
             0);
     }
     private IEnumerator IgnoreSequence()
@@ -772,12 +779,13 @@ public class BattleManager : MonoBehaviour
         {
             if (actingMgr != null && actingMgr.actingText != null)
             {
-                actingMgr.actingText.text = "* Mateo sigue intentando provocarte.";
+                string eName = activeEnemyData != null ? activeEnemyData.enemyName : "El enemigo";
+                actingMgr.actingText.text = $"* {eName} sigue intentando provocarte.";
                 actingMgr.actingText.gameObject.SetActive(true);
             }
         });
     }
-    public IEnumerator CalmSequence(string playerLine, string mateoLine, int mercyGain)
+    public IEnumerator CalmSequence(string playerLine, string enemyLine, int mercyGain)
     {
         isHablando = true;
 
@@ -792,7 +800,7 @@ public class BattleManager : MonoBehaviour
         bool firstDone = false;
         DialogueManager.instance.Talking(() => firstDone = true);
         yield return new WaitUntil(() => firstDone);
-        DialogueManager.instance.dialogueTxt = mateoLine;
+        DialogueManager.instance.dialogueTxt = enemyLine;
         bool secondDone = false;
         DialogueManager.instance.Talking(() => secondDone = true);
         yield return new WaitUntil(() => secondDone);
@@ -810,7 +818,7 @@ public class BattleManager : MonoBehaviour
         if (actingMgr != null && actingMgr.totalMercy >= actingMgr.totalMercyMax)
         {
             isHablando = false;
-            CompleteBullyEncounter("* Mateo entiende que se equivoco y te devuelve la mochila.");
+            CompleteBullyEncounter(activeEnemyData != null ? activeEnemyData.spareMessage : "* El enemigo se detiene.");
             yield break;
         }
         if (ItemManager.instance != null)
@@ -846,10 +854,10 @@ public class BattleManager : MonoBehaviour
         isHablando = false;
 
         if (AntiBullyingGame.Managers.SaveManager.Instance != null &&
-            !string.IsNullOrEmpty(resolvedId) &&
-            !AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Contains(resolvedId))
+            activeEnemyData != null && !string.IsNullOrEmpty(activeEnemyData.resolvedSaveId) &&
+            !AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Contains(activeEnemyData.resolvedSaveId))
         {
-            AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Add(resolvedId);
+            AntiBullyingGame.Managers.SaveManager.Instance.interactedNPCs.Add(activeEnemyData.resolvedSaveId);
         }
         if (soul != null) soul.enabled = false;
         if (actingMgr != null && actingMgr.actObjects != null) actingMgr.actObjects.SetActive(false);

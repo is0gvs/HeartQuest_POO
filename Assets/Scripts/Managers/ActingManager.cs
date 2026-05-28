@@ -250,9 +250,10 @@ public class ActingManager : MonoBehaviour
         else
         {
             DialogueManager.instance.shouldTalk = false;
+            string eName = BattleManager.battleInstance.activeEnemyData != null ? BattleManager.battleInstance.activeEnemyData.enemyName : "El enemigo";
             StartCoroutine(BattleManager.battleInstance.CalmSequence(
                 playerLine,
-                "* Mateo baja un poco el tono.",
+                $"* {eName} baja un poco el tono.",
                 0));
         }
 

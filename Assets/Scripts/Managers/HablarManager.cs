@@ -53,13 +53,13 @@ public class HablarManager : MonoBehaviour
 
     private readonly int[] mercyValues = { 22, 28, 12, 35, 8 };
     private readonly bool[] startsBattle = { false, false, true, false, true };
-    private readonly string[] mateoResponses =
+    private readonly string[] fallbackResponses =
     {
-        "* Mateo baja la voz por primera vez.",
-        "* Mateo mira al suelo. Parece que eso le llego.",
-        "* Mateo se molesta y vuelve a atacarte.",
-        "* Mateo aprieta la mochila, pero empieza a dudar.",
-        "* Mateo se pone a la defensiva y lanza otra provocacion."
+        "* {0} baja la voz por primera vez.",
+        "* {0} mira al suelo. Parece que eso le llego.",
+        "* {0} se molesta y vuelve a atacarte.",
+        "* {0} parece dudar por un segundo.",
+        "* {0} se pone a la defensiva y lanza otra provocacion."
     };
     private int[] rotationIdx;
 
@@ -335,13 +335,14 @@ public class HablarManager : MonoBehaviour
         }
         else
         {
-            // Fallbacks de Mateo
+            // Fallbacks genéricos
             int rot = rotationIdx[idx];
             playerLine = dialogueLines[idx][rot % dialogueLines[idx].Length];
             rotationIdx[idx] = (rot + 1) % dialogueLines[idx].Length;
             mercyVal = mercyValues[idx];
             triggersCombat = startsBattle[idx];
-            response = mateoResponses[idx];
+            string eName = bm.activeEnemyData != null ? bm.activeEnemyData.enemyName : "El enemigo";
+            response = fallbackResponses[idx].Replace("{0}", eName);
         }
 
         // Mercy
@@ -352,7 +353,7 @@ public class HablarManager : MonoBehaviour
         DialogueManager.instance.shouldTalk = false;
         if (bm.actingMgr.totalMercy >= bm.actingMgr.totalMercyMax)
         {
-            string endMessage = bm.activeEnemyData != null ? bm.activeEnemyData.spareMessage : "* Mateo entiende el dano que hizo y decide cambiar.";
+            string endMessage = bm.activeEnemyData != null ? bm.activeEnemyData.spareMessage : "* El enemigo entiende el daño que hizo y decide cambiar.";
             bm.StartCoroutine(bm.CalmSequence(
                 playerLine,
                 endMessage,

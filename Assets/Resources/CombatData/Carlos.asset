@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34ea2ea66c2eb2c41a30a9cff4764e06, type: 3}
+  m_Name: Carlos
+  m_EditorClassIdentifier: Assembly-CSharp::AntiBullyingGame.Core.EnemyCombatData
+  enemyName: Carlos
+  resolvedSaveId: bully_carlos_reformed
+  enemySprite: {fileID: 0}
+  nextSceneName: 
+  maxHP: 32
+  attackValue: 5
+  defendValue: 0
+  spareMessage: '* Carlos se cruza de brazos y se marcha furioso, pero te deja en paz.'
+  flavorTexts:
+  - '* Carlos aprieta los puños.'
+  - '* El ambiente se siente amenazante.'
+  - '* Tratas de mantener la calma ante la agresión.'
+  hablarOpciones: []
+  attackWords:
+  - Empujón
+  - Amenaza
+  - Golpe
+  - Grito
+  - Bofetada
+  - Patada
+  minigameDuration: 6.5
+  pelletSpeed: 2.65
+  spawnInterval: 0.4
