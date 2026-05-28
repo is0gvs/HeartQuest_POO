@@ -800,7 +800,7 @@ public class BattleManager : MonoBehaviour
         bool firstDone = false;
         DialogueManager.instance.Talking(() => firstDone = true);
         yield return new WaitUntil(() => firstDone);
-        DialogueManager.instance.dialogueTxt = mateoLine;
+        DialogueManager.instance.dialogueTxt = enemyLine;
         bool secondDone = false;
         DialogueManager.instance.Talking(() => secondDone = true);
         yield return new WaitUntil(() => secondDone);
