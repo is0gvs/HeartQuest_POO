@@ -24,9 +24,9 @@ namespace AntiBullyingGame.Core
     public class EnemyCombatData : ScriptableObject
     {
         [Header("Datos Generales del Enemigo")]
-        public string enemyName = "Mateo el Bully";
+        public string enemyName = "Carlos";
         [Tooltip("ID único usado en el SaveManager para marcar al enemigo como resuelto")]
-        public string resolvedSaveId = "bully_mateo_reformed";
+        public string resolvedSaveId = "bully_carlos_reformed";
         public Sprite enemySprite;
         [Header("Transición Post-Combate")]
         [Tooltip("Escena a cargar al ganar el combate. Si está vacío, vuelve a la escena anterior.")]
@@ -36,10 +36,10 @@ namespace AntiBullyingGame.Core
         public float attackValue = 5f;
         public float defendValue = 0f;
         [Header("Comportamiento de Paciencia / Perdón")]
-        public string spareMessage = "* Mateo baja los brazos y decide cambiar.";
+        public string spareMessage = "* Carlos baja los brazos y decide cambiar.";
         public string[] flavorTexts = {
             "* Intuitivamente, sientes la tensión en el aire.",
-            "* Mateo parece dudar por un segundo.",
+            "* Carlos parece dudar por un segundo.",
             "* Tratas de mantener la calma."
         };
         [Header("Opciones del submenú HABLAR")]

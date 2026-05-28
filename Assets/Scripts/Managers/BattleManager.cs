@@ -785,7 +785,7 @@ public class BattleManager : MonoBehaviour
             }
         });
     }
-    public IEnumerator CalmSequence(string playerLine, string mateoLine, int mercyGain)
+    public IEnumerator CalmSequence(string playerLine, string enemyLine, int mercyGain)
     {
         isHablando = true;
 
